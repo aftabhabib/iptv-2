@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Map;
 
 import okhttp3.FormBody;
@@ -22,65 +21,85 @@ public class HttpHelper {
     public static byte[] opGet(String url, Map<String, String> property) {
         byte[] content = null;
 
+        Response response = null;
         try {
             Request request = createGetRequest(url, property);
 
-            Response response = new OkHttpClient().newCall(request).execute();
+            response = new OkHttpClient().newCall(request).execute();
             if (response.isSuccessful()) {
                 content = response.body().bytes();
             }
             else {
-                Log.e(TAG, "HTTP GET fail, " + response.message());
-                response.close();
+                throw new IOException(response.message());
             }
         }
         catch (IOException e) {
-            Log.e(TAG, "HTTP GET error, " + e.getMessage());
+            Log.e(TAG, "HTTP GET fail, " + e.getMessage());
+
+            if (response != null) {
+                response.close();
+            }
         }
 
         return content;
     }
 
     public static boolean opDownload(String url, Map<String, String> property, File dstFile) {
-        boolean ret = false;
-
-        /**
-         * 如果已经存在，则先删除
-         */
         if (dstFile.exists()) {
             dstFile.delete();
         }
 
+        Response response = null;
         try {
             Request request = createGetRequest(url, property);
 
-            Response response = new OkHttpClient().newCall(request).execute();
+            response = new OkHttpClient().newCall(request).execute();
             if (response.isSuccessful()) {
                 InputStream input = response.body().byteStream();
-                OutputStream output = new FileOutputStream(dstFile);
-
-                byte[] buf = new byte[1024];
-                while (true) {
-                    int bytesRead = input.read(buf);
-                    if (bytesRead == -1) {
-                        break;
-                    }
-
-                    output.write(buf, 0, bytesRead);
-                }
-
-                input.close();
-                output.close();
-
-                ret = true;
+                downloadFile(input, dstFile);
             }
             else {
-                Log.e(TAG, "HTTP GET fail, " + response.message());
-                response.close();
+                throw new IOException(response.message());
             }
         }
         catch (IOException e) {
-            Log.e(TAG, "HTTP GET error, " + e.getMessage());
+            Log.e(TAG, "GET error, " + e.getMessage());
+
+            if (response != null) {
+                response.close();
+            }
+        }
+
+        return dstFile.exists();
+    }
+
+    private static void downloadFile(InputStream input, File dstFile) {
+        FileOutputStream output = null;
+        try {
+            output = new FileOutputStream(dstFile);
+
+            byte[] buf = new byte[1024];
+            while (true) {
+                int bytesRead = input.read(buf);;
+                if (bytesRead == -1) {
+                    break;
+                }
+
+                output.write(buf, 0, bytesRead);
+            }
+        }
+        catch (IOException e) {
+            Log.e(TAG, "read data error, " + e.getMessage());
+        }
+        finally {
+            if (output != null) {
+                try {
+                    output.close();
+                }
+                catch (IOException e) {
+                    //ignore
+                }
+            }
 
             /**
              * 下载过程中出错，删除未完成的文件
@@ -89,27 +108,29 @@ public class HttpHelper {
                 dstFile.delete();
             }
         }
-
-        return ret;
     }
 
     public static byte[] opPost(String url, String xml, Map<String, String> property) {
         byte[] content = null;
 
+        Response response = null;
         try {
             Request request = createPostRequest(url, createXmlBody(xml), property);
 
-            Response response = new OkHttpClient().newCall(request).execute();
+            response = new OkHttpClient().newCall(request).execute();
             if (response.isSuccessful()) {
                 content = response.body().bytes();
             }
             else {
-                Log.e(TAG, "HTTP POST fail, " + response.message());
-                response.close();
+                throw new IOException(response.message());
             }
         }
         catch (IOException e) {
-            Log.e(TAG, "HTTP POST error, " + e.getMessage());
+            Log.e(TAG, "POST fail, " + e.getMessage());
+
+            if (response != null) {
+                response.close();
+            }
         }
 
         return content;
@@ -157,9 +178,5 @@ public class HttpHelper {
         }
 
         return builder.build();
-    }
-
-    private HttpHelper() {
-        //ignore
     }
 }
