@@ -11,9 +11,17 @@ import com.source.GroupInfo;
 import com.utils.GzipHelper;
 import com.utils.HttpHelper;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -24,12 +32,15 @@ public final class SuperTVClient extends BaseClient {
     private static final String TAG = "SuperTVClient";
 
     private static final String CONFIG_URL = "http://119.29.74.92:8123/config.json";
+    private static final String IPTV_URL = "https://119.29.74.92/iptv_auth?area=%s";
 
     private static final String LIST_GZIP_NAME = "list.gz";
     private static final String LIVE_DB_NAME = "live.db";
 
     private static final long DEFAULT_DB_UPTIME = 0;
     private static final String SETTINGS_DB_UPTIME = "db_uptime";
+
+    private static final String IPTV_GROUP = "IPTV";
 
     private File mDataDir;
     private SharedPreferences mSettings;
@@ -130,8 +141,19 @@ public final class SuperTVClient extends BaseClient {
 
         mChannelList = reader.readChannels();
         mGroupList = reader.readGroups();
-
         reader.release();
+
+        /**
+         * IPTV频道
+         */
+        String area = getArea();
+        if (!area.isEmpty()) {
+            List<Channel> iptvList = getIptvList(area);
+            if (!iptvList.isEmpty()) {
+                mChannelList.addAll(iptvList);
+                mGroupList.add(new GroupInfo(IPTV_GROUP, IPTV_GROUP));
+            }
+        }
 
         return true;
     }
@@ -144,6 +166,78 @@ public final class SuperTVClient extends BaseClient {
         else {
             return false;
         }
+    }
+
+    private static String getArea() {
+        String area = "";
+
+        byte[] content = HttpHelper.opGet("https://g3.le.com/r?format=1", null);
+        if (content == null) {
+            Log.e(TAG, "get le json fail");
+        }
+        else {
+            try {
+                JSONObject rootObj = new JSONObject(new String(content));
+
+                area = rootObj.getString("desc");
+            }
+            catch (JSONException e) {
+                Log.e(TAG, "parse le json fail");
+            }
+        }
+
+        return area;
+    }
+
+    private List<Channel> getIptvList(String area) {
+        List<Channel> iptvList = new LinkedList<Channel>();
+
+        File gzFile = new File(mDataDir, "iptv.gz");
+        File txtFile = new File(mDataDir, "iptv.txt");
+        try {
+            Map<String, String> property = new HashMap<String, String>();
+            property.put("User-Agent", "lgsg/1.0");
+
+            if (!HttpHelper.opDownload(String.format(IPTV_URL, URLEncoder.encode(area, "UTF-8")), property, gzFile)) {
+                throw new IOException("download " + gzFile.getName() + " fail");
+            }
+
+            if (!GzipHelper.extract(gzFile, txtFile)) {
+                throw new IOException("extract " + txtFile.getName() + " fail");
+            }
+
+            BufferedReader reader = new BufferedReader(new FileReader(txtFile));
+            while (true) {
+                String line = reader.readLine();
+                if (line == null) {
+                    break;
+                }
+
+                String[] results = line.split(",");
+
+                Channel channel = new Channel();
+                channel.addGroupId(IPTV_GROUP);
+                channel.setName(results[0]);
+                channel.addSource(results[1]);
+
+                iptvList.add(channel);
+            }
+            reader.close();
+        }
+        catch (IOException e) {
+            Log.e(TAG, e.getMessage());
+        }
+        finally {
+            if (txtFile.exists()) {
+                txtFile.delete();
+            }
+
+            if (gzFile.exists()) {
+                gzFile.delete();
+            }
+        }
+
+        return iptvList;
     }
 
     @Override
