@@ -26,26 +26,11 @@ public class Downloader {
     public static final int TS_COMPLETE = 0x4;
     public static final int TS_FAILED = 0x5;
 
-    private static Downloader mIntance = null;
-
     static {
         System.loadLibrary("fgdownloader");
     }
 
-    public static Downloader get() {
-        if (mIntance == null) {
-            mIntance = new Downloader();
-        }
-
-        return mIntance;
-    }
-
-    public static void release() {
-        Uninit();
-        mIntance = null;
-    }
-
-    private static native int Uninit();
+    public static native int Uninit();
 
     public native String LiveGetLocalProxyUrl(String url);
 }
