@@ -20,7 +20,7 @@ public class ForceTV {
     /**
      * 同一时刻只能有一个活跃频道
      */
-    private ForceChannel mCurrChannel = null;
+    private ChannelInfo mChannel = null;
 
     /**
      * 构造函数
@@ -50,7 +50,7 @@ public class ForceTV {
      * 开始取流
      */
     public void startChannel(String url) {
-        mCurrChannel = ForceChannel.parse(url);
+        mChannel = ChannelInfo.parse(url);
         sendCommand(switchCommand());
     }
 
@@ -58,9 +58,9 @@ public class ForceTV {
      * 当前的频道停止取流
      */
     public void stopChannel() {
-        if (mCurrChannel != null) {
+        if (mChannel != null) {
             sendCommand(stopCommand());
-            mCurrChannel = null;
+            mChannel = null;
         }
     }
 
@@ -68,7 +68,7 @@ public class ForceTV {
      * 获取当前频道的播放地址
      */
     public String getPlayUrl() {
-        return "http://127.0.0.1:" + mServPort + "/" + mCurrChannel.getPath();
+        return "http://127.0.0.1:" + mServPort + "/" + mChannel.getPath();
     }
 
     private native int start(int port, int bufferSize);
@@ -82,9 +82,9 @@ public class ForceTV {
         buffer.append(mServPort);
         buffer.append("/cmd.xml?cmd=switch_chan");
         buffer.append("&server=");
-        buffer.append(mCurrChannel.getServer());
+        buffer.append(mChannel.getServer());
         buffer.append("&id=");
-        buffer.append(mCurrChannel.getId());
+        buffer.append(mChannel.getId());
 
         return buffer.toString();
     }
@@ -96,7 +96,7 @@ public class ForceTV {
         buffer.append(mServPort);
         buffer.append("/cmd.xml?cmd=stop_chan");
         buffer.append("&id=");
-        buffer.append(mCurrChannel.getId());
+        buffer.append(mChannel.getId());
 
         return buffer.toString();
     }

@@ -2,23 +2,12 @@ package com.forcetech.android;
 
 import android.net.Uri;
 
-class ForceChannel {
-    public static ForceChannel parse(String url) {
-        Uri uri = Uri.parse(url);
-
-        if (!uri.getScheme().equalsIgnoreCase("p2p")) {
-            throw new AssertionError("invalid forcetv url");
-        }
-
-        return new ForceChannel(uri.getHost() + ":" + uri.getPort(),
-                parseId(uri.getLastPathSegment()), uri.getPath());
-    }
-
+class ChannelInfo {
     private String mServer;
     private String mId;
     private String mPath;
 
-    private ForceChannel(String server, String id, String path) {
+    private ChannelInfo(String server, String id, String path) {
         mServer = server;
         mId = id;
         mPath = path;
@@ -34,6 +23,13 @@ class ForceChannel {
 
     public String getPath() {
         return mPath;
+    }
+
+    public static ChannelInfo parse(String url) {
+        Uri uri = Uri.parse(url);
+
+        return new ChannelInfo(uri.getHost() + ":" + uri.getPort(),
+                parseId(uri.getLastPathSegment()), uri.getPath());
     }
 
     private static String parseId(String segment) {
