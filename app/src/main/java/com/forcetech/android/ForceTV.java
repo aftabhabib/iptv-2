@@ -1,15 +1,8 @@
 package com.forcetech.android;
 
 import android.util.Log;
-import android.util.Xml;
 
 import com.utils.HttpHelper;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 /**
  * 原力SDK
@@ -41,7 +34,6 @@ public class ForceTV {
 
     /**
      * 启动p2p服务
-     * @return
      */
     public int startP2PService() {
         return start(mServPort, mBufferSize);
@@ -49,7 +41,6 @@ public class ForceTV {
 
     /**
      * 停止p2p服务
-     * @return
      */
     public int stopP2PService() {
         return stop();
@@ -57,27 +48,20 @@ public class ForceTV {
 
     /**
      * 开始取流
-     * @param url ---- 频道
      */
     public void startChannel(String url) {
         mCurrChannel = ForceChannel.parse(url);
-
-        String api = ForceApi.switchChannel(mServPort, mCurrChannel);
-        sendCommand(api);
+        sendCommand(switchCommand());
     }
 
     /**
      * 当前的频道停止取流
      */
     public void stopChannel() {
-        if (mCurrChannel == null) {
-            throw new IllegalStateException("no active channel");
+        if (mCurrChannel != null) {
+            sendCommand(stopCommand());
+            mCurrChannel = null;
         }
-
-        String api = ForceApi.stopChannel(mServPort, mCurrChannel);
-        sendCommand(api);
-
-        mCurrChannel = null;
     }
 
     /**
@@ -91,47 +75,39 @@ public class ForceTV {
 
     private native int stop();
 
-    /**
-     * FIXME: 检查命令是否得到正确响应
-     */
-    private void sendCommand(String api) {
-        byte[] content = HttpHelper.opGet(api, null);
+    private String switchCommand() {
+        StringBuffer buffer = new StringBuffer();
+
+        buffer.append("http://127.0.0.1:");
+        buffer.append(mServPort);
+        buffer.append("/cmd.xml?cmd=switch_chan");
+        buffer.append("&server=");
+        buffer.append(mCurrChannel.getServer());
+        buffer.append("&id=");
+        buffer.append(mCurrChannel.getId());
+
+        return buffer.toString();
+    }
+
+    private String stopCommand() {
+        StringBuffer buffer = new StringBuffer();
+
+        buffer.append("http://127.0.0.1:");
+        buffer.append(mServPort);
+        buffer.append("/cmd.xml?cmd=stop_chan");
+        buffer.append("&id=");
+        buffer.append(mCurrChannel.getId());
+
+        return buffer.toString();
+    }
+
+    private void sendCommand(String cmd) {
+        byte[] content = HttpHelper.opGet(cmd, null);
         if (content == null) {
-            Log.e(TAG, "send " + api + " fail");
+            Log.e(TAG, "GET " + cmd + " fail");
         }
         else {
-            XmlPullParser xmlParser = Xml.newPullParser();
-
-            try {
-                xmlParser.setInput(new ByteArrayInputStream(content), "utf-8");
-
-                int eventType = xmlParser.getEventType();
-                do {
-                    switch (eventType) {
-                        case XmlPullParser.START_DOCUMENT: {
-                            break;
-                        }
-                        case XmlPullParser.START_TAG: {
-                            break;
-                        }
-                        case XmlPullParser.END_TAG: {
-                            break;
-                        }
-                        default: {
-                            break;
-                        }
-                    }
-
-                    eventType = xmlParser.next();
-                }
-                while (eventType != XmlPullParser.END_DOCUMENT);
-            }
-            catch (IOException e) {
-                //ignore
-            }
-            catch (XmlPullParserException e) {
-                Log.e(TAG, "parse xml fail, " + e.getMessage());
-            }
+            Log.d(TAG, "server response " + new String(content));
         }
     }
 }
