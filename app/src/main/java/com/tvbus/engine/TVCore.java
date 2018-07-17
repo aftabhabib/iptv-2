@@ -22,12 +22,12 @@ public class TVCore {
         return init(mNativeHandle, ctx);
     }
 
-    public void quit() {
-        quit(mNativeHandle);
-    }
-
     public int run() {
         return run(mNativeHandle);
+    }
+
+    public void quit() {
+        quit(mNativeHandle);
     }
 
     public void setPlayPort(int port) {
