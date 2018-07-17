@@ -1,106 +1,79 @@
 package com.proxy;
 
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
 import android.util.Log;
 
 import com.nagasoft.player.VJListener;
 import com.nagasoft.player.VJPlayer;
+import com.source.ProtocolType;
 
-class NagaProxy implements Proxy, VJListener {
+public class NagaProxy extends Service implements VJListener {
     private static final String TAG = "NagaProxy";
 
     private VJPlayer mPlayer;
+    private boolean mIsRunning = false;
 
-    private boolean mIsWorking = false;
-
-    private String mLocalUrl = "";
-    private Object mLock = new Object();
-
-    public NagaProxy() {
+    @Override
+    public void onCreate() {
         mPlayer = new VJPlayer();
         mPlayer.setVJListener(this);
-    }
-
-    public String start(String url) {
-        if (mPlayer == null) {
-            throw new IllegalStateException("proxy is released");
-        }
-
-        if (mIsWorking) {
-            Log.w(TAG, "proxy is working, stop first");
-
-            mPlayer.stop();
-            mIsWorking = false;
-        }
-
-        mPlayer.setURL(url);
         mPlayer.setVJMSBufferTimeout(10);
-
-        mIsWorking = mPlayer.start();
-        if (!mIsWorking) {
-            Log.e(TAG, "proxy start fail");
-            return "";
-        }
-
-        synchronized (mLock) {
-            boolean isWaiting = true;
-
-            do {
-                try {
-                    mLock.wait();
-                    isWaiting = false;
-                }
-                catch (InterruptedException e) {
-                    //ignore
-                }
-            }
-            while (isWaiting);
-
-            return mLocalUrl;
-        }
     }
 
-    public void stop() {
-        if (mPlayer == null) {
-            throw new IllegalStateException("proxy is released");
-        }
-
-        if (mIsWorking) {
-            mPlayer.stop();
-            mIsWorking = false;
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        String url = intent.getStringExtra("url");
+        if (url == null || !ProtocolType.isNaga(url)) {
+            Log.e(TAG, "not naga protocol");
         }
         else {
-            Log.w(TAG, "proxy is not working");
+            mPlayer.setURL(url);
+
+            mIsRunning = mPlayer.start();
+            if (!mIsRunning) {
+                Log.e(TAG, "VJPlayer start fail");
+            }
         }
+
+        return START_NOT_STICKY;
     }
 
-    public void release() {
-        if (mPlayer != null) {
-            if (mIsWorking) {
-                Log.w(TAG, "proxy is working, stop first");
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 
+    @Override
+    public void onDestroy() {
+        if (mPlayer != null) {
+            if (mIsRunning) {
                 mPlayer.stop();
-                mIsWorking = false;
+                mIsRunning = false;
             }
 
             mPlayer._release();
             mPlayer = null;
         }
-        else {
-            Log.w(TAG, "proxy is released");
-        }
     }
 
     @Override
     public void onPlayURL(String url) {
-        synchronized (mLock) {
-            mLocalUrl = url;
+        Log.d(TAG, "VJPlayer notify url " + url);
 
-            mLock.notify();
-        }
+        Intent intent = new Intent("com.iptv.demo.action.PLAY_URL");
+        intent.putExtra("local_proxy_url", url);
+
+        sendBroadcast(intent);
     }
 
     @Override
     public void onError(int error) {
-        Log.e(TAG, "naga proxy notify error " + error);
+        Log.e(TAG, "VJPlayer notify error " + error);
+
+        /**
+         * FIXME: notify player
+         */
     }
 }

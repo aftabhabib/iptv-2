@@ -1,118 +1,74 @@
 package com.proxy;
 
-import android.content.Context;
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
 import android.util.Log;
 
+import com.source.ProtocolType;
 import com.tvbus.engine.TVCore;
 import com.tvbus.engine.TVListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class TVBusProxy implements Proxy, TVListener {
+public class TVBusProxy extends Service implements TVListener {
     private static final String TAG = "TVBusProxy";
 
     private TVCore mCore;
+    private boolean mIsRunning = false;
 
-    private boolean mIsServiceRunning = false;
-    private boolean mIsWorking= false;
-
-    private String mLocalUrl = "";
-    private Object mLock = new Object();
-
-    public TVBusProxy(Context ctx) {
+    @Override
+    public void onCreate() {
         mCore = new TVCore();
         mCore.setTVListener(this);
         mCore.setServPort(8902);
         mCore.setPlayPort(4010);
 
-        int ret = mCore.init(ctx);
-        if (ret == 0) {
-            ret = mCore.run();
-            if (ret == 0) {
-                mIsServiceRunning = true;
+        int ret = mCore.init(this);
+        if (ret < 0) {
+            Log.e(TAG, "TVCore init fail");
+        }
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        String url = intent.getStringExtra("url");
+        if (url == null || !ProtocolType.isTVBus(url)) {
+            Log.e(TAG, "not tvbus protocol");
+        }
+        else {
+            int ret = mCore.run();
+            if (ret < 0) {
+                Log.e(TAG, "TVCore run fail");
             }
             else {
-                Log.e(TAG, "run fail");
+                /**
+                 * FIXME: 这里的accessCode用处不明
+                 */
+                mCore.start(url, "1111");
+                mIsRunning = true;
             }
         }
-        else {
-            Log.e(TAG, "init fail");
-        }
+
+        return START_NOT_STICKY;
     }
 
-    public String start(String url) {
-        if (mCore == null) {
-            throw new IllegalStateException("proxy is released");
-        }
-
-        if (!mIsServiceRunning) {
-            throw new IllegalStateException("proxy service is not running");
-        }
-
-        if (mIsWorking) {
-            Log.w(TAG, "proxy is working, stop first");
-
-            mCore.stop();
-            mIsWorking = false;
-        }
-
-        /**
-         * FIXME: 这里的accessCode用处不明
-         */
-        mCore.start(url, "1111");
-        mIsWorking = true;
-
-        synchronized (mLock) {
-            boolean isWaiting = true;
-
-            do {
-                try {
-                    mLock.wait();
-                    isWaiting = false;
-                }
-                catch (InterruptedException e) {
-                    //ignore
-                }
-            }
-            while (isWaiting);
-
-            return mLocalUrl;
-        }
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
-    public void stop() {
-        if (mCore == null) {
-            throw new IllegalStateException("proxy is released");
-        }
-
-        if (mIsWorking) {
-            mCore.stop();
-            mIsWorking = false;
-        }
-        else {
-            Log.w(TAG, "proxy is not working");
-        }
-    }
-
-    public void release() {
+    @Override
+    public void onDestroy() {
         if (mCore != null) {
-            if (mIsWorking) {
-                Log.w(TAG, "proxy is working, stop first");
-
+            if (mIsRunning) {
                 mCore.stop();
-                mIsWorking = false;
-            }
-
-            if (mIsServiceRunning) {
                 mCore.quit();
-                mIsServiceRunning = false;
+                mIsRunning = false;
             }
 
             mCore = null;
-        }
-        else {
-            Log.w(TAG, "proxy is released");
         }
     }
 
@@ -125,18 +81,27 @@ class TVBusProxy implements Proxy, TVListener {
     public void onPrepared(String result) {
         Log.d(TAG, "onPrepared callback " + result);
 
-        synchronized (mLock) {
-            try {
-                JSONObject rootObj = new JSONObject(result);
+        String url = getPlayUrl(result);
+        if (!url.isEmpty()) {
+            Intent intent = new Intent("com.iptv.demo.action.PLAY_URL");
+            intent.putExtra("local_proxy_url", url);
 
-                mLocalUrl = rootObj.getString("hls");
-            }
-            catch (JSONException e) {
-                Log.w(TAG, "parse json error, " + e.getMessage());
-            }
-
-            mLock.notify();
+            sendBroadcast(intent);
         }
+    }
+
+    private static String getPlayUrl(String preparedResult) {
+        String url = "";
+
+        try {
+            JSONObject rootObj = new JSONObject(preparedResult);
+            url = rootObj.getString("hls");
+        }
+        catch (JSONException e) {
+            Log.w(TAG, "parse prepared json error, " + e.getMessage());
+        }
+
+        return url;
     }
 
     @Override
