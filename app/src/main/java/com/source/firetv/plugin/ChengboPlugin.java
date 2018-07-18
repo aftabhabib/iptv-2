@@ -74,7 +74,7 @@ public class ChengboPlugin implements Plugin {
             return getPlayUrl(tmpUrl, property) + DOUBLE_AT;
         }
         else {
-            throw new IllegalArgumentException("url is not chengbo source");
+            throw new IllegalArgumentException("url is not chengbo item_source");
         }
     }
 
