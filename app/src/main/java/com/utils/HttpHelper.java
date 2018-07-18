@@ -90,6 +90,13 @@ public class HttpHelper {
         }
         catch (IOException e) {
             Log.e(TAG, "read data error, " + e.getMessage());
+
+            /**
+             * 下载过程中出错，删除未完成的文件
+             */
+            if (dstFile.exists()) {
+                dstFile.delete();
+            }
         }
         finally {
             if (output != null) {
@@ -99,13 +106,6 @@ public class HttpHelper {
                 catch (IOException e) {
                     //ignore
                 }
-            }
-
-            /**
-             * 下载过程中出错，删除未完成的文件
-             */
-            if (dstFile.exists()) {
-                dstFile.delete();
             }
         }
     }

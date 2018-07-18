@@ -14,7 +14,7 @@ public class ZipHelper {
         try {
             ZipFile zipFile = new ZipFile(srcFile);
 
-            if (zipFile.isValidZipFile()) {
+            if (!zipFile.isValidZipFile()) {
                 Log.e(TAG, "invalid zip file");
                 return false;
             }
