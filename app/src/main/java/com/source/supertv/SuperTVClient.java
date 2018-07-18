@@ -8,6 +8,7 @@ import android.util.Log;
 import com.source.BaseClient;
 import com.source.Channel;
 import com.source.GroupInfo;
+import com.source.ProtocolType;
 import com.utils.GzipHelper;
 import com.utils.HttpHelper;
 
@@ -242,6 +243,20 @@ public final class SuperTVClient extends BaseClient {
 
     @Override
     protected void onDecodeSource(String source) {
-        //TODO
+        String url = source;
+
+        if (ProtocolType.isHttp(url)
+                || ProtocolType.isRtsp(url)
+                || ProtocolType.isFlashgetX(url)) {
+            /**
+             * 可以直接使用
+             */
+            mListener.onDecodeSource(url);
+        }
+        else {
+            /**
+             * 不能直接使用
+             */
+        }
     }
 }
