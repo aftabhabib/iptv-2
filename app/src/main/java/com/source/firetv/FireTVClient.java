@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.source.Channel;
 import com.source.GroupInfo;
+import com.source.ProtocolType;
 import com.source.firetv.plugin.ChengboPlugin;
 import com.source.BaseClient;
 import com.utils.ZipHelper;
@@ -77,7 +78,7 @@ public final class FireTVClient extends BaseClient {
     private boolean prepareConfig() {
         byte[] content = HttpHelper.opGet(SOFT_TXT_URL, null);
         if (content == null) {
-            Log.e(TAG, "get soft.txt fail");
+            Log.e(TAG, "get " + SOFT_TXT_URL + " fail");
             return false;
         }
 
@@ -104,7 +105,7 @@ public final class FireTVClient extends BaseClient {
              * 下载
              */
             if (!HttpHelper.opDownload(TVLIST_ZIP_URL, null, zipFile)) {
-                Log.e(TAG, "download " + TVLIST_ZIP_NAME + " fail");
+                Log.e(TAG, "download " + TVLIST_ZIP_URL + " fail");
                 return false;
             }
 
@@ -244,13 +245,12 @@ public final class FireTVClient extends BaseClient {
             url = url.replaceAll("&amp;", "&");
         }
 
-        if (url.startsWith("http://")
-                || url.startsWith("https://")
-                || url.startsWith("rtmp://")
-                || url.startsWith("rtsp://")
-                || url.startsWith("vjms://")
-                || url.startsWith("tvbus://")
-                || url.startsWith("p2p://")) {
+        if (ProtocolType.isHttp(url)
+                || ProtocolType.isRtsp(url)
+                || ProtocolType.isRtmp(url)
+                || ProtocolType.isNaga(url)
+                || ProtocolType.isTVBus(url)
+                || ProtocolType.isForceP2P(url)) {
             /**
              * 可以直接使用
              */
@@ -268,12 +268,12 @@ public final class FireTVClient extends BaseClient {
                 }
                 else {
                     Log.w(TAG, plugin.getName() + " process " + url + " fail");
-                    mListener.onError("decode source fail");
+                    mListener.onError("decode " + source + " fail");
                 }
             }
             else {
                 Log.w(TAG, "no suitable plugin for " + url);
-                mListener.onError("decode source fail");
+                mListener.onError("decode " + source + " fail");
             }
         }
     }
