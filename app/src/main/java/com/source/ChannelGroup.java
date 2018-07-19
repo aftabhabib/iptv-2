@@ -18,4 +18,12 @@ public class ChannelGroup {
     public List<Channel> getChannelList() {
         return mChannelList;
     }
+
+    public Channel getChannel(int index) {
+        return mChannelList.get(index);
+    }
+
+    public int getChannelCount() {
+        return mChannelList.size();
+    }
 }
