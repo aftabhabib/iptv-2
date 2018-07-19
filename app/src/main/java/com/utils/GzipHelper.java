@@ -5,10 +5,10 @@ import android.util.Log;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.zip.GZIPInputStream;
 
 public class GzipHelper {
@@ -18,12 +18,16 @@ public class GzipHelper {
         boolean ret = false;
 
         FileInputStream input = null;
+        FileOutputStream output = null;
         try {
             input = new FileInputStream(srcFile);
-            ret = extract(input, dstFile);
+            output = new FileOutputStream(dstFile);
+
+            extract(input, output);
+            ret = true;
         }
-        catch (FileNotFoundException e) {
-            Log.e(TAG, "extract gzip fail, " + e.getMessage());
+        catch (IOException e) {
+            Log.e(TAG, "extract fail, " + e.getMessage());
         }
         finally {
             if (input != null) {
@@ -34,37 +38,36 @@ public class GzipHelper {
                     //ignore
                 }
             }
+
+            if (output != null) {
+                try {
+                    output.close();
+                }
+                catch (IOException e) {
+                    //ignore
+                }
+            }
         }
 
         return ret;
     }
 
-    public static boolean extract(byte[] data, File dstFile) {
-        return extract(new ByteArrayInputStream(data), dstFile);
+    public static boolean extract(byte[] data, File file) {
+        return extract(new ByteArrayInputStream(data), file);
     }
 
-    public static boolean extract(InputStream srcInput, File dstFile) {
+    public static boolean extract(InputStream input, File file) {
         boolean ret = false;
 
         FileOutputStream output = null;
         try {
-            GZIPInputStream input = new GZIPInputStream(srcInput);
-            output = new FileOutputStream(dstFile);
+            output = new FileOutputStream(file);
 
-            byte[] buf = new byte[1024];
-            while (true) {
-                int bytesRead = input.read(buf);
-                if (bytesRead == -1) {
-                    break;
-                }
-
-                output.write(buf, 0, bytesRead);
-            }
-
+            extract(input, output);
             ret = true;
         }
         catch (IOException e) {
-            Log.e(TAG, "extract gzip fail, " + e.getMessage());
+            Log.e(TAG, "extract fail, " + e.getMessage());
         }
         finally {
             if (output != null) {
@@ -78,5 +81,31 @@ public class GzipHelper {
         }
 
         return ret;
+    }
+
+    public static boolean extract(byte[] data, OutputStream output) {
+        try {
+            extract(new ByteArrayInputStream(data), output);
+        }
+        catch (IOException e) {
+            Log.e(TAG, "extract fail, " + e.getMessage());
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void extract(InputStream input, OutputStream output) throws IOException {
+        GZIPInputStream gzInput = new GZIPInputStream(input);
+
+        byte[] buf = new byte[1024];
+        while (true) {
+            int bytesRead = gzInput.read(buf);
+            if (bytesRead == -1) {
+                break;
+            }
+
+            output.write(buf, 0, bytesRead);
+        }
     }
 }
