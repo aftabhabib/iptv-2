@@ -5,7 +5,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import java.util.List;
+import com.iptv.demo.channel.ChannelTable;
 
 public abstract class BaseClient extends Handler {
     private static final String TAG = "BaseClient";
@@ -20,7 +20,7 @@ public abstract class BaseClient extends Handler {
     }
 
     public interface Listener {
-        void onSetup(List<Channel> channelList, List<GroupInfo> groupList);
+        void onSetup(ChannelTable table);
 
         void onDecodeSource(String source);
 

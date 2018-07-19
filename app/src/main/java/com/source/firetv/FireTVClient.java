@@ -5,8 +5,9 @@ import android.content.SharedPreferences;
 import android.os.Looper;
 import android.util.Log;
 
-import com.source.Channel;
-import com.source.GroupInfo;
+import com.iptv.demo.channel.Channel;
+import com.iptv.demo.channel.ChannelGroup;
+import com.iptv.demo.channel.ChannelTable;
 import com.source.ProtocolType;
 import com.source.firetv.plugin.ChengboPlugin;
 import com.source.BaseClient;
@@ -43,7 +44,7 @@ public final class FireTVClient extends BaseClient {
 
     private FireTVConfig mConfig;
     private List<Channel> mChannelList;
-    private List<GroupInfo> mGroupList;
+    private List<ChannelGroup.GroupInfo> mGroupInfoList;
 
     private List<Plugin> mPluginList;
 
@@ -72,7 +73,7 @@ public final class FireTVClient extends BaseClient {
             return;
         }
 
-        mListener.onSetup(mChannelList, mGroupList);
+        mListener.onSetup(new ChannelTable(mChannelList, mGroupInfoList));
     }
 
     private boolean prepareConfig() {
@@ -134,7 +135,7 @@ public final class FireTVClient extends BaseClient {
             return false;
         }
 
-        mGroupList = createGroupInfo();
+        prepareGroupInfoList();
 
         return true;
     }
@@ -149,7 +150,7 @@ public final class FireTVClient extends BaseClient {
         }
     }
 
-    private static List<GroupInfo> createGroupInfo() {
+    private void prepareGroupInfoList() {
         final String[] GROUP_NAME = {
                 "央视频道",
                 "卫视频道",
@@ -200,14 +201,12 @@ public final class FireTVClient extends BaseClient {
                 "临时频道"
         };
 
-        List<GroupInfo> groupList = new ArrayList<GroupInfo>(GROUP_NAME.length);
+        mGroupInfoList = new ArrayList<ChannelGroup.GroupInfo>(GROUP_NAME.length);
 
         for (int i = 0; i < GROUP_NAME.length; i++) {
-            GroupInfo group = new GroupInfo(String.valueOf(i + 1), GROUP_NAME[i]);
-            groupList.add(group);
+            ChannelGroup.GroupInfo groupInfo = new ChannelGroup.GroupInfo(String.valueOf(i + 1), GROUP_NAME[i]);
+            mGroupInfoList.add(groupInfo);
         }
-
-        return groupList;
     }
 
     @Override

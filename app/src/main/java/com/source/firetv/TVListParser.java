@@ -2,7 +2,7 @@ package com.source.firetv;
 
 import android.util.Xml;
 
-import com.source.Channel;
+import com.iptv.demo.channel.Channel;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -15,6 +15,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 final class TVListParser {
+    private static final String XML_TAG_TVLISTS = "tvlists";
+    private static final String XML_TAG_TVLIST = "tvlist";
+    private static final String XML_TAG_TVNAME = "tvname";
+    private static final String XML_TAG_TVADDR = "tvaddr";
+
+    private static final String XML_ATTR_ID = "id";
+
     public static List<Channel> parse(File file) {
         List<Channel> channels;
 
@@ -54,7 +61,7 @@ final class TVListParser {
     }
 
     private static List<Channel> readChannels(XmlPullParser parser) throws XmlPullParserException, IOException {
-        parser.require(XmlPullParser.START_TAG, null, "tvlists");
+        parser.require(XmlPullParser.START_TAG, null, XML_TAG_TVLISTS);
 
         List<Channel> channels = new LinkedList<Channel>();
 
@@ -64,7 +71,7 @@ final class TVListParser {
             }
 
             String tagName = parser.getName();
-            if (tagName.equals("tvlist")) {
+            if (tagName.equals(XML_TAG_TVLIST)) {
                 Channel channel = readChannel(parser);
                 channels.add(channel);
             }
@@ -77,11 +84,11 @@ final class TVListParser {
     }
 
     private static Channel readChannel(XmlPullParser parser) throws XmlPullParserException, IOException {
-        parser.require(XmlPullParser.START_TAG, null, "tvlist");
+        parser.require(XmlPullParser.START_TAG, null, XML_TAG_TVLIST);
 
         Channel channel = new Channel();
 
-        String value = parser.getAttributeValue(null, "id");
+        String value = parser.getAttributeValue(null, XML_ATTR_ID);
         if (value.contains("|")) {
             String[] results = value.split("|");
 
@@ -99,12 +106,12 @@ final class TVListParser {
             }
 
             String tagName = parser.getName();
-            if (tagName.equals("tvname")) {
+            if (tagName.equals(XML_TAG_TVNAME)) {
                 String text = readName(parser);
 
                 channel.setName(text);
             }
-            else if (tagName.equals("tvaddr")) {
+            else if (tagName.equals(XML_TAG_TVADDR)) {
                 String text = readSource(parser);
 
                 if (text.contains("|")) {
@@ -127,7 +134,7 @@ final class TVListParser {
     }
 
     private static String readName(XmlPullParser parser) throws IOException, XmlPullParserException {
-        parser.require(XmlPullParser.START_TAG, null, "tvname");
+        parser.require(XmlPullParser.START_TAG, null, XML_TAG_TVNAME);
 
         String name = "";
         if (parser.next() == XmlPullParser.TEXT) {
@@ -135,13 +142,13 @@ final class TVListParser {
             parser.nextTag();
         }
 
-        parser.require(XmlPullParser.END_TAG, null, "tvname");
+        parser.require(XmlPullParser.END_TAG, null, XML_TAG_TVNAME);
 
         return name;
     }
 
     private static String readSource(XmlPullParser parser) throws IOException, XmlPullParserException {
-        parser.require(XmlPullParser.START_TAG, null, "tvaddr");
+        parser.require(XmlPullParser.START_TAG, null, XML_TAG_TVADDR);
 
         String source = "";
         if (parser.next() == XmlPullParser.TEXT) {
@@ -149,7 +156,7 @@ final class TVListParser {
             parser.nextTag();
         }
 
-        parser.require(XmlPullParser.END_TAG, null, "tvaddr");
+        parser.require(XmlPullParser.END_TAG, null, XML_TAG_TVADDR);
 
         return source;
     }
