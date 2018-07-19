@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.iptv.demo.R;
-import com.source.Channel;
+import com.iptv.demo.channel.Channel;
 
 import java.util.List;
 
@@ -58,8 +58,9 @@ public final class ChannelListAdapter extends BaseAdapter {
         }
 
         Channel channel = mChannelList.get(index);
+
         /**
-         * 台标暂不显示
+         * FIXME：获取频道对应的台标
          */
         viewHolder.mLogoImageView.setVisibility(View.GONE);
         viewHolder.mChannelNameView.setText(channel.getName());
