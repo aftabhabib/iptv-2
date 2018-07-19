@@ -2,54 +2,54 @@ package com.source.supertv;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
-import com.source.Channel;
-import com.source.GroupInfo;
+import com.iptv.demo.channel.Channel;
+import com.iptv.demo.channel.ChannelGroup;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class DatabaseReader {
+    private static final String TAG = "DatabaseReader";
+
     private SQLiteDatabase mSqlite;
 
     private DatabaseReader(SQLiteDatabase sqlite) {
         mSqlite = sqlite;
     }
 
-    public List<GroupInfo> readGroups() {
-        List<GroupInfo> groupList = new ArrayList<GroupInfo>(50);
+    public List<ChannelGroup.GroupInfo> getGroupInfoList() {
+        List<ChannelGroup.GroupInfo> groupInfoList = new LinkedList<ChannelGroup.GroupInfo>();
 
-        /**
-         * 特征分组
-         */
         Cursor cursor = mSqlite.rawQuery("select * from tvitem order by num asc", null);
-        if (cursor == null) {
-            throw new IllegalStateException("query tvitem table fail");
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                String name = cursor.getString(cursor.getColumnIndex("name"));
+                int id = cursor.getInt(cursor.getColumnIndex("id"));
+
+                ChannelGroup.GroupInfo groupInfo = new ChannelGroup.GroupInfo(String.valueOf(id), name);
+                groupInfoList.add(groupInfo);
+            }
+
+            cursor.close();
+
+            /**
+             * 手动添加地区分组
+             */
+            addAreaGroupInfo(groupInfoList);
+        }
+        else {
+            Log.e(TAG, "query tvitem table fail");
         }
 
-        while (cursor.moveToNext()) {
-            String name = cursor.getString(cursor.getColumnIndex("name"));
-            int id = cursor.getInt(cursor.getColumnIndex("id"));
-
-            GroupInfo group = new GroupInfo(String.valueOf(id), name);
-            groupList.add(group);
-        }
-
-        cursor.close();
-
-        /**
-         * 地区分组
-         */
-        groupList.addAll(getAreaGroups());
-
-        return groupList;
+        return groupInfoList;
     }
 
-    private static List<GroupInfo> getAreaGroups() {
+    private void addAreaGroupInfo(List<ChannelGroup.GroupInfo> groupInfoList) {
         final String[] AREA_NAME = {
                 "北京",
                 "天津",
@@ -84,61 +84,64 @@ final class DatabaseReader {
                 "新疆"
         };
 
-        List<GroupInfo> groupList = new ArrayList<GroupInfo>(AREA_NAME.length);
-
         for (int i = 0; i < AREA_NAME.length; i++) {
-            GroupInfo group = new GroupInfo(AREA_NAME[i], AREA_NAME[i]);
-            groupList.add(group);
+            ChannelGroup.GroupInfo groupInfo = new ChannelGroup.GroupInfo(AREA_NAME[i], AREA_NAME[i]);
+            groupInfoList.add(groupInfo);
         }
-
-        return groupList;
     }
 
-    public List<Channel> readChannels() {
+    public List<Channel> getChannelList() {
         List<Channel> channelList = new LinkedList<Channel>();
 
         Cursor cursor = mSqlite.rawQuery("select * from tvdata order by num asc", null);
-        if (cursor == null) {
-            throw new IllegalStateException("query tvdata table fail");
-        }
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                Channel channel = new Channel();
 
-        while (cursor.moveToNext()) {
-            Channel channel = new Channel();
+                String title = cursor.getString(cursor.getColumnIndex("title"));
+                channel.setName(title);
 
-            String title = cursor.getString(cursor.getColumnIndex("title"));
-            channel.setName(title);
+                String itemId = cursor.getString(cursor.getColumnIndex("itemid"));
+                if (!itemId.isEmpty()) {
+                    /**
+                     * 对应tvitem表中的id
+                     */
+                    Matcher matcher = Pattern.compile("\\d+").matcher(itemId);
 
-            String itemId = cursor.getString(cursor.getColumnIndex("itemid"));
-            if (!itemId.isEmpty()) {
-                Matcher matcher = Pattern.compile("\\d+").matcher(itemId);
-
-                while (matcher.find()) {
-                    String id = matcher.group();
-                    channel.addGroupId(id);
+                    while (matcher.find()) {
+                        String id = matcher.group();
+                        channel.addGroupId(id);
+                    }
                 }
-            }
 
-            String area = cursor.getString(cursor.getColumnIndex("area"));
-            if (!area.isEmpty()) {
-                channel.addGroupId(area);
-            }
-
-            String url = cursor.getString(cursor.getColumnIndex("url"));
-            if (url.contains("#")) {
-                String[] results = url.split("#");
-
-                for (int i = 0; i < results.length; i++) {
-                    channel.addSource(results[i]);
+                String area = cursor.getString(cursor.getColumnIndex("area"));
+                if (!area.isEmpty()) {
+                    /**
+                     * 对应地区分组
+                     */
+                    channel.addGroupId(area);
                 }
-            }
-            else {
-                channel.addSource(url);
+
+                String url = cursor.getString(cursor.getColumnIndex("url"));
+                if (url.contains("#")) {
+                    String[] results = url.split("#");
+
+                    for (int i = 0; i < results.length; i++) {
+                        channel.addSource(results[i]);
+                    }
+                }
+                else {
+                    channel.addSource(url);
+                }
+
+                channelList.add(channel);
             }
 
-            channelList.add(channel);
+            cursor.close();
         }
-
-        cursor.close();
+        else {
+            Log.e(TAG, "query tvdata table fail");
+        }
 
         return channelList;
     }
@@ -155,6 +158,25 @@ final class DatabaseReader {
             return null;
         }
 
+        /**
+         * 更新数据库
+         */
+        update(sqlite);
+
         return new DatabaseReader(sqlite);
+    }
+
+    private static void update(SQLiteDatabase sqlite) {
+        /**
+         * 删除，港澳台频道不再有效
+         */
+        sqlite.execSQL("DELETE FROM tvitem WHERE cid=2048");
+        sqlite.execSQL("DELETE FROM tvdata WHERE cid&2048>=2048");
+
+        /**
+         * 删除，电影抢先看频道
+         */
+        sqlite.execSQL("DELETE FROM tvitem WHERE cid=4096");
+        sqlite.execSQL("DELETE FROM tvdata WHERE cid&4096>=4096");
     }
 }
