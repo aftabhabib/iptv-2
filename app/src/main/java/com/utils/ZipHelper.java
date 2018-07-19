@@ -15,7 +15,7 @@ public class ZipHelper {
             ZipFile zipFile = new ZipFile(srcFile);
 
             if (!zipFile.isValidZipFile()) {
-                Log.e(TAG, "invalid zip file");
+                Log.e(TAG, srcFile.getName() + " is not zip format");
                 return false;
             }
 
@@ -23,7 +23,7 @@ public class ZipHelper {
 
             if (zipFile.isEncrypted()) {
                 if (password == null || password.isEmpty()) {
-                    Log.e(TAG, "need password");
+                    Log.e(TAG, srcFile.getName() + "is encrypted, need password");
                     return false;
                 }
 
@@ -33,7 +33,7 @@ public class ZipHelper {
             zipFile.extractAll(dstDir);
         }
         catch (ZipException e) {
-            Log.e(TAG, "extract zip fail, " + e.getMessage());
+            Log.e(TAG, "extract fail, " + e.getMessage());
             return false;
         }
 

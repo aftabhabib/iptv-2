@@ -34,7 +34,7 @@ public class HttpHelper {
             }
         }
         catch (IOException e) {
-            Log.e(TAG, "HTTP GET fail, " + e.getMessage());
+            Log.e(TAG, "GET fail, " + e.getMessage());
 
             if (response != null) {
                 response.close();
