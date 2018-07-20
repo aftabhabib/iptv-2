@@ -4,8 +4,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
-import com.iptv.demo.channel.Channel;
-import com.iptv.demo.channel.ChannelGroup;
+import com.iptv.channel.Channel;
+import com.iptv.channel.ChannelGroup;
 
 import java.io.File;
 import java.util.LinkedList;

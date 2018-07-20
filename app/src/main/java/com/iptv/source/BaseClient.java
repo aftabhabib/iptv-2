@@ -5,7 +5,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import com.iptv.demo.channel.ChannelTable;
+import com.iptv.channel.ChannelTable;
 
 public abstract class BaseClient extends Handler {
     private static final String TAG = "BaseClient";

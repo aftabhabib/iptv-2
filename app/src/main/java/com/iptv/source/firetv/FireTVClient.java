@@ -5,9 +5,9 @@ import android.content.SharedPreferences;
 import android.os.Looper;
 import android.util.Log;
 
-import com.iptv.demo.channel.Channel;
-import com.iptv.demo.channel.ChannelGroup;
-import com.iptv.demo.channel.ChannelTable;
+import com.iptv.channel.Channel;
+import com.iptv.channel.ChannelGroup;
+import com.iptv.channel.ChannelTable;
 import com.iptv.source.ProtocolType;
 import com.iptv.source.firetv.plugin.ChengboPlugin;
 import com.iptv.source.BaseClient;

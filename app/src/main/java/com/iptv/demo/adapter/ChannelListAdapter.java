@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.iptv.demo.R;
-import com.iptv.demo.channel.Channel;
+import com.iptv.channel.Channel;
 
 import java.util.List;
 

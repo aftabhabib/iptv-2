@@ -2,8 +2,8 @@ package com.iptv.source.firetv;
 
 import android.util.Xml;
 
-import com.iptv.demo.channel.Channel;
-import com.iptv.demo.channel.ChannelGroup;
+import com.iptv.channel.Channel;
+import com.iptv.channel.ChannelGroup;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;

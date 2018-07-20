@@ -2,8 +2,8 @@ package com.iptv.source.supertv;
 
 import android.util.Log;
 
-import com.iptv.demo.channel.Channel;
-import com.iptv.demo.channel.ChannelGroup;
+import com.iptv.channel.Channel;
+import com.iptv.channel.ChannelGroup;
 
 import java.io.BufferedReader;
 import java.io.File;
