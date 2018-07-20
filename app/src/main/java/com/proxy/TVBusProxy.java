@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.source.ProtocolType;
+import com.iptv.source.ProtocolType;
 import com.tvbus.engine.TVCore;
 import com.tvbus.engine.TVListener;
 

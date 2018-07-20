@@ -6,7 +6,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.flashgetech.Downloader;
-import com.source.ProtocolType;
+import com.iptv.source.ProtocolType;
 
 public class FlashgetXProxy extends Service {
     private static final String TAG = "FlashgetXProxy";

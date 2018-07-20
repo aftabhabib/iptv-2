@@ -6,7 +6,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.forcetech.android.ForceTV;
-import com.source.ProtocolType;
+import com.iptv.source.ProtocolType;
 
 public class ForceP2PProxy extends Service {
     private static final String TAG = "ForceP2PProxy";

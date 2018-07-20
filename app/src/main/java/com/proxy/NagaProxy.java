@@ -7,7 +7,7 @@ import android.util.Log;
 
 import com.nagasoft.player.VJListener;
 import com.nagasoft.player.VJPlayer;
-import com.source.ProtocolType;
+import com.iptv.source.ProtocolType;
 
 public class NagaProxy extends Service implements VJListener {
     private static final String TAG = "NagaProxy";
