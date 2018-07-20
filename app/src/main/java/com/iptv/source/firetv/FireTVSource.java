@@ -2,25 +2,22 @@ package com.iptv.source.firetv;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Looper;
 import android.util.Log;
 
 import com.iptv.channel.Channel;
 import com.iptv.channel.ChannelGroup;
 import com.iptv.channel.ChannelTable;
-import com.iptv.plugin.PluginManager;
+import com.iptv.plugin.Plugin;
 import com.iptv.plugin.firetv.ChengboPlugin;
-import com.iptv.source.AbstractSource;
+import com.iptv.source.Source;
 import com.utils.ZipHelper;
 import com.utils.HttpHelper;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 星火New直播
- */
-public final class FireTVSource extends AbstractSource {
+public final class FireTVSource implements Source {
     private static final String TAG = "FireTVSource";
 
     private static final String SERVER_URL = "http://myzhibo8.oss-cn-shanghai.aliyuncs.com/soft";
@@ -36,12 +33,10 @@ public final class FireTVSource extends AbstractSource {
     private SharedPreferences mSettings;
 
     private FireTVConfig mConfig;
-    private List<Channel> mChannelList;
-    private List<ChannelGroup.GroupInfo> mGroupInfoList;
+    private ChannelTable mChannelTable;
+    private List<Plugin> mPluginList;
 
-    public FireTVSource(Context context, Looper looper) {
-        super(looper);
-
+    public FireTVSource(Context context) {
         mDataDir = new File(context.getFilesDir(), "firetv");
         if (!mDataDir.exists()) {
             mDataDir.mkdir();
@@ -51,20 +46,33 @@ public final class FireTVSource extends AbstractSource {
     }
 
     @Override
-    protected void onSetup(OnSetupListener listener) {
+    public String getName() {
+        return "星火New直播";
+    }
+
+    @Override
+    public boolean setup() {
         if (!prepareConfig()) {
-            listener.onError("setup fail");
-            return;
+            return false;
+        }
+
+        if (!prepareChannelTable()) {
+            return false;
         }
 
         preparePlugin();
 
-        if (!prepareChannelTable()) {
-            listener.onError("setup fail");
-            return;
-        }
+        return true;
+    }
 
-        listener.onSetup(new ChannelTable(mChannelList, mGroupInfoList));
+    @Override
+    public ChannelTable getChannelTable() {
+        return mChannelTable;
+    }
+
+    @Override
+    public List<Plugin> getPluginList() {
+        return mPluginList;
     }
 
     private boolean prepareConfig() {
@@ -77,14 +85,6 @@ public final class FireTVSource extends AbstractSource {
         mConfig = FireTVConfig.parse(new String(content));
 
         return mConfig != null;
-    }
-
-    private void preparePlugin() {
-        PluginManager pluginMgr = PluginManager.getInstance();
-        /**
-         * register plugins
-         */
-        pluginMgr.register(new ChengboPlugin(mConfig.getYzkey()));
     }
 
     private boolean prepareChannelTable() {
@@ -144,9 +144,15 @@ public final class FireTVSource extends AbstractSource {
             return false;
         }
 
-        mChannelList = TVListParser.parse(xmlFile);
-        mGroupInfoList = TVListParser.getGroupInfoList();
+        List<Channel> channelList = TVListParser.parse(xmlFile);
+        List<ChannelGroup.GroupInfo> groupInfoList = TVListParser.getGroupInfoList();
+        mChannelTable = ChannelTable.create(channelList, groupInfoList);
 
         return true;
+    }
+
+    private void preparePlugin() {
+        mPluginList = new ArrayList<Plugin>(15);
+        mPluginList.add(new ChengboPlugin(mConfig.getYzkey()));
     }
 }

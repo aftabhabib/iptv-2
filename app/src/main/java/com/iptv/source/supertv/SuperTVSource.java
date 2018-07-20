@@ -2,13 +2,13 @@ package com.iptv.source.supertv;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Looper;
 import android.util.Log;
 
 import com.iptv.channel.ChannelGroup;
 import com.iptv.channel.ChannelTable;
-import com.iptv.source.AbstractSource;
 import com.iptv.channel.Channel;
+import com.iptv.plugin.Plugin;
+import com.iptv.source.Source;
 import com.utils.GzipHelper;
 import com.utils.HttpHelper;
 
@@ -18,14 +18,12 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 超级直播
- */
-public final class SuperTVSource extends AbstractSource {
+public final class SuperTVSource implements Source {
     private static final String TAG = "SuperTVSource";
 
     private static final String CONFIG_URL = "http://119.29.74.92:8123/config.json";
@@ -41,12 +39,10 @@ public final class SuperTVSource extends AbstractSource {
     private SharedPreferences mSettings;
 
     private SuperTVConfig mConfig;
-    private List<Channel> mChannelList;
-    private List<ChannelGroup.GroupInfo> mGroupInfoList;
+    private ChannelTable mChannelTable;
+    private List<Plugin> mPluginList;
 
-    public SuperTVSource(Context context, Looper looper) {
-        super(looper);
-
+    public SuperTVSource(Context context) {
         mDataDir = new File(context.getFilesDir(), "supertv");
         if (!mDataDir.exists()) {
             mDataDir.mkdir();
@@ -56,20 +52,33 @@ public final class SuperTVSource extends AbstractSource {
     }
 
     @Override
-    protected void onSetup(OnSetupListener listener) {
+    public String getName() {
+        return "超级直播";
+    }
+
+    @Override
+    public boolean setup() {
         if (!prepareConfig()) {
-            listener.onError("setup fail");
-            return;
+            return false;
         }
 
         if (!prepareChannelTable()) {
-            listener.onError("setup fail");
-            return;
+            return false;
         }
 
-        addIPTVChannels();
+        preparePlugin();
 
-        listener.onSetup(new ChannelTable(mChannelList, mGroupInfoList));
+        return true;
+    }
+
+    @Override
+    public ChannelTable getChannelTable() {
+        return mChannelTable;
+    }
+
+    @Override
+    public List<Plugin> getPluginList() {
+        return mPluginList;
     }
 
     private boolean prepareConfig() {
@@ -112,9 +121,6 @@ public final class SuperTVSource extends AbstractSource {
             editor.commit();
         }
 
-        /**
-         * 读取频道数据
-         */
         return readDatabase(dbFile);
     }
 
@@ -153,14 +159,18 @@ public final class SuperTVSource extends AbstractSource {
             return false;
         }
 
-        mChannelList = reader.getChannelList();
-        mGroupInfoList = reader.getGroupInfoList();
+        List<Channel> channelList = reader.getChannelList();
+        List<ChannelGroup.GroupInfo> groupInfoList = reader.getGroupInfoList();
+        mChannelTable = ChannelTable.create(channelList, groupInfoList);
+        mChannelTable.addGroup(getIPTVGroup());
 
         reader.release();
         return true;
     }
 
-    private void addIPTVChannels() {
+    private ChannelGroup getIPTVGroup() {
+        ChannelGroup group = new ChannelGroup(IPTVListParser.getGroupInfo());
+
         File txtFile = new File(mDataDir, IPTV_TXT_NAME);
         if (!txtFile.exists()) {
             /**
@@ -168,15 +178,19 @@ public final class SuperTVSource extends AbstractSource {
              */
             if (!downloadIPTVList(txtFile)) {
                 Log.e(TAG, "download " + txtFile.getName() + " fail");
-                return;
+            }
+            else {
+                group.addChannels(IPTVListParser.parse(txtFile));
             }
         }
-
-        List<Channel> iptvChannelList = IPTVListParser.parse(txtFile);
-        if (!iptvChannelList.isEmpty()) {
-            mChannelList.addAll(iptvChannelList);
-            mGroupInfoList.add(IPTVListParser.getGroupInfo());
+        else {
+            /**
+             * IPTV列表文件没有版本或时间信息
+             */
+            group.addChannels(IPTVListParser.parse(txtFile));
         }
+
+        return group;
     }
 
     private static boolean downloadIPTVList(File txtFile) {
@@ -237,5 +251,9 @@ public final class SuperTVSource extends AbstractSource {
         }
 
         return area;
+    }
+
+    private void preparePlugin() {
+        mPluginList = new ArrayList<Plugin>(15);
     }
 }

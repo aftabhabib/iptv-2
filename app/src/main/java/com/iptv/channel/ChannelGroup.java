@@ -23,6 +23,10 @@ public class ChannelGroup {
         mChannelList.add(channel);
     }
 
+    public void addChannels(List<Channel> channels) {
+        mChannelList.addAll(channels);
+    }
+
     public String getName() {
         return mGroupInfo.getName();
     }

@@ -13,8 +13,28 @@ public class ChannelTable {
 
     private List<ChannelGroup> mGroupList;
 
-    public ChannelTable(List<Channel> channelList, List<ChannelGroup.GroupInfo> groupInfoList) {
+    public ChannelTable() {
         mGroupList = new LinkedList<ChannelGroup>();
+    }
+
+    public List<ChannelGroup> getGroupList() {
+        return mGroupList;
+    }
+
+    public int getGroupCount() {
+        return mGroupList.size();
+    }
+
+    public ChannelGroup getGroup(int index) {
+        return mGroupList.get(index);
+    }
+
+    public void addGroup(ChannelGroup group) {
+        mGroupList.add(group);
+    }
+
+    public static ChannelTable create(List<Channel> channelList, List<ChannelGroup.GroupInfo> groupInfoList) {
+        ChannelTable channelTable = new ChannelTable();
 
         for (int i = 0; i < groupInfoList.size(); i++) {
             ChannelGroup group = new ChannelGroup(groupInfoList.get(i));
@@ -37,19 +57,9 @@ public class ChannelTable {
                 }
             }
 
-            mGroupList.add(group);
+            channelTable.addGroup(group);
         }
-    }
 
-    public List<ChannelGroup> getGroupList() {
-        return mGroupList;
-    }
-
-    public int getGroupCount() {
-        return mGroupList.size();
-    }
-
-    public ChannelGroup getGroup(int index) {
-        return mGroupList.get(index);
+        return channelTable;
     }
 }
