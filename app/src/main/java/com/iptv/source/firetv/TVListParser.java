@@ -1,4 +1,4 @@
-package com.source.firetv;
+package com.iptv.source.firetv;
 
 import android.util.Xml;
 

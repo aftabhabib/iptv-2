@@ -1,30 +1,31 @@
-package com.source.firetv.plugin;
+package com.iptv.source.firetv.plugin;
 
 import android.util.Log;
 
-import com.source.firetv.Plugin;
+import com.iptv.source.firetv.Plugin;
 import com.utils.HttpHelper;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Map;
 
-public class FjtvPlugin implements Plugin {
-    private static final String TAG = "FjtvPlugin";
+public class SzyxPlugin implements Plugin {
+    private static final String TAG = "SzyxPlugin";
 
-    private static final String SCHEME = "fjtv://";
+    private static final String SCHEME = "szyx://";
 
-    private static final String FJTV_URL =
-            "http://mobile.fjtv.net/haibo/channel_detail.php?appid=9&appkey=OU4VuJgmGkqFzelCaueFLHll1sZJpOG4&client_id_android=b17049e927554e29a2860236864e6cb6&device_token=347e2ef9eb2eabaeba84cf3d31b18381&_member_id=&version=2.0.5&app_version=2.0.5&package_name=com.hoge.android.app.fujian&system_version=5.1&phone_models=OPPOR9m&channel_id=%s";
+    private static final String SZYX_URL =
+            "http://122.193.8.99:8090/cms/thirdPartyPortalInterface/play.service?clientId=26941&channelId=%s&busiType=live&definition=sd&clientip=192.168.0.104&resFormat=json&terminalType=mobile&assetId=%s";
 
-    public FjtvPlugin() {
-        //ignore
+    public SzyxPlugin() {
+        //
     }
 
     @Override
     public String getName() {
-        return "福建TV";
+        return "";
     }
 
     @Override
@@ -45,14 +46,14 @@ public class FjtvPlugin implements Plugin {
             return getPlayUrl(channelId, property);
         }
         else {
-            throw new IllegalArgumentException("url is not fjtv source");
+            throw new IllegalArgumentException("url is not szyx item_source");
         }
     }
 
     private String getPlayUrl(String channelId, Map<String, String> property) {
         String url = "";
 
-        byte[] content = HttpHelper.opGet(String.format(FJTV_URL, channelId), property);
+        byte[] content = HttpHelper.opGet(String.format(SZYX_URL, channelId, channelId), property);
         if (content == null) {
             Log.e(TAG, "get channel's json fail");
         }
@@ -60,9 +61,13 @@ public class FjtvPlugin implements Plugin {
             try {
                 JSONObject rootObj = new JSONObject(new String(content));
 
-                /**
-                 * TODO: 验证失败
-                 */
+                JSONObject responseObj = rootObj.getJSONObject("playResponse");
+                JSONObject contentsObj = responseObj.getJSONObject("contentList");
+
+                JSONArray contentArray = contentsObj.getJSONArray("content");
+                JSONObject contentObj = contentArray.getJSONObject(0);
+
+                url = contentObj.getString("url").trim();
             }
             catch (JSONException e) {
                 Log.e(TAG, "parse channel's json fail, " + e.getMessage());

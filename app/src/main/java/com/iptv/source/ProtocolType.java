@@ -1,4 +1,4 @@
-package com.source;
+package com.iptv.source;
 
 public class ProtocolType {
     private static final String TYPE_HTTP = "http://";

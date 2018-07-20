@@ -1,4 +1,4 @@
-package com.source.supertv;
+package com.iptv.source.supertv;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;

@@ -1,8 +1,8 @@
-package com.source.firetv.plugin;
+package com.iptv.source.firetv.plugin;
 
 import android.util.Log;
 
-import com.source.firetv.Plugin;
+import com.iptv.source.firetv.Plugin;
 import com.utils.HttpHelper;
 
 import org.json.JSONArray;
@@ -49,7 +49,7 @@ public class Unicom3gtvPlugin implements Plugin {
             return getPlayUrl(channelId, Integer.parseInt(resIndex), property);
         }
         else {
-            throw new IllegalArgumentException("url is not unicom 3gtv source");
+            throw new IllegalArgumentException("url is not unicom 3gtv item_source");
         }
     }
 

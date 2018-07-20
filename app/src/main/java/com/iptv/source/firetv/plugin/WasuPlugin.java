@@ -1,9 +1,9 @@
-package com.source.firetv.plugin;
+package com.iptv.source.firetv.plugin;
 
 import android.util.Log;
 import android.util.Xml;
 
-import com.source.firetv.Plugin;
+import com.iptv.source.firetv.Plugin;
 import com.utils.HttpHelper;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -47,7 +47,7 @@ public class WasuPlugin implements Plugin {
             return getPlayUrl(contentCode, property);
         }
         else {
-            throw new IllegalArgumentException("url is not wasu source");
+            throw new IllegalArgumentException("url is not wasu item_source");
         }
     }
 

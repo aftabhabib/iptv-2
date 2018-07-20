@@ -1,8 +1,8 @@
-package com.source.firetv.plugin;
+package com.iptv.source.firetv.plugin;
 
 import android.util.Log;
 
-import com.source.firetv.Plugin;
+import com.iptv.source.firetv.Plugin;
 import com.utils.HttpHelper;
 
 import org.json.JSONArray;
@@ -45,7 +45,7 @@ public class ZhcsAppPlugin implements Plugin {
             return getPlayUrl(ad0101, property);
         }
         else {
-            throw new IllegalArgumentException("url is not zhcs app source");
+            throw new IllegalArgumentException("url is not zhcs app item_source");
         }
     }
 

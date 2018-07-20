@@ -1,4 +1,4 @@
-package com.source.supertv;
+package com.iptv.source.supertv;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -7,9 +7,9 @@ import android.util.Log;
 
 import com.iptv.demo.channel.ChannelGroup;
 import com.iptv.demo.channel.ChannelTable;
-import com.source.BaseClient;
+import com.iptv.source.BaseClient;
 import com.iptv.demo.channel.Channel;
-import com.source.ProtocolType;
+import com.iptv.source.ProtocolType;
 import com.utils.GzipHelper;
 import com.utils.HttpHelper;
 

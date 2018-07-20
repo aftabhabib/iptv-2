@@ -1,4 +1,4 @@
-package com.source.firetv;
+package com.iptv.source.firetv;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -8,9 +8,9 @@ import android.util.Log;
 import com.iptv.demo.channel.Channel;
 import com.iptv.demo.channel.ChannelGroup;
 import com.iptv.demo.channel.ChannelTable;
-import com.source.ProtocolType;
-import com.source.firetv.plugin.ChengboPlugin;
-import com.source.BaseClient;
+import com.iptv.source.ProtocolType;
+import com.iptv.source.firetv.plugin.ChengboPlugin;
+import com.iptv.source.BaseClient;
 import com.utils.ZipHelper;
 import com.utils.HttpHelper;
 

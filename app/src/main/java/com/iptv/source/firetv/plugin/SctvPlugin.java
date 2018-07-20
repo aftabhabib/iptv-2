@@ -1,31 +1,29 @@
-package com.source.firetv.plugin;
+package com.iptv.source.firetv.plugin;
 
 import android.util.Log;
 
-import com.source.firetv.Plugin;
+import com.iptv.source.firetv.Plugin;
 import com.utils.HttpHelper;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Map;
 
-public class SzyxPlugin implements Plugin {
-    private static final String TAG = "SzyxPlugin";
+public class SctvPlugin implements Plugin {
+    private static final String TAG = "SctvPlugin";
 
-    private static final String SCHEME = "szyx://";
+    private static final String SCHEME = "sctv://";
 
-    private static final String SZYX_URL =
-            "http://122.193.8.99:8090/cms/thirdPartyPortalInterface/play.service?clientId=26941&channelId=%s&busiType=live&definition=sd&clientip=192.168.0.104&resFormat=json&terminalType=mobile&assetId=%s";
+    private static final String SCTV_URL = "http://tvdi.sctv.com:18091/xmsjt/client/getChannelById?channelid=%s";
 
-    public SzyxPlugin() {
-        //
+    public SctvPlugin() {
+        //ignore
     }
 
     @Override
     public String getName() {
-        return "";
+        return "四川TV";
     }
 
     @Override
@@ -46,14 +44,14 @@ public class SzyxPlugin implements Plugin {
             return getPlayUrl(channelId, property);
         }
         else {
-            throw new IllegalArgumentException("url is not szyx source");
+            throw new IllegalArgumentException("url is not sctv item_source");
         }
     }
 
     private String getPlayUrl(String channelId, Map<String, String> property) {
         String url = "";
 
-        byte[] content = HttpHelper.opGet(String.format(SZYX_URL, channelId, channelId), property);
+        byte[] content = HttpHelper.opGet(String.format(SCTV_URL, channelId), property);
         if (content == null) {
             Log.e(TAG, "get channel's json fail");
         }
@@ -61,13 +59,9 @@ public class SzyxPlugin implements Plugin {
             try {
                 JSONObject rootObj = new JSONObject(new String(content));
 
-                JSONObject responseObj = rootObj.getJSONObject("playResponse");
-                JSONObject contentsObj = responseObj.getJSONObject("contentList");
-
-                JSONArray contentArray = contentsObj.getJSONArray("content");
-                JSONObject contentObj = contentArray.getJSONObject(0);
-
-                url = contentObj.getString("url").trim();
+                /**
+                 * TODO: 验证失败
+                 */
             }
             catch (JSONException e) {
                 Log.e(TAG, "parse channel's json fail, " + e.getMessage());
