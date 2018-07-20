@@ -8,7 +8,8 @@ import android.util.Log;
 import com.iptv.channel.Channel;
 import com.iptv.channel.ChannelGroup;
 import com.iptv.channel.ChannelTable;
-import com.iptv.source.firetv.plugin.ChengboPlugin;
+import com.iptv.plugin.PluginManager;
+import com.iptv.plugin.firetv.ChengboPlugin;
 import com.iptv.source.AbstractSource;
 import com.utils.ZipHelper;
 import com.utils.HttpHelper;
@@ -79,7 +80,11 @@ public final class FireTVSource extends AbstractSource {
     }
 
     private void preparePlugin() {
-        new ChengboPlugin(mConfig.getYzkey());
+        PluginManager pluginMgr = PluginManager.getInstance();
+        /**
+         * register plugins
+         */
+        pluginMgr.register(new ChengboPlugin(mConfig.getYzkey()));
     }
 
     private boolean prepareChannelTable() {
