@@ -55,7 +55,7 @@ final class IPTVListParser {
         return channelList;
     }
 
-    public static ChannelGroup.GroupInfo getIPTVGroupInfo() {
+    public static ChannelGroup.GroupInfo getGroupInfo() {
         return new ChannelGroup.GroupInfo(IPTV_GROUP, IPTV_GROUP);
     }
 }

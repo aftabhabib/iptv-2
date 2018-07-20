@@ -85,8 +85,7 @@ final class DatabaseReader {
         };
 
         for (int i = 0; i < AREA_NAME.length; i++) {
-            ChannelGroup.GroupInfo groupInfo = new ChannelGroup.GroupInfo(AREA_NAME[i], AREA_NAME[i]);
-            groupInfoList.add(groupInfo);
+            groupInfoList.add(new ChannelGroup.GroupInfo(AREA_NAME[i], AREA_NAME[i]));
         }
     }
 

@@ -30,7 +30,6 @@ public final class SuperTVClient extends BaseClient {
     private static final String TAG = "SuperTVClient";
 
     private static final String CONFIG_URL = "http://119.29.74.92:8123/config.json";
-    private static final String LE_AREA_URL = "https://g3.le.com/r?format=1";
     private static final String IPTV_URL_FORMULAR = "https://119.29.74.92/iptv_auth?area=%s";
 
     private static final String LIVE_DB_NAME = "live.db";
@@ -78,9 +77,6 @@ public final class SuperTVClient extends BaseClient {
         Map<String, String> property = new HashMap<String, String>();
         property.put("User-Agent", "lgsg/1.0");
 
-        /**
-         * 获取参数
-         */
         byte[] content = HttpHelper.opGet(CONFIG_URL, property);
         if (content == null) {
             Log.e(TAG, "get config.json fail");
@@ -94,7 +90,7 @@ public final class SuperTVClient extends BaseClient {
             //ignore
         }
 
-        return true;
+        return mConfig != null;
     }
 
     private boolean prepareChannelTable() {
@@ -167,7 +163,6 @@ public final class SuperTVClient extends BaseClient {
 
     private void addIPTVChannels() {
         File txtFile = new File(mDataDir, IPTV_TXT_NAME);
-
         if (!txtFile.exists()) {
             /**
              * 不存在，下载
@@ -181,7 +176,7 @@ public final class SuperTVClient extends BaseClient {
         List<Channel> iptvChannelList = IPTVListParser.parse(txtFile);
         if (!iptvChannelList.isEmpty()) {
             mChannelList.addAll(iptvChannelList);
-            mGroupInfoList.add(IPTVListParser.getIPTVGroupInfo());
+            mGroupInfoList.add(IPTVListParser.getGroupInfo());
         }
     }
 
@@ -209,19 +204,16 @@ public final class SuperTVClient extends BaseClient {
         String url = "";
 
         String area = getAreaByUserIp();
-        if (!area.isEmpty()) {
-            /**
-             * 用户所在地区（基于ip判断）
-             */
+        if (area.isEmpty()) {
+            Log.e(TAG, "can not get area by user ip");
+        }
+        else {
             try {
                 url = String.format(IPTV_URL_FORMULAR, URLEncoder.encode(area, "UTF-8"));
             }
             catch (UnsupportedEncodingException e) {
                 //ignore
             }
-        }
-        else {
-            Log.e(TAG, "can not get area by user ip");
         }
 
         return url;
@@ -230,9 +222,9 @@ public final class SuperTVClient extends BaseClient {
     private static String getAreaByUserIp() {
         String area = "";
 
-        byte[] content = HttpHelper.opGet(LE_AREA_URL, null);
+        byte[] content = HttpHelper.opGet("https://g3.le.com/r?format=1", null);
         if (content == null) {
-            Log.e(TAG, "get area json fail");
+            Log.e(TAG, "get le json fail");
         }
         else {
             try {
@@ -241,7 +233,7 @@ public final class SuperTVClient extends BaseClient {
                 area = rootObj.getString("desc");
             }
             catch (JSONException e) {
-                Log.e(TAG, "parse area json fail");
+                Log.e(TAG, "parse le json fail");
             }
         }
 

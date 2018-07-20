@@ -1,9 +1,13 @@
 package com.source.supertv;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 final class SuperTVConfig {
+    private static final String TAG = "SuperTVConfig";
+
     private String mDatabaseUrl;
     private long mDatabaseUptime;
 
@@ -21,6 +25,8 @@ final class SuperTVConfig {
     }
 
     public static SuperTVConfig parse(String content) {
+        SuperTVConfig config = null;
+
         try {
             JSONObject rootObj = new JSONObject(content);
 
@@ -28,10 +34,12 @@ final class SuperTVConfig {
             String dbUrl = dbObj.getString("url");
             long dbUptime = dbObj.getLong("uptime");
 
-            return new SuperTVConfig(dbUrl, dbUptime);
+            config = new SuperTVConfig(dbUrl, dbUptime);
         }
         catch (JSONException e) {
-            throw new IllegalArgumentException("malformed");
+            Log.e(TAG, "parse fail");
         }
+
+        return config;
     }
 }
