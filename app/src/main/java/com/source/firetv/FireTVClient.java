@@ -15,7 +15,6 @@ import com.utils.ZipHelper;
 import com.utils.HttpHelper;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,13 +30,10 @@ public final class FireTVClient extends BaseClient {
     private static final String SOFT_TXT_URL = SERVER_URL + "/soft.txt";
     private static final String TVLIST_ZIP_URL = SERVER_URL + "/tvlist.zip";
 
-    private static final String TVLIST_ZIP_NAME = "tvlist.zip";
     private static final String TVLIST_XML_NAME = "tvlist.xml";
 
     private static final String DEFAULT_TVLIST_DATE = "0110";
     private static final String SETTINGS_TVLIST_DATE = "tvlist_date";
-
-    private static final String UNZIP_PASSWORD = "FiReTvtEst@Qq.cOm2";
 
     private File mDataDir;
     private SharedPreferences mSettings;
@@ -85,7 +81,7 @@ public final class FireTVClient extends BaseClient {
 
         mConfig = FireTVConfig.parse(new String(content));
 
-        return true;
+        return mConfig != null;
     }
 
     private void preparePlugin() {
@@ -98,23 +94,9 @@ public final class FireTVClient extends BaseClient {
     }
 
     private boolean prepareChannelTable() {
-        File zipFile = new File(mDataDir, TVLIST_ZIP_NAME);
-        File xmlFile = new File(mDataDir, TVLIST_XML_NAME);
-
         if (isTvlistExpired()) {
-            /**
-             * 下载
-             */
-            if (!HttpHelper.opDownload(TVLIST_ZIP_URL, null, zipFile)) {
-                Log.e(TAG, "download " + TVLIST_ZIP_URL + " fail");
-                return false;
-            }
-
-            /**
-             * 解压
-             */
-            if (!ZipHelper.extract(zipFile, mDataDir.getPath(), UNZIP_PASSWORD)) {
-                Log.e(TAG, "extract " + TVLIST_ZIP_NAME + " fail");
+            if (!downloadTvlist()) {
+                Log.e(TAG, "download tvlist fail");
                 return false;
             }
 
@@ -126,18 +108,7 @@ public final class FireTVClient extends BaseClient {
             editor.commit();
         }
 
-        /**
-         * 解析频道数据
-         */
-        mChannelList = TVListParser.parse(xmlFile);
-        if (mChannelList == null) {
-            Log.e(TAG, "parse " + TVLIST_XML_NAME + " fail");
-            return false;
-        }
-
-        prepareGroupInfoList();
-
-        return true;
+        return readTvlist();
     }
 
     private boolean isTvlistExpired() {
@@ -150,63 +121,39 @@ public final class FireTVClient extends BaseClient {
         }
     }
 
-    private void prepareGroupInfoList() {
-        final String[] GROUP_NAME = {
-                "央视频道",
-                "卫视频道",
-                "高清频道",
-                "数字频道",
-                "体育频道",
-                "新闻频道",
-                "影视频道",
-                "少儿频道",
-                "网络频道1",
-                "网络频道2",
-                "港台频道",
-                "海外频道",
-                "测试频道",
-                "北京",
-                "上海",
-                "天津",
-                "重庆",
-                "黑龙江",
-                "吉林",
-                "辽宁",
-                "新疆",
-                "甘肃",
-                "宁夏",
-                "青海",
-                "陕西",
-                "山西",
-                "河南",
-                "河北",
-                "安徽",
-                "山东",
-                "江苏",
-                "浙江",
-                "福建",
-                "广东",
-                "广西",
-                "云南",
-                "湖南",
-                "湖北",
-                "江西",
-                "海南",
-                "四川",
-                "贵州",
-                "西藏",
-                "内蒙古",
-                "自定义频道",
-                "已收藏频道",
-                "临时频道"
-        };
+    private boolean downloadTvlist() {
+        File zipFile = new File(mDataDir, "temp.zip");
 
-        mGroupInfoList = new ArrayList<ChannelGroup.GroupInfo>(GROUP_NAME.length);
-
-        for (int i = 0; i < GROUP_NAME.length; i++) {
-            ChannelGroup.GroupInfo groupInfo = new ChannelGroup.GroupInfo(String.valueOf(i + 1), GROUP_NAME[i]);
-            mGroupInfoList.add(groupInfo);
+        if (!HttpHelper.opDownload(TVLIST_ZIP_URL, null, zipFile)) {
+            Log.e(TAG, "download " + TVLIST_ZIP_URL + " fail");
+            return false;
         }
+
+        final String password = "FiReTvtEst@Qq.cOm2";
+        if (!ZipHelper.extract(zipFile, mDataDir.getPath(), password)) {
+            Log.e(TAG, "extract " + zipFile.getName() + " fail");
+            return false;
+        }
+
+        /**
+         * 解压之后就删除压缩包文件
+         */
+        zipFile.delete();
+
+        return true;
+    }
+
+    private boolean readTvlist() {
+        File xmlFile = new File(mDataDir, TVLIST_XML_NAME);
+        if (!xmlFile.exists()) {
+            Log.e(TAG, xmlFile.getName() + " is not exist");
+            return false;
+        }
+
+        mChannelList = TVListParser.parse(xmlFile);
+        mGroupInfoList = TVListParser.getGroupInfoList();
+
+        return true;
     }
 
     @Override

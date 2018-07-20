@@ -3,6 +3,7 @@ package com.source.firetv;
 import android.util.Xml;
 
 import com.iptv.demo.channel.Channel;
+import com.iptv.demo.channel.ChannelGroup;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -11,6 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,7 +30,7 @@ final class TVListParser {
         FileInputStream input = null;
         try {
             input = new FileInputStream(file);
-            channels = parse(input);
+            channels = parseXml(input);
         }
         catch (IOException e) {
             channels = null;
@@ -47,7 +49,7 @@ final class TVListParser {
         return channels;
     }
 
-    public static List<Channel> parse(InputStream input) throws IOException {
+    private static List<Channel> parseXml(InputStream input) throws IOException {
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setInput(input, "utf-8");
@@ -179,5 +181,65 @@ final class TVListParser {
                 }
             }
         }
+    }
+
+    public static List<ChannelGroup.GroupInfo> getGroupInfoList() {
+        final String[] GROUP_NAME = {
+                "央视频道",
+                "卫视频道",
+                "高清频道",
+                "数字频道",
+                "体育频道",
+                "新闻频道",
+                "影视频道",
+                "少儿频道",
+                "网络频道1",
+                "网络频道2",
+                "港台频道",
+                "海外频道",
+                "测试频道",
+                "北京",
+                "上海",
+                "天津",
+                "重庆",
+                "黑龙江",
+                "吉林",
+                "辽宁",
+                "新疆",
+                "甘肃",
+                "宁夏",
+                "青海",
+                "陕西",
+                "山西",
+                "河南",
+                "河北",
+                "安徽",
+                "山东",
+                "江苏",
+                "浙江",
+                "福建",
+                "广东",
+                "广西",
+                "云南",
+                "湖南",
+                "湖北",
+                "江西",
+                "海南",
+                "四川",
+                "贵州",
+                "西藏",
+                "内蒙古",
+                "自定义频道",
+                "已收藏频道",
+                "临时频道"
+        };
+
+        List<ChannelGroup.GroupInfo> groupInfoList = new ArrayList<ChannelGroup.GroupInfo>(GROUP_NAME.length);
+
+        for (int i = 0; i < GROUP_NAME.length; i++) {
+            groupInfoList.add(new ChannelGroup.GroupInfo(String.valueOf(i + 1), GROUP_NAME[i]));
+        }
+
+        return groupInfoList;
     }
 }
