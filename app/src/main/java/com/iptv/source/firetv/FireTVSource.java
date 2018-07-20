@@ -8,23 +8,19 @@ import android.util.Log;
 import com.iptv.channel.Channel;
 import com.iptv.channel.ChannelGroup;
 import com.iptv.channel.ChannelTable;
-import com.iptv.source.ProtocolType;
 import com.iptv.source.firetv.plugin.ChengboPlugin;
-import com.iptv.source.BaseClient;
+import com.iptv.source.AbstractSource;
 import com.utils.ZipHelper;
 import com.utils.HttpHelper;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 星火New直播
  */
-public final class FireTVClient extends BaseClient {
-    private static final String TAG = "FireTVClient";
+public final class FireTVSource extends AbstractSource {
+    private static final String TAG = "FireTVSource";
 
     private static final String SERVER_URL = "http://myzhibo8.oss-cn-shanghai.aliyuncs.com/soft";
     private static final String SOFT_TXT_URL = SERVER_URL + "/soft.txt";
@@ -42,9 +38,7 @@ public final class FireTVClient extends BaseClient {
     private List<Channel> mChannelList;
     private List<ChannelGroup.GroupInfo> mGroupInfoList;
 
-    private List<Plugin> mPluginList;
-
-    public FireTVClient(Context context, Looper looper) {
+    public FireTVSource(Context context, Looper looper) {
         super(looper);
 
         mDataDir = new File(context.getFilesDir(), "firetv");
@@ -56,20 +50,20 @@ public final class FireTVClient extends BaseClient {
     }
 
     @Override
-    protected void onSetup() {
+    protected void onSetup(OnSetupListener listener) {
         if (!prepareConfig()) {
-            mListener.onError("setup fail");
+            listener.onError("setup fail");
             return;
         }
 
         preparePlugin();
 
         if (!prepareChannelTable()) {
-            mListener.onError("setup fail");
+            listener.onError("setup fail");
             return;
         }
 
-        mListener.onSetup(new ChannelTable(mChannelList, mGroupInfoList));
+        listener.onSetup(new ChannelTable(mChannelList, mGroupInfoList));
     }
 
     private boolean prepareConfig() {
@@ -85,12 +79,7 @@ public final class FireTVClient extends BaseClient {
     }
 
     private void preparePlugin() {
-        mPluginList = new LinkedList<Plugin>();
-
-        mPluginList.add(new ChengboPlugin(mConfig.getYzkey()));
-        /**
-         * TODO: more plugins
-         */
+        new ChengboPlugin(mConfig.getYzkey());
     }
 
     private boolean prepareChannelTable() {
@@ -154,86 +143,5 @@ public final class FireTVClient extends BaseClient {
         mGroupInfoList = TVListParser.getGroupInfoList();
 
         return true;
-    }
-
-    @Override
-    protected void onDecodeSource(String source) {
-        String url = source;
-        Map<String, String> property = new HashMap<String, String>();
-
-        if (url.endsWith("#ad")) {
-            url = url.substring(0, url.length() - 3);
-        }
-
-        if (url.endsWith("jiema0")
-                || url.endsWith("jiema1")
-                || url.endsWith("jiema2")
-                || url.endsWith("jiema3")
-                || url.endsWith("jiema4")) {
-            url = url.substring(0, url.length() - 6);
-        }
-
-        if (url.contains("useragent")) {
-            String[] results = url.split("useragent");
-
-            url = results[0];
-            property.put("UserAgent", results[1]);
-        }
-
-        if (url.contains("refer")) {
-            String[] results = url.split("refer");
-
-            url = results[0];
-            property.put("Refer", results[1]);
-        }
-
-        if (url.contains("&amp;")) {
-            url = url.replaceAll("&amp;", "&");
-        }
-
-        if (ProtocolType.isHttp(url)
-                || ProtocolType.isRtsp(url)
-                || ProtocolType.isRtmp(url)
-                || ProtocolType.isNaga(url)
-                || ProtocolType.isTVBus(url)
-                || ProtocolType.isForceP2P(url)) {
-            /**
-             * 可以直接使用
-             */
-            mListener.onDecodeSource(url);
-        }
-        else {
-            /**
-             * 不能直接使用
-             */
-            Plugin plugin = findPlugin(url);
-            if (plugin != null) {
-                url = plugin.process(url, property);
-                if (!url.isEmpty()) {
-                    mListener.onDecodeSource(url);
-                }
-                else {
-                    Log.w(TAG, plugin.getName() + " process " + url + " fail");
-                    mListener.onError("decode " + source + " fail");
-                }
-            }
-            else {
-                Log.w(TAG, "no suitable plugin for " + url);
-                mListener.onError("decode " + source + " fail");
-            }
-        }
-    }
-
-    private Plugin findPlugin(String url) {
-        Plugin plugin = null;
-
-        for (int i = 0; i < mPluginList.size(); i++) {
-            plugin = mPluginList.get(i);
-            if (plugin.isSupported(url)) {
-                break;
-            }
-        }
-
-        return plugin;
     }
 }

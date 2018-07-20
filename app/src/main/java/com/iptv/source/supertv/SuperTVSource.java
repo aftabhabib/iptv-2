@@ -7,9 +7,8 @@ import android.util.Log;
 
 import com.iptv.channel.ChannelGroup;
 import com.iptv.channel.ChannelTable;
-import com.iptv.source.BaseClient;
+import com.iptv.source.AbstractSource;
 import com.iptv.channel.Channel;
-import com.iptv.source.ProtocolType;
 import com.utils.GzipHelper;
 import com.utils.HttpHelper;
 
@@ -26,8 +25,8 @@ import java.util.Map;
 /**
  * 超级直播
  */
-public final class SuperTVClient extends BaseClient {
-    private static final String TAG = "SuperTVClient";
+public final class SuperTVSource extends AbstractSource {
+    private static final String TAG = "SuperTVSource";
 
     private static final String CONFIG_URL = "http://119.29.74.92:8123/config.json";
     private static final String IPTV_URL_FORMULAR = "https://119.29.74.92/iptv_auth?area=%s";
@@ -45,7 +44,7 @@ public final class SuperTVClient extends BaseClient {
     private List<Channel> mChannelList;
     private List<ChannelGroup.GroupInfo> mGroupInfoList;
 
-    public SuperTVClient(Context context, Looper looper) {
+    public SuperTVSource(Context context, Looper looper) {
         super(looper);
 
         mDataDir = new File(context.getFilesDir(), "supertv");
@@ -57,20 +56,20 @@ public final class SuperTVClient extends BaseClient {
     }
 
     @Override
-    protected void onSetup() {
+    protected void onSetup(OnSetupListener listener) {
         if (!prepareConfig()) {
-            mListener.onError("setup fail");
+            listener.onError("setup fail");
             return;
         }
 
         if (!prepareChannelTable()) {
-            mListener.onError("setup fail");
+            listener.onError("setup fail");
             return;
         }
 
         addIPTVChannels();
 
-        mListener.onSetup(new ChannelTable(mChannelList, mGroupInfoList));
+        listener.onSetup(new ChannelTable(mChannelList, mGroupInfoList));
     }
 
     private boolean prepareConfig() {
@@ -238,24 +237,5 @@ public final class SuperTVClient extends BaseClient {
         }
 
         return area;
-    }
-
-    @Override
-    protected void onDecodeSource(String source) {
-        String url = source;
-
-        if (ProtocolType.isHttp(url)
-                || ProtocolType.isRtsp(url)
-                || ProtocolType.isFlashgetX(url)) {
-            /**
-             * 可以直接使用
-             */
-            mListener.onDecodeSource(url);
-        }
-        else {
-            /**
-             * 不能直接使用
-             */
-        }
     }
 }
