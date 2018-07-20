@@ -5,9 +5,10 @@ import android.content.SharedPreferences;
 import android.os.Looper;
 import android.util.Log;
 
+import com.iptv.demo.channel.ChannelGroup;
+import com.iptv.demo.channel.ChannelTable;
 import com.source.BaseClient;
-import com.source.Channel;
-import com.source.GroupInfo;
+import com.iptv.demo.channel.Channel;
 import com.source.ProtocolType;
 import com.utils.GzipHelper;
 import com.utils.HttpHelper;
@@ -15,14 +16,10 @@ import com.utils.HttpHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -33,22 +30,21 @@ public final class SuperTVClient extends BaseClient {
     private static final String TAG = "SuperTVClient";
 
     private static final String CONFIG_URL = "http://119.29.74.92:8123/config.json";
-    private static final String IPTV_URL = "https://119.29.74.92/iptv_auth?area=%s";
+    private static final String LE_AREA_URL = "https://g3.le.com/r?format=1";
+    private static final String IPTV_URL_FORMULAR = "https://119.29.74.92/iptv_auth?area=%s";
 
-    private static final String LIST_GZIP_NAME = "list.gz";
     private static final String LIVE_DB_NAME = "live.db";
+    private static final String IPTV_TXT_NAME = "iptv.txt";
 
     private static final long DEFAULT_DB_UPTIME = 0;
     private static final String SETTINGS_DB_UPTIME = "db_uptime";
-
-    private static final String IPTV_GROUP = "IPTV";
 
     private File mDataDir;
     private SharedPreferences mSettings;
 
     private SuperTVConfig mConfig;
     private List<Channel> mChannelList;
-    private List<GroupInfo> mGroupList;
+    private List<ChannelGroup.GroupInfo> mGroupInfoList;
 
     public SuperTVClient(Context context, Looper looper) {
         super(looper);
@@ -73,7 +69,9 @@ public final class SuperTVClient extends BaseClient {
             return;
         }
 
-        mListener.onSetup(mChannelList, mGroupList);
+        addIPTVChannels();
+
+        mListener.onSetup(new ChannelTable(mChannelList, mGroupInfoList));
     }
 
     private boolean prepareConfig() {
@@ -100,31 +98,19 @@ public final class SuperTVClient extends BaseClient {
     }
 
     private boolean prepareChannelTable() {
-        File gzFile = new File(mDataDir, LIST_GZIP_NAME);
         File dbFile = new File(mDataDir, LIVE_DB_NAME);
 
         if (isDatabaseExpired()) {
             /**
-             * 数据库过期，重新下载
+             * 过期，重新下载
              */
-            Map<String, String> property = new HashMap<String, String>();
-            property.put("User-Agent", "lgsg/1.0");
-
-            if (!HttpHelper.opDownload(mConfig.getDatabaseUrl(), property, gzFile)) {
-                Log.e(TAG, "download " + LIST_GZIP_NAME + " fail");
+            if (!downloadDatabase(dbFile)) {
+                Log.e(TAG, "download " + dbFile.getName() + " fail");
                 return false;
             }
 
             /**
-             * 解压
-             */
-            if (!GzipHelper.extract(gzFile, dbFile)) {
-                Log.e(TAG, "extract " + LIST_GZIP_NAME + " fail");
-                return false;
-            }
-
-            /**
-             * 更新本地的版本信息
+             * 更新本地的记录
              */
             SharedPreferences.Editor editor = mSettings.edit();
             editor.putLong(SETTINGS_DB_UPTIME, mConfig.getDatabaseUptime());
@@ -132,31 +118,9 @@ public final class SuperTVClient extends BaseClient {
         }
 
         /**
-         * 解析频道数据
+         * 读取频道数据
          */
-        DatabaseReader reader = DatabaseReader.create(dbFile);
-        if (reader == null) {
-            Log.e(TAG, "open " + LIVE_DB_NAME + " fail");
-            return false;
-        }
-
-        mChannelList = reader.readChannels();
-        mGroupList = reader.readGroups();
-        reader.release();
-
-        /**
-         * IPTV频道
-         */
-        String area = getArea();
-        if (!area.isEmpty()) {
-            List<Channel> iptvList = getIptvList(area);
-            if (!iptvList.isEmpty()) {
-                mChannelList.addAll(iptvList);
-                mGroupList.add(new GroupInfo(IPTV_GROUP, IPTV_GROUP));
-            }
-        }
-
-        return true;
+        return readDatabase(dbFile);
     }
 
     private boolean isDatabaseExpired() {
@@ -169,12 +133,106 @@ public final class SuperTVClient extends BaseClient {
         }
     }
 
-    private static String getArea() {
+    private boolean downloadDatabase(File dbFile) {
+        Map<String, String> property = new HashMap<String, String>();
+        property.put("User-Agent", "lgsg/1.0");
+
+        byte[] content = HttpHelper.opGet(mConfig.getDatabaseUrl(), property);
+        if (content == null) {
+            Log.e(TAG, "get " + mConfig.getDatabaseUrl() + " fail");
+            return false;
+        }
+
+        if (!GzipHelper.extract(content, dbFile)) {
+            Log.e(TAG, "extract to " + dbFile.getName() + " fail");
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean readDatabase(File dbFile) {
+        DatabaseReader reader = DatabaseReader.create(dbFile);
+        if (reader == null) {
+            Log.e(TAG, "read " + dbFile.getName() + " fail");
+            return false;
+        }
+
+        mChannelList = reader.getChannelList();
+        mGroupInfoList = reader.getGroupInfoList();
+
+        reader.release();
+        return true;
+    }
+
+    private void addIPTVChannels() {
+        File txtFile = new File(mDataDir, IPTV_TXT_NAME);
+
+        if (!txtFile.exists()) {
+            /**
+             * 不存在，下载
+             */
+            if (!downloadIPTVList(txtFile)) {
+                Log.e(TAG, "download " + txtFile.getName() + " fail");
+                return;
+            }
+        }
+
+        List<Channel> iptvChannelList = IPTVListParser.parse(txtFile);
+        if (!iptvChannelList.isEmpty()) {
+            mChannelList.addAll(iptvChannelList);
+            mGroupInfoList.add(IPTVListParser.getIPTVGroupInfo());
+        }
+    }
+
+    private static boolean downloadIPTVList(File txtFile) {
+        String url = getIPTVUrl();
+
+        Map<String, String> property = new HashMap<String, String>();
+        property.put("User-Agent", "lgsg/1.0");
+
+        byte[] content = HttpHelper.opGet(url, property);
+        if (content == null) {
+            Log.e(TAG, "get " + url + " fail");
+            return false;
+        }
+
+        if (!GzipHelper.extract(content, txtFile)) {
+            Log.e(TAG, "extract to " + txtFile.getName() + " fail");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static String getIPTVUrl() {
+        String url = "";
+
+        String area = getAreaByUserIp();
+        if (!area.isEmpty()) {
+            /**
+             * 用户所在地区（基于ip判断）
+             */
+            try {
+                url = String.format(IPTV_URL_FORMULAR, URLEncoder.encode(area, "UTF-8"));
+            }
+            catch (UnsupportedEncodingException e) {
+                //ignore
+            }
+        }
+        else {
+            Log.e(TAG, "can not get area by user ip");
+        }
+
+        return url;
+    }
+
+    private static String getAreaByUserIp() {
         String area = "";
 
-        byte[] content = HttpHelper.opGet("https://g3.le.com/r?format=1", null);
+        byte[] content = HttpHelper.opGet(LE_AREA_URL, null);
         if (content == null) {
-            Log.e(TAG, "get le json fail");
+            Log.e(TAG, "get area json fail");
         }
         else {
             try {
@@ -183,62 +241,11 @@ public final class SuperTVClient extends BaseClient {
                 area = rootObj.getString("desc");
             }
             catch (JSONException e) {
-                Log.e(TAG, "parse le json fail");
+                Log.e(TAG, "parse area json fail");
             }
         }
 
         return area;
-    }
-
-    private List<Channel> getIptvList(String area) {
-        List<Channel> iptvList = new LinkedList<Channel>();
-
-        File gzFile = new File(mDataDir, "iptv.gz");
-        File txtFile = new File(mDataDir, "iptv.txt");
-        try {
-            Map<String, String> property = new HashMap<String, String>();
-            property.put("User-Agent", "lgsg/1.0");
-
-            if (!HttpHelper.opDownload(String.format(IPTV_URL, URLEncoder.encode(area, "UTF-8")), property, gzFile)) {
-                throw new IOException("download " + gzFile.getName() + " fail");
-            }
-
-            if (!GzipHelper.extract(gzFile, txtFile)) {
-                throw new IOException("extract " + txtFile.getName() + " fail");
-            }
-
-            BufferedReader reader = new BufferedReader(new FileReader(txtFile));
-            while (true) {
-                String line = reader.readLine();
-                if (line == null) {
-                    break;
-                }
-
-                String[] results = line.split(",");
-
-                Channel channel = new Channel();
-                channel.addGroupId(IPTV_GROUP);
-                channel.setName(results[0]);
-                channel.addSource(results[1]);
-
-                iptvList.add(channel);
-            }
-            reader.close();
-        }
-        catch (IOException e) {
-            Log.e(TAG, e.getMessage());
-        }
-        finally {
-            if (txtFile.exists()) {
-                txtFile.delete();
-            }
-
-            if (gzFile.exists()) {
-                gzFile.delete();
-            }
-        }
-
-        return iptvList;
     }
 
     @Override
