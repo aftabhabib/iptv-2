@@ -1,4 +1,4 @@
-package com.iptv.demo.channel;
+package com.iptv.channel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +31,14 @@ public class Channel {
 
     public List<String> getSourceList() {
         return mSourceList;
+    }
+
+    public int getSourceCount() {
+        return mSourceList.size();
+    }
+
+    public String getSource(int index) {
+        return mSourceList.get(index);
     }
 
     public void addGroupId(String groupId) {

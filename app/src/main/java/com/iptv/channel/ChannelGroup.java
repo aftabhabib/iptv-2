@@ -1,4 +1,4 @@
-package com.iptv.demo.channel;
+package com.iptv.channel;
 
 import java.util.LinkedList;
 import java.util.List;
