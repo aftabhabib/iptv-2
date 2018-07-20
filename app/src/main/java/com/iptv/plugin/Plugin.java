@@ -1,4 +1,4 @@
-package com.iptv.source.firetv;
+package com.iptv.plugin;
 
 import java.util.Map;
 

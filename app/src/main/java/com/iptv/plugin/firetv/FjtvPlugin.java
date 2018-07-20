@@ -1,8 +1,8 @@
-package com.iptv.source.firetv.plugin;
+package com.iptv.plugin.firetv;
 
 import android.util.Log;
 
-import com.iptv.source.firetv.Plugin;
+import com.iptv.plugin.Plugin;
 import com.utils.HttpHelper;
 
 import org.json.JSONException;
