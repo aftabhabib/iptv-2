@@ -1,7 +1,5 @@
 package com.iptv.plugin;
 
-import java.util.Map;
-
 public interface Plugin {
     /**
      * 名称
@@ -12,7 +10,7 @@ public interface Plugin {
      */
     boolean isSupported(String url);
     /**
-     * 处理
+     * 解码
      */
-    String process(String url, Map<String, String> property);
+    String decode(String url);
 }
