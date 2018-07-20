@@ -2,7 +2,6 @@ package com.iptv.plugin.firetv;
 
 import android.util.Log;
 
-import com.iptv.plugin.Plugin;
 import com.utils.HttpHelper;
 
 import org.json.JSONException;
@@ -12,7 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
-public class ChengboPlugin implements Plugin {
+public class ChengboPlugin extends AbstractPlugin {
     private static final String TAG = "ChengboPlugin";
 
     private static final String SCHEME = "kslive1://";
@@ -47,7 +46,7 @@ public class ChengboPlugin implements Plugin {
     }
 
     @Override
-    public String process(String url, Map<String, String> property) {
+    protected String decode(String url, Map<String, String> property) {
         if (url.startsWith(SCHEME)) {
             String queryParameters = getQueryParameters();
             if (queryParameters.isEmpty()) {
