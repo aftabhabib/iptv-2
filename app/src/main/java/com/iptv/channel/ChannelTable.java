@@ -1,5 +1,7 @@
 package com.iptv.channel;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import java.util.LinkedList;
@@ -8,7 +10,7 @@ import java.util.List;
 /**
  * 频道表
  */
-public class ChannelTable {
+public class ChannelTable implements Parcelable {
     private static final String TAG = "ChannelTable";
 
     private List<ChannelGroup> mGroupList;
@@ -16,6 +18,32 @@ public class ChannelTable {
     public ChannelTable() {
         mGroupList = new LinkedList<ChannelGroup>();
     }
+
+    protected ChannelTable(Parcel in) {
+        in.readTypedList(mGroupList, ChannelGroup.CREATOR);
+    }
+
+    @Override
+    public void writeToParcel(Parcel out, int flags) {
+        out.writeTypedList(mGroupList);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<ChannelTable> CREATOR = new Creator<ChannelTable>() {
+        @Override
+        public ChannelTable createFromParcel(Parcel in) {
+            return new ChannelTable(in);
+        }
+
+        @Override
+        public ChannelTable[] newArray(int size) {
+            return new ChannelTable[size];
+        }
+    };
 
     public List<ChannelGroup> getGroupList() {
         return mGroupList;
