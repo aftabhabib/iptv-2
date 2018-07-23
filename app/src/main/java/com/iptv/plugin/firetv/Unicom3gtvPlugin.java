@@ -2,7 +2,6 @@ package com.iptv.plugin.firetv;
 
 import android.util.Log;
 
-import com.iptv.plugin.Plugin;
 import com.utils.HttpHelper;
 
 import org.json.JSONArray;
@@ -11,16 +10,16 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-public class Unicom3gtvPlugin implements Plugin {
+public class Unicom3gtvPlugin extends AbstractPlugin {
     private static final String TAG = "Unicom3gtvPlugin";
 
     private static final String SCHEME = "gdlt://";
 
-    private static final String UNICOM_3GTV_URL =
+    private static final String UNICOM_3GTV_URL_FORMULAR =
             "http://u1.3gtv.net:2080/pms-service/broadcast/broadcast_detail?contentType=4&sectionId=-1&portalId=43&id=%s";
 
     public Unicom3gtvPlugin() {
-        //
+        super();
     }
 
     @Override
@@ -39,7 +38,7 @@ public class Unicom3gtvPlugin implements Plugin {
     }
 
     @Override
-    public String process(String url, Map<String, String> property) {
+    protected String decode(String url, Map<String, String> property) {
         if (url.startsWith(SCHEME)) {
             String[] arrParameter = url.substring(SCHEME.length()).split("#");
 
@@ -49,16 +48,16 @@ public class Unicom3gtvPlugin implements Plugin {
             return getPlayUrl(channelId, Integer.parseInt(resIndex), property);
         }
         else {
-            throw new IllegalArgumentException("url is not unicom 3gtv item_source");
+            throw new IllegalArgumentException("invalid url");
         }
     }
 
     private String getPlayUrl(String channelId, int resIndex, Map<String, String> property) {
         String url = "";
 
-        byte[] content = HttpHelper.opGet(String.format(UNICOM_3GTV_URL, channelId), property);
+        byte[] content = HttpHelper.opGet(String.format(UNICOM_3GTV_URL_FORMULAR, channelId), property);
         if (content == null) {
-            Log.e(TAG, "get channel's json fail");
+            Log.e(TAG, "get json fail");
         }
         else {
             try {
@@ -70,7 +69,7 @@ public class Unicom3gtvPlugin implements Plugin {
                 url = resourceObj.getString("resUrl").trim();
             }
             catch (JSONException e) {
-                Log.e(TAG, "parse channel's json fail, " + e.getMessage());
+                Log.e(TAG, "parse json fail, " + e.getMessage());
             }
         }
 

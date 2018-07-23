@@ -2,7 +2,6 @@ package com.iptv.plugin.firetv;
 
 import android.util.Log;
 
-import com.iptv.plugin.Plugin;
 import com.utils.HttpHelper;
 
 import org.json.JSONArray;
@@ -11,16 +10,16 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-public class SzyxPlugin implements Plugin {
+public class SzyxPlugin extends AbstractPlugin {
     private static final String TAG = "SzyxPlugin";
 
     private static final String SCHEME = "szyx://";
 
-    private static final String SZYX_URL =
+    private static final String SZYX_URL_FORMULAR =
             "http://122.193.8.99:8090/cms/thirdPartyPortalInterface/play.service?clientId=26941&channelId=%s&busiType=live&definition=sd&clientip=192.168.0.104&resFormat=json&terminalType=mobile&assetId=%s";
 
     public SzyxPlugin() {
-        //
+        super();
     }
 
     @Override
@@ -39,23 +38,23 @@ public class SzyxPlugin implements Plugin {
     }
 
     @Override
-    public String process(String url, Map<String, String> property) {
+    protected String decode(String url, Map<String, String> property) {
         if (url.startsWith(SCHEME)) {
             String channelId = url.substring(SCHEME.length());
 
             return getPlayUrl(channelId, property);
         }
         else {
-            throw new IllegalArgumentException("url is not szyx item_source");
+            throw new IllegalArgumentException("invalid url");
         }
     }
 
     private String getPlayUrl(String channelId, Map<String, String> property) {
         String url = "";
 
-        byte[] content = HttpHelper.opGet(String.format(SZYX_URL, channelId, channelId), property);
+        byte[] content = HttpHelper.opGet(String.format(SZYX_URL_FORMULAR, channelId, channelId), property);
         if (content == null) {
-            Log.e(TAG, "get channel's json fail");
+            Log.e(TAG, "get json fail");
         }
         else {
             try {
@@ -70,7 +69,7 @@ public class SzyxPlugin implements Plugin {
                 url = contentObj.getString("url").trim();
             }
             catch (JSONException e) {
-                Log.e(TAG, "parse channel's json fail, " + e.getMessage());
+                Log.e(TAG, "parse json fail, " + e.getMessage());
             }
         }
 

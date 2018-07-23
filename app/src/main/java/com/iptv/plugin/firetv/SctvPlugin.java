@@ -2,7 +2,6 @@ package com.iptv.plugin.firetv;
 
 import android.util.Log;
 
-import com.iptv.plugin.Plugin;
 import com.utils.HttpHelper;
 
 import org.json.JSONException;
@@ -10,15 +9,15 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-public class SctvPlugin implements Plugin {
+public class SctvPlugin extends AbstractPlugin {
     private static final String TAG = "SctvPlugin";
 
     private static final String SCHEME = "sctv://";
 
-    private static final String SCTV_URL = "http://tvdi.sctv.com:18091/xmsjt/client/getChannelById?channelid=%s";
+    private static final String SCTV_URL_FORMULAR = "http://tvdi.sctv.com:18091/xmsjt/client/getChannelById?channelid=%s";
 
     public SctvPlugin() {
-        //ignore
+        super();
     }
 
     @Override
@@ -37,23 +36,23 @@ public class SctvPlugin implements Plugin {
     }
 
     @Override
-    public String process(String url, Map<String, String> property) {
+    protected String decode(String url, Map<String, String> property) {
         if (url.startsWith(SCHEME)) {
             String channelId = url.substring(SCHEME.length());
 
             return getPlayUrl(channelId, property);
         }
         else {
-            throw new IllegalArgumentException("url is not sctv item_source");
+            throw new IllegalArgumentException("invalid url");
         }
     }
 
     private String getPlayUrl(String channelId, Map<String, String> property) {
         String url = "";
 
-        byte[] content = HttpHelper.opGet(String.format(SCTV_URL, channelId), property);
+        byte[] content = HttpHelper.opGet(String.format(SCTV_URL_FORMULAR, channelId), property);
         if (content == null) {
-            Log.e(TAG, "get channel's json fail");
+            Log.e(TAG, "get json fail");
         }
         else {
             try {
@@ -64,7 +63,7 @@ public class SctvPlugin implements Plugin {
                  */
             }
             catch (JSONException e) {
-                Log.e(TAG, "parse channel's json fail, " + e.getMessage());
+                Log.e(TAG, "parse json fail, " + e.getMessage());
             }
         }
 

@@ -2,7 +2,6 @@ package com.iptv.plugin.firetv;
 
 import android.util.Log;
 
-import com.iptv.plugin.Plugin;
 import com.utils.HttpHelper;
 
 import org.json.JSONException;
@@ -10,16 +9,16 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-public class FjtvPlugin implements Plugin {
+public class FjtvPlugin extends AbstractPlugin {
     private static final String TAG = "FjtvPlugin";
 
     private static final String SCHEME = "fjtv://";
 
-    private static final String FJTV_URL =
+    private static final String FJTV_URL_FORMULAR =
             "http://mobile.fjtv.net/haibo/channel_detail.php?appid=9&appkey=OU4VuJgmGkqFzelCaueFLHll1sZJpOG4&client_id_android=b17049e927554e29a2860236864e6cb6&device_token=347e2ef9eb2eabaeba84cf3d31b18381&_member_id=&version=2.0.5&app_version=2.0.5&package_name=com.hoge.android.app.fujian&system_version=5.1&phone_models=OPPOR9m&channel_id=%s";
 
     public FjtvPlugin() {
-        //ignore
+        super();
     }
 
     @Override
@@ -38,23 +37,23 @@ public class FjtvPlugin implements Plugin {
     }
 
     @Override
-    public String process(String url, Map<String, String> property) {
+    protected String decode(String url, Map<String, String> property) {
         if (url.startsWith(SCHEME)) {
             String channelId = url.substring(SCHEME.length());
 
             return getPlayUrl(channelId, property);
         }
         else {
-            throw new IllegalArgumentException("url is not fjtv item_source");
+            throw new IllegalArgumentException("invalid url");
         }
     }
 
     private String getPlayUrl(String channelId, Map<String, String> property) {
         String url = "";
 
-        byte[] content = HttpHelper.opGet(String.format(FJTV_URL, channelId), property);
+        byte[] content = HttpHelper.opGet(String.format(FJTV_URL_FORMULAR, channelId), property);
         if (content == null) {
-            Log.e(TAG, "get channel's json fail");
+            Log.e(TAG, "get json fail");
         }
         else {
             try {
@@ -65,7 +64,7 @@ public class FjtvPlugin implements Plugin {
                  */
             }
             catch (JSONException e) {
-                Log.e(TAG, "parse channel's json fail, " + e.getMessage());
+                Log.e(TAG, "parse json fail, " + e.getMessage());
             }
         }
 

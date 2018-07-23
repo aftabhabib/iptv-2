@@ -24,6 +24,8 @@ public class ChengboPlugin extends AbstractPlugin {
     private String mYzKey;
 
     public ChengboPlugin(String yzKey) {
+        super();
+
         mYzKey = yzKey;
     }
 
@@ -73,7 +75,7 @@ public class ChengboPlugin extends AbstractPlugin {
             return getPlayUrl(tmpUrl, property) + DOUBLE_AT;
         }
         else {
-            throw new IllegalArgumentException("url is not chengbo item_source");
+            throw new IllegalArgumentException("invalid url");
         }
     }
 
