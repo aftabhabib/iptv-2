@@ -9,8 +9,8 @@ import com.iptv.channel.ChannelTable;
 import com.iptv.channel.Channel;
 import com.iptv.plugin.Plugin;
 import com.iptv.source.Source;
-import com.utils.GzipHelper;
-import com.utils.HttpHelper;
+import com.iptv.utils.GzipHelper;
+import com.iptv.utils.HttpHelper;
 
 import org.json.JSONException;
 import org.json.JSONObject;

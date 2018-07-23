@@ -10,8 +10,8 @@ import com.iptv.channel.ChannelTable;
 import com.iptv.plugin.Plugin;
 import com.iptv.plugin.firetv.ChengboPlugin;
 import com.iptv.source.Source;
-import com.utils.ZipHelper;
-import com.utils.HttpHelper;
+import com.iptv.utils.ZipHelper;
+import com.iptv.utils.HttpHelper;
 
 import java.io.File;
 import java.util.ArrayList;
