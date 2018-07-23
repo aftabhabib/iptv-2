@@ -1,4 +1,4 @@
-package com.proxy;
+package com.iptv.proxy;
 
 import android.app.Service;
 import android.content.Intent;
