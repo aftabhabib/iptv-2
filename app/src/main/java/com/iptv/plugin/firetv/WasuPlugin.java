@@ -3,7 +3,8 @@ package com.iptv.plugin.firetv;
 import android.util.Log;
 import android.util.Xml;
 
-import com.utils.HttpHelper;
+import com.iptv.plugin.Plugin;
+import com.iptv.utils.HttpHelper;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -12,7 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Map;
 
-public class WasuPlugin extends AbstractPlugin {
+public class WasuPlugin implements Plugin {
     private static final String TAG = "WasuPlugin";
 
     private static final String SCHEME = "wasutv://";
@@ -20,7 +21,7 @@ public class WasuPlugin extends AbstractPlugin {
     private static final String WASU_CATALOG_URL = "http://61.167.237.19:8080//wasu_catalog/catalog";
 
     public WasuPlugin() {
-        super();
+        //
     }
 
     @Override
@@ -39,11 +40,11 @@ public class WasuPlugin extends AbstractPlugin {
     }
 
     @Override
-    protected String decode(String url, Map<String, String> property) {
+    public String decode(String url) {
         if (url.startsWith(SCHEME)) {
             String contentCode = url.substring(SCHEME.length());
 
-            return getPlayUrl(contentCode, property);
+            return getPlayUrl(contentCode, null);
         }
         else {
             throw new IllegalArgumentException("invalid url");

@@ -2,7 +2,8 @@ package com.iptv.plugin.firetv;
 
 import android.util.Log;
 
-import com.utils.HttpHelper;
+import com.iptv.plugin.Plugin;
+import com.iptv.utils.HttpHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -10,7 +11,7 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-public class ZhcsAppPlugin extends AbstractPlugin {
+public class ZhcsAppPlugin implements Plugin {
     private static final String TAG = "ZhcsAppPlugin";
 
     private static final String SCHEME = "xhhncs://";
@@ -18,7 +19,7 @@ public class ZhcsAppPlugin extends AbstractPlugin {
     private static final String ZHCS_APP_URL_FORMULAR = "http://www.zhcsapp.cn:8686/zhcsserver/SearchPanelList.action?ad0101=%s";
 
     public ZhcsAppPlugin() {
-        super();
+        //
     }
 
     @Override
@@ -37,11 +38,11 @@ public class ZhcsAppPlugin extends AbstractPlugin {
     }
 
     @Override
-    protected String decode(String url, Map<String, String> property) {
+    public String decode(String url) {
         if (url.startsWith(SCHEME)) {
             String ad0101 = url.substring(SCHEME.length());
 
-            return getPlayUrl(ad0101, property);
+            return getPlayUrl(ad0101, null);
         }
         else {
             throw new IllegalArgumentException("url is not zhcs app item_source");

@@ -2,14 +2,15 @@ package com.iptv.plugin.firetv;
 
 import android.util.Log;
 
-import com.utils.HttpHelper;
+import com.iptv.plugin.Plugin;
+import com.iptv.utils.HttpHelper;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Map;
 
-public class SctvPlugin extends AbstractPlugin {
+public class SctvPlugin implements Plugin {
     private static final String TAG = "SctvPlugin";
 
     private static final String SCHEME = "sctv://";
@@ -17,7 +18,7 @@ public class SctvPlugin extends AbstractPlugin {
     private static final String SCTV_URL_FORMULAR = "http://tvdi.sctv.com:18091/xmsjt/client/getChannelById?channelid=%s";
 
     public SctvPlugin() {
-        super();
+        //
     }
 
     @Override
@@ -36,11 +37,11 @@ public class SctvPlugin extends AbstractPlugin {
     }
 
     @Override
-    protected String decode(String url, Map<String, String> property) {
+    public String decode(String url) {
         if (url.startsWith(SCHEME)) {
             String channelId = url.substring(SCHEME.length());
 
-            return getPlayUrl(channelId, property);
+            return getPlayUrl(channelId, null);
         }
         else {
             throw new IllegalArgumentException("invalid url");

@@ -2,7 +2,7 @@ package com.iptv.plugin;
 
 public interface Plugin {
     /**
-     * 名称
+     * 获取名称
      */
     String getName();
     /**

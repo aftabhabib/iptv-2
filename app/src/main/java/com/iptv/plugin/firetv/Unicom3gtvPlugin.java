@@ -2,7 +2,8 @@ package com.iptv.plugin.firetv;
 
 import android.util.Log;
 
-import com.utils.HttpHelper;
+import com.iptv.plugin.Plugin;
+import com.iptv.utils.HttpHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -10,7 +11,7 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-public class Unicom3gtvPlugin extends AbstractPlugin {
+public class Unicom3gtvPlugin implements Plugin {
     private static final String TAG = "Unicom3gtvPlugin";
 
     private static final String SCHEME = "gdlt://";
@@ -19,7 +20,7 @@ public class Unicom3gtvPlugin extends AbstractPlugin {
             "http://u1.3gtv.net:2080/pms-service/broadcast/broadcast_detail?contentType=4&sectionId=-1&portalId=43&id=%s";
 
     public Unicom3gtvPlugin() {
-        super();
+        //
     }
 
     @Override
@@ -38,14 +39,14 @@ public class Unicom3gtvPlugin extends AbstractPlugin {
     }
 
     @Override
-    protected String decode(String url, Map<String, String> property) {
+    public String decode(String url) {
         if (url.startsWith(SCHEME)) {
             String[] arrParameter = url.substring(SCHEME.length()).split("#");
 
             String channelId = arrParameter[0];
             String resIndex = arrParameter[1];
 
-            return getPlayUrl(channelId, Integer.parseInt(resIndex), property);
+            return getPlayUrl(channelId, Integer.parseInt(resIndex), null);
         }
         else {
             throw new IllegalArgumentException("invalid url");

@@ -2,7 +2,8 @@ package com.iptv.plugin.firetv;
 
 import android.util.Log;
 
-import com.utils.HttpHelper;
+import com.iptv.plugin.Plugin;
+import com.iptv.utils.HttpHelper;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,7 +12,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
-public class ChengboPlugin extends AbstractPlugin {
+public class ChengboPlugin implements Plugin {
     private static final String TAG = "ChengboPlugin";
 
     private static final String SCHEME = "kslive1://";
@@ -24,8 +25,6 @@ public class ChengboPlugin extends AbstractPlugin {
     private String mYzKey;
 
     public ChengboPlugin(String yzKey) {
-        super();
-
         mYzKey = yzKey;
     }
 
@@ -48,7 +47,7 @@ public class ChengboPlugin extends AbstractPlugin {
     }
 
     @Override
-    protected String decode(String url, Map<String, String> property) {
+    public String decode(String url) {
         if (url.startsWith(SCHEME)) {
             String queryParameters = getQueryParameters();
             if (queryParameters.isEmpty()) {
@@ -72,7 +71,7 @@ public class ChengboPlugin extends AbstractPlugin {
             }
 
             String tmpUrl = "http://" + url.substring(DOUBLE_AT.length()) + queryParameters;
-            return getPlayUrl(tmpUrl, property) + DOUBLE_AT;
+            return getPlayUrl(tmpUrl, null) + DOUBLE_AT;
         }
         else {
             throw new IllegalArgumentException("invalid url");

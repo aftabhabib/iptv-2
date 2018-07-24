@@ -2,7 +2,8 @@ package com.iptv.plugin.firetv;
 
 import android.util.Log;
 
-import com.utils.HttpHelper;
+import com.iptv.plugin.Plugin;
+import com.iptv.utils.HttpHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -10,7 +11,7 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-public class SzyxPlugin extends AbstractPlugin {
+public class SzyxPlugin implements Plugin {
     private static final String TAG = "SzyxPlugin";
 
     private static final String SCHEME = "szyx://";
@@ -19,7 +20,7 @@ public class SzyxPlugin extends AbstractPlugin {
             "http://122.193.8.99:8090/cms/thirdPartyPortalInterface/play.service?clientId=26941&channelId=%s&busiType=live&definition=sd&clientip=192.168.0.104&resFormat=json&terminalType=mobile&assetId=%s";
 
     public SzyxPlugin() {
-        super();
+        //
     }
 
     @Override
@@ -38,11 +39,11 @@ public class SzyxPlugin extends AbstractPlugin {
     }
 
     @Override
-    protected String decode(String url, Map<String, String> property) {
+    public String decode(String url) {
         if (url.startsWith(SCHEME)) {
             String channelId = url.substring(SCHEME.length());
 
-            return getPlayUrl(channelId, property);
+            return getPlayUrl(channelId, null);
         }
         else {
             throw new IllegalArgumentException("invalid url");
