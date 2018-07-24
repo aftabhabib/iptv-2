@@ -77,8 +77,24 @@ public final class SuperTVSource implements Source {
     }
 
     @Override
-    public List<Plugin> getPluginList() {
-        return mPluginList;
+    public Map<String, String> decodeSource(String source) {
+        String url = source;
+        Map<String, String> parameters = new HashMap<String, String>();
+
+        /**
+         * TODO：源代码中的处理过程
+         */
+
+        parameters.put("url", url);
+
+        return parameters;
+    }
+
+    @Override
+    public void release() {
+        /**
+         * TODO：释放资源
+         */
     }
 
     private boolean prepareConfig() {

@@ -1,15 +1,15 @@
 package com.iptv.source;
 
 import com.iptv.channel.ChannelTable;
-import com.iptv.plugin.Plugin;
 
-import java.util.List;
+import java.util.Map;
 
 public interface Source {
     /**
      * 获取名称
      */
     String getName();
+
     /**
      * 启动
      */
@@ -18,8 +18,14 @@ public interface Source {
      * 获取频道表
      */
     ChannelTable getChannelTable();
+
     /**
-     * 获取插件
+     * 数据源解码
      */
-    List<Plugin> getPluginList();
+    Map<String, String> decodeSource(String source);
+
+    /**
+     * 释放
+     */
+    void release();
 }

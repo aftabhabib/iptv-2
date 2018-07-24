@@ -9,13 +9,16 @@ import com.iptv.channel.ChannelGroup;
 import com.iptv.channel.ChannelTable;
 import com.iptv.plugin.Plugin;
 import com.iptv.plugin.firetv.ChengboPlugin;
+import com.iptv.source.ProtocolType;
 import com.iptv.source.Source;
 import com.iptv.utils.ZipHelper;
 import com.iptv.utils.HttpHelper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class FireTVSource implements Source {
     private static final String TAG = "FireTVSource";
@@ -28,6 +31,11 @@ public final class FireTVSource implements Source {
 
     private static final String DEFAULT_TVLIST_DATE = "0110";
     private static final String SETTINGS_TVLIST_DATE = "tvlist_date";
+
+    private static final String SOURCE_PARAMETER_AD = "#ad";
+    private static final String SOURCE_PARAMETER_JIEMA = "jiema";
+    private static final String SOURCE_PARAMETER_USERAGENT = "useragent";
+    private static final String SOURCE_PARAMETER_REFER = "refer";
 
     private File mDataDir;
     private SharedPreferences mSettings;
@@ -71,8 +79,76 @@ public final class FireTVSource implements Source {
     }
 
     @Override
-    public List<Plugin> getPluginList() {
-        return mPluginList;
+    public Map<String, String> decodeSource(String source) {
+        String url = source;
+        Map<String, String> parameters = new HashMap<String, String>();
+
+        if (url.endsWith(SOURCE_PARAMETER_AD)) {
+            /**
+             * 源代码中直接删除，这里也同样处理
+             */
+            url = url.substring(0, url.length() - SOURCE_PARAMETER_AD.length());
+        }
+
+        if (url.contains(SOURCE_PARAMETER_JIEMA)) {
+            /**
+             * 与源代码中的播放器类型有关，这里不使用
+             */
+            String[] results = url.split(SOURCE_PARAMETER_JIEMA);
+
+            url = results[0];
+        }
+
+        if (url.contains(SOURCE_PARAMETER_USERAGENT)) {
+            /**
+             * HTTP/HTTPS协议，头部中的UserAgent字段
+             */
+            String[] results = url.split(SOURCE_PARAMETER_USERAGENT);
+
+            url = results[0];
+            parameters.put("UserAgent", results[1]);
+        }
+
+        if (url.contains(SOURCE_PARAMETER_REFER)) {
+            /**
+             * HTTP/HTTPS协议，头部中的Refer字段
+             */
+            String[] results = url.split(SOURCE_PARAMETER_REFER);
+
+            url = results[0];
+            parameters.put("Refer", results[1]);
+        }
+
+        if (url.contains("&amp;")) {
+            /**
+             * HTML语法中的转义字符，替换
+             */
+            url = url.replaceAll("&amp;", "&");
+        }
+
+        if (isEncodedUrl(url)) {
+            /**
+             * 自定义协议，需要进一步解码
+             */
+            for (int i = 0; i < mPluginList.size(); i++) {
+                Plugin plugin = mPluginList.get(i);
+                if (plugin.isSupported(url)) {
+                    url = plugin.decode(url);
+                    break;
+                }
+            }
+        }
+
+        parameters.put("url", url);
+
+        return parameters;
+    }
+
+    @Override
+    public void release() {
+        /**
+         * TODO：释放资源
+         */
     }
 
     private boolean prepareConfig() {
@@ -154,5 +230,18 @@ public final class FireTVSource implements Source {
     private void preparePlugin() {
         mPluginList = new ArrayList<Plugin>(15);
         mPluginList.add(new ChengboPlugin(mConfig.getYzkey()));
+    }
+
+    private static boolean isEncodedUrl(String url) {
+        if (!ProtocolType.isHttpOrHttps(url)
+                && !ProtocolType.isRtsp(url)
+                && !ProtocolType.isRtmp(url)
+                && !ProtocolType.isNaga(url)
+                && !ProtocolType.isTVBus(url)
+                && !ProtocolType.isForceP2P(url)) {
+            return true;
+        }
+
+        return false;
     }
 }
