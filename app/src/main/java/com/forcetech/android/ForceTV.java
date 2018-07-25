@@ -2,7 +2,7 @@ package com.forcetech.android;
 
 import android.util.Log;
 
-import com.utils.HttpHelper;
+import com.iptv.utils.HttpHelper;
 
 /**
  * 原力SDK
