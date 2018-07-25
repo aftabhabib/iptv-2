@@ -8,7 +8,6 @@ public class ProtocolType {
     private static final String TYPE_NAGA = "vjms://";
     private static final String TYPE_TVBUS = "tvbus://";
     private static final String TYPE_FORCE_P2P = "p2p://";
-    private static final String TYPE_FLASHGET_X = "flashgetx://";
 
     public static boolean isHttpOrHttps(String url) {
         if (url.startsWith(TYPE_HTTP) || url.startsWith(TYPE_HTTPS)) {
@@ -37,9 +36,5 @@ public class ProtocolType {
 
     public static boolean isForceP2P(String url) {
         return url.startsWith(TYPE_FORCE_P2P);
-    }
-
-    public static boolean isFlashgetX(String url) {
-        return url.startsWith(TYPE_FLASHGET_X);
     }
 }
