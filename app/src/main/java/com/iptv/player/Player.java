@@ -14,7 +14,7 @@ public interface Player {
         /**
          * 出错
          */
-        void onError(String error);
+        void onError(String desc);
     }
 
     /**
