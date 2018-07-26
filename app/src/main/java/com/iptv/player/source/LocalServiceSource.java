@@ -1,4 +1,4 @@
-package com.iptv.player.mediasource;
+package com.iptv.player.source;
 
 import android.annotation.TargetApi;
 import android.media.MediaDataSource;

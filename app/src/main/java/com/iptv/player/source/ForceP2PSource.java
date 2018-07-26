@@ -1,6 +1,4 @@
-package com.iptv.player.mediasource;
-
-import android.util.Log;
+package com.iptv.player.source;
 
 import com.forcetech.android.ForceTV;
 
