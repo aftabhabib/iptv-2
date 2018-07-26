@@ -14,7 +14,7 @@ public class ForceP2PSource extends LocalServiceSource {
         super();
 
         /**
-         * FIXME：端口号，缓冲大小参考GitHub上的代码
+         * FIXME：端口号、缓冲大小，参考GitHub上的代码
          */
         mClient = new ForceTV(9906, 20 * 1024 * 1024);
     }
