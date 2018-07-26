@@ -11,8 +11,10 @@ import com.iptv.source.Plugin;
 import com.iptv.source.firetv.plugin.ChengboPlugin;
 import com.iptv.source.ProtocolType;
 import com.iptv.source.Source;
-import com.iptv.source.utils.ZipHelper;
 import com.iptv.source.utils.HttpHelper;
+
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,9 +25,9 @@ import java.util.Map;
 public final class FireTVSource implements Source {
     private static final String TAG = "FireTVSource";
 
-    private static final String SERVER_URL = "http://myzhibo8.oss-cn-shanghai.aliyuncs.com/soft";
-    private static final String SOFT_TXT_URL = SERVER_URL + "/soft.txt";
-    private static final String TVLIST_ZIP_URL = SERVER_URL + "/tvlist.zip";
+    private static final String SERVER_URL = "http://myzhibo8.oss-cn-shanghai.aliyuncs.com/soft/";
+    private static final String SOFT_TXT_URL = SERVER_URL + "soft.txt";
+    private static final String TVLIST_ZIP_URL = SERVER_URL + "tvlist.zip";
 
     private static final String TVLIST_XML_NAME = "tvlist.xml";
 
@@ -164,9 +166,9 @@ public final class FireTVSource implements Source {
     }
 
     private boolean prepareChannelTable() {
-        if (isTvlistExpired()) {
-            if (!downloadTvlist()) {
-                Log.e(TAG, "download tvlist fail");
+        if (isChannelListExpired()) {
+            if (!downloadChannelList()) {
+                Log.e(TAG, "download channel list fail");
                 return false;
             }
 
@@ -178,10 +180,10 @@ public final class FireTVSource implements Source {
             editor.commit();
         }
 
-        return readTvlist();
+        return readChannelList();
     }
 
-    private boolean isTvlistExpired() {
+    private boolean isChannelListExpired() {
         String tvListDate = mSettings.getString(SETTINGS_TVLIST_DATE, DEFAULT_TVLIST_DATE);
         if (tvListDate.equals(mConfig.getTvlistDate())) {
             return false;
@@ -191,16 +193,15 @@ public final class FireTVSource implements Source {
         }
     }
 
-    private boolean downloadTvlist() {
-        File zipFile = new File(mDataDir, "temp.zip");
+    private boolean downloadChannelList() {
+        File zipFile = new File(mDataDir, System.currentTimeMillis() + ".zip");
 
         if (!HttpHelper.opDownload(TVLIST_ZIP_URL, null, zipFile)) {
             Log.e(TAG, "download " + TVLIST_ZIP_URL + " fail");
             return false;
         }
 
-        final String password = "FiReTvtEst@Qq.cOm2";
-        if (!ZipHelper.extract(zipFile, mDataDir.getPath(), password)) {
+        if (!extract(zipFile, mDataDir)) {
             Log.e(TAG, "extract " + zipFile.getName() + " fail");
             return false;
         }
@@ -213,7 +214,30 @@ public final class FireTVSource implements Source {
         return true;
     }
 
-    private boolean readTvlist() {
+    private static boolean extract(File file, File dir) {
+        try {
+            ZipFile zipFile = new ZipFile(file);
+
+            if (!zipFile.isValidZipFile()) {
+                Log.e(TAG, file.getName() + " is not zip format");
+                return false;
+            }
+
+            if (zipFile.isEncrypted()) {
+                zipFile.setPassword("FiReTvtEst@Qq.cOm2");
+            }
+
+            zipFile.extractAll(dir.getPath());
+        }
+        catch (ZipException e) {
+            Log.e(TAG, "extract error, " + e.getMessage());
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean readChannelList() {
         File xmlFile = new File(mDataDir, TVLIST_XML_NAME);
         if (!xmlFile.exists()) {
             Log.e(TAG, xmlFile.getName() + " is not exist");
