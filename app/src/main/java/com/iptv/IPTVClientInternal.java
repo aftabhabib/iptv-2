@@ -12,8 +12,8 @@ import com.iptv.source.firetv.FireTVSource;
 
 import java.util.Map;
 
-class IPTVClientImpl extends Handler implements Player.Listener {
-    private static final String TAG = "IPTVClientImpl";
+class IPTVClientInternal extends Handler implements Player.Listener {
+    private static final String TAG = "IPTVClientInternal";
 
     private static final int ST_INIT = 0;
     private static final int ST_IDLE = 1;
@@ -37,7 +37,7 @@ class IPTVClientImpl extends Handler implements Player.Listener {
     private Source mSource;
     private Player mPlayer;
 
-    public IPTVClientImpl(Looper looper) {
+    public IPTVClientInternal(Looper looper) {
         super(looper);
 
         mState = ST_INIT;

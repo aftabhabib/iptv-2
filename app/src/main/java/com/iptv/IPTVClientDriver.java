@@ -12,14 +12,14 @@ public class IPTVClientDriver implements IPTVClient {
     private HandlerThread mDriverThread;
 
     private Listener mListener;
-    private IPTVClientImpl mImpl;
+    private IPTVClientInternal mInternal;
 
     public IPTVClientDriver() {
         mDriverThread = new HandlerThread("iptv client driver thread");
         mDriverThread.start();
 
-        mImpl = new IPTVClientImpl(mDriverThread.getLooper());
-        mImpl.setDriver(this);
+        mInternal = new IPTVClientInternal(mDriverThread.getLooper());
+        mInternal.setDriver(this);
     }
 
     @Override
@@ -29,51 +29,57 @@ public class IPTVClientDriver implements IPTVClient {
 
     @Override
     public void load(Context context) {
-        mImpl.load(context);
+        mInternal.load(context);
     }
 
     @Override
     public void setOutputSurface(Surface surface) {
-        mImpl.setOutputSurface(surface);
+        mInternal.setOutputSurface(surface);
     }
 
     @Override
     public void setChannelSource(String source) {
-        mImpl.setChannelSource(source);
+        mInternal.setChannelSource(source);
     }
 
     @Override
     public void startPlay() {
-        mImpl.startPlay();
+        mInternal.startPlay();
     }
 
     @Override
     public void setVolume(float volume) {
-        mImpl.setVolume(volume);
+        mInternal.setVolume(volume);
     }
 
     @Override
     public void stopPlay() {
-        mImpl.stopPlay();
+        mInternal.stopPlay();
     }
 
     @Override
     public void release() {
-        mImpl.release();
-        mImpl = null;
+        mInternal.release();
+        mInternal = null;
 
         mDriverThread.quitSafely();
     }
 
     public void notifyError(String desc) {
-        mListener.onError(desc);
+        if (mListener != null) {
+            mListener.onError(desc);
+        }
     }
 
     public void notifyLoadComplete(ChannelTable channelTable) {
-        mListener.onLoadComplete(channelTable);
+        if (mListener != null) {
+            mListener.onLoadComplete(channelTable);
+        }
     }
 
     public void notifyPrepareComplete() {
-        mListener.onPrepareComplete();
+        if (mListener != null) {
+            mListener.onPrepareComplete();
+        }
     }
 }
