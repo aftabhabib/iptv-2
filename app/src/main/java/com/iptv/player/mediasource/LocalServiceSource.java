@@ -15,6 +15,8 @@ public abstract class LocalServiceSource extends MediaDataSource {
 
     private HttpURLConnection mConnection = null;
     private long mContentLength = -1;
+    private String mContentType = "";
+
     private long mCurrPosition = 0;
     private InputStream mContentInput = null;
 
@@ -22,6 +24,10 @@ public abstract class LocalServiceSource extends MediaDataSource {
         startService(url);
 
         connectService();
+    }
+
+    public String getMime() {
+        return mContentType;
     }
 
     @Override
@@ -72,13 +78,15 @@ public abstract class LocalServiceSource extends MediaDataSource {
 
         int responseCode = mConnection.getResponseCode();
         if (responseCode == HttpURLConnection.HTTP_OK) {
+            /**
+             * 保存媒体文件的大小和类型
+             */
+            mContentType = mConnection.getContentType();
             mContentLength = mConnection.getContentLength();
+
             mContentInput = mConnection.getInputStream();
         }
         else if (responseCode == HttpURLConnection.HTTP_PARTIAL) {
-            /**
-             * 第一次得到mContentLength的值是文件的总大小，这里不覆盖
-             */
             mContentInput = mConnection.getInputStream();
         }
         else {
