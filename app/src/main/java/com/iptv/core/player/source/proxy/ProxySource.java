@@ -10,7 +10,7 @@ import java.net.URL;
 /**
  * 纳加、TVBus和原力P2P等第三方协议的共同特征
  */
-public abstract class ProxySource implements Source {
+abstract class ProxySource implements Source {
     protected String mLocalUrl = null;
 
     private HttpURLConnection mConnection = null;
