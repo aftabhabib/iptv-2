@@ -1,14 +1,14 @@
-package com.iptv.core.player.source;
+package com.iptv.core.player.source.proxy;
 
 import com.forcetech.android.ForceTV;
 
 import java.io.IOException;
 
-public class ForceP2PSource extends LocalServiceSource {
+public class ForceP2PSource extends ProxySource {
     private static final String TAG = "ForceP2PSource";
 
     private ForceTV mClient;
-    private boolean mIsServiceRunning = false;
+    private boolean mIsProxyWorking = false;
 
     public ForceP2PSource() {
         super();
@@ -27,18 +27,18 @@ public class ForceP2PSource extends LocalServiceSource {
         }
 
         mClient.startChannel(url);
-        mIsServiceRunning = true;
+        mIsProxyWorking = true;
 
         mLocalUrl = mClient.getPlayUrl();
     }
 
     @Override
     protected void stopService() {
-        if (mIsServiceRunning) {
+        if (mIsProxyWorking) {
             mClient.stopChannel();
             mClient.stopP2PService();
 
-            mIsServiceRunning = false;
+            mIsProxyWorking = false;
         }
     }
 }

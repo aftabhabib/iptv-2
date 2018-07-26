@@ -1,4 +1,4 @@
-package com.iptv.core.player.source;
+package com.iptv.core.player.source.proxy;
 
 import android.content.Context;
 import android.util.Log;
@@ -11,12 +11,12 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-public class TVBusSource extends LocalServiceSource implements TVListener {
+public class TVBusSource extends ProxySource implements TVListener {
     private static final String TAG = "TVBusSource";
 
     private TVCore mCore;
-    private int mInitCheck;
 
+    private int mInitCheck;
     private DriverThread mDriverThread = null;
 
     public TVBusSource(Context context) {
@@ -48,7 +48,7 @@ public class TVBusSource extends LocalServiceSource implements TVListener {
 
         mLocalUrl = getPlayUrl(result);
         /**
-         * 得到mLocalUrl，解除startService的阻塞
+         * 得到本地代理地址，解除startService的阻塞
          */
         synchronized (this) {
             notify();
@@ -118,12 +118,15 @@ public class TVBusSource extends LocalServiceSource implements TVListener {
         @Override
         public void	run() {
             /**
-             * FIXME：从GitHub上的代码逻辑看，TVCore的run操作似乎是阻塞的
+             * FIXME：从GitHub上的代码逻辑看，TVCore的run操作应该是阻塞的
              */
             mCore.run();
         }
 
         public void quitSafely() {
+            /**
+             * quit操作会解除run操作的阻塞，线程体结束
+             */
             mCore.quit();
 
             boolean isTerminated = false;
