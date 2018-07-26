@@ -9,7 +9,7 @@ import com.iptv.core.channel.ChannelGroup;
 import com.iptv.core.channel.ChannelTable;
 import com.iptv.core.source.Plugin;
 import com.iptv.core.source.firetv.plugin.ChengboPlugin;
-import com.iptv.core.source.ProtocolType;
+import com.iptv.core.utils.ProtocolType;
 import com.iptv.core.source.Source;
 import com.iptv.core.source.utils.HttpHelper;
 

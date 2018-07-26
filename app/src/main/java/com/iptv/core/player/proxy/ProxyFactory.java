@@ -2,7 +2,7 @@ package com.iptv.core.player.proxy;
 
 import android.content.Context;
 
-import com.iptv.core.source.ProtocolType;
+import com.iptv.core.utils.ProtocolType;
 
 public class ProxyFactory {
     private Context mContext;
