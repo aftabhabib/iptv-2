@@ -17,7 +17,7 @@ public class TVBusSource extends LocalServiceSource implements TVListener {
     private TVCore mCore;
     private int mInitCheck;
 
-    private TVService mService = null;
+    private DriverThread mDriverThread = null;
 
     public TVBusSource(Context context) {
         super();
@@ -81,8 +81,8 @@ public class TVBusSource extends LocalServiceSource implements TVListener {
             throw new IOException("TVCore init fail");
         }
 
-        mService = new TVService();
-        mService.start();
+        mDriverThread = new DriverThread();
+        mDriverThread.start();
 
         /**
          * 稍等，确保服务已运行
@@ -102,17 +102,17 @@ public class TVBusSource extends LocalServiceSource implements TVListener {
 
     @Override
     protected void stopService() {
-        if (mService != null) {
+        if (mDriverThread != null) {
             mCore.stop();
 
-            mService.quitSafely();
-            mService = null;
+            mDriverThread.quitSafely();
+            mDriverThread = null;
         }
     }
 
-    private class TVService extends Thread {
-        public TVService() {
-            super("TVCore service thread");
+    private class DriverThread extends Thread {
+        public DriverThread() {
+            super("TVCore driver thread");
         }
 
         @Override
