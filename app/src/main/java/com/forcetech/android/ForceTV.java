@@ -2,7 +2,11 @@ package com.forcetech.android;
 
 import android.util.Log;
 
-import com.iptv.utils.HttpHelper;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 /**
  * 原力SDK
@@ -102,12 +106,44 @@ public class ForceTV {
     }
 
     private void sendCommand(String cmd) {
-        byte[] content = HttpHelper.opGet(cmd, null);
-        if (content == null) {
-            Log.e(TAG, "GET " + cmd + " fail");
+        HttpURLConnection connection = null;
+
+        try {
+            URL url = new URL(cmd);
+            connection = (HttpURLConnection)url.openConnection();
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                InputStream input = connection.getInputStream();
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+                byte[] buf = new byte[1024];
+                while (true) {
+                    int ret = input.read(buf);
+                    if (ret < 0) {
+                        break;
+                    }
+
+                    output.write(buf, 0, ret);
+                }
+
+                Log.d(TAG, "local service response " + new String(output.toByteArray()));
+
+                /**
+                 * TODO: parse response xml
+                 */
+            }
+            else {
+                Log.e(TAG, "request " + cmd + " fail");
+            }
         }
-        else {
-            Log.d(TAG, "server response " + new String(content));
+        catch (IOException e) {
+            //ignore
+        }
+        finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
     }
 }
