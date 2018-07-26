@@ -1,16 +1,15 @@
-package com.iptv.core.player.source.proxy;
+package com.iptv.core.player.proxy;
 
 import com.forcetech.android.ForceTV;
 
 import java.io.IOException;
 
-public class ForceP2PSource extends ProxySource {
-    private static final String TAG = "ForceP2PSource";
+public class ForceP2PProxy extends AbstractProxy {
+    private static final String TAG = "ForceP2PProxy";
 
     private ForceTV mClient;
-    private boolean mIsProxyWorking = false;
 
-    public ForceP2PSource() {
+    public ForceP2PProxy() {
         super();
 
         /**
@@ -20,25 +19,24 @@ public class ForceP2PSource extends ProxySource {
     }
 
     @Override
-    protected void startService(String url) throws IOException {
+    public void startService(String url) throws IOException {
         int ret = mClient.startP2PService();
         if (ret < 0) {
             throw new IOException("ForceP2P start service fail");
         }
 
+        /**
+         * TODO：从GitHub上的代码看，似乎要确保服务已运行
+         */
+
         mClient.startChannel(url);
-        mIsProxyWorking = true;
 
         mLocalUrl = mClient.getPlayUrl();
     }
 
     @Override
-    protected void stopService() {
-        if (mIsProxyWorking) {
-            mClient.stopChannel();
-            mClient.stopP2PService();
-
-            mIsProxyWorking = false;
-        }
+    public void stopService() {
+        mClient.stopChannel();
+        mClient.stopP2PService();
     }
 }
