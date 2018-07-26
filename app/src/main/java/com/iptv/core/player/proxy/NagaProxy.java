@@ -7,7 +7,7 @@ import com.nagasoft.player.VJPlayer;
 
 import java.io.IOException;
 
-public class NagaProxy extends AbstractProxy {
+class NagaProxy extends Proxy {
     private static final String TAG = "NagaProxy";
 
     private VJPlayer mPlayer;

@@ -4,7 +4,7 @@ import com.forcetech.android.ForceTV;
 
 import java.io.IOException;
 
-public class ForceP2PProxy extends AbstractProxy {
+class ForceP2PProxy extends Proxy {
     private static final String TAG = "ForceP2PProxy";
 
     private ForceTV mClient;

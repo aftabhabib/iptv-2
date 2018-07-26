@@ -11,7 +11,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-public class TVBusProxy extends AbstractProxy {
+class TVBusProxy extends Proxy {
     private static final String TAG = "TVBusProxy";
 
     private TVCore mCore;
