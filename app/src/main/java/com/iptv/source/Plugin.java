@@ -1,4 +1,4 @@
-package com.iptv.plugin;
+package com.iptv.source;
 
 public interface Plugin {
     /**

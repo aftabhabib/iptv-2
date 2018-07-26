@@ -1,4 +1,4 @@
-package com.iptv.utils;
+package com.iptv.source.utils;
 
 import android.util.Log;
 
@@ -10,6 +10,9 @@ import java.io.File;
 public class ZipHelper {
     private static final String TAG = "ZipHelper";
 
+    /**
+     * 源文件解压到指定文件夹
+     */
     public static boolean extract(File srcFile, String dstDir, String password) {
         try {
             ZipFile zipFile = new ZipFile(srcFile);

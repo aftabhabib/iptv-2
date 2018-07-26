@@ -1,4 +1,4 @@
-package com.iptv.utils;
+package com.iptv.source.utils;
 
 import android.util.Log;
 
@@ -18,6 +18,9 @@ import okhttp3.Response;
 public class HttpHelper {
     private static final String TAG = "HttpHelper";
 
+    /**
+     * http GET，获取数据
+     */
     public static byte[] opGet(String url, Map<String, String> property) {
         byte[] content = null;
 
@@ -44,6 +47,9 @@ public class HttpHelper {
         return content;
     }
 
+    /**
+     * 下载为指定文件
+     */
     public static boolean opDownload(String url, Map<String, String> property, File dstFile) {
         if (dstFile.exists()) {
             dstFile.delete();
@@ -110,6 +116,9 @@ public class HttpHelper {
         }
     }
 
+    /**
+     * POST，得到响应数据
+     */
     public static byte[] opPost(String url, String xml, Map<String, String> property) {
         byte[] content = null;
 

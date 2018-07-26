@@ -7,10 +7,10 @@ import android.util.Log;
 import com.iptv.channel.ChannelGroup;
 import com.iptv.channel.ChannelTable;
 import com.iptv.channel.Channel;
-import com.iptv.plugin.Plugin;
+import com.iptv.source.Plugin;
 import com.iptv.source.Source;
-import com.iptv.utils.GzipHelper;
-import com.iptv.utils.HttpHelper;
+import com.iptv.source.utils.GzipHelper;
+import com.iptv.source.utils.HttpHelper;
 
 import org.json.JSONException;
 import org.json.JSONObject;

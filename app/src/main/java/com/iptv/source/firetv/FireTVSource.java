@@ -7,12 +7,12 @@ import android.util.Log;
 import com.iptv.channel.Channel;
 import com.iptv.channel.ChannelGroup;
 import com.iptv.channel.ChannelTable;
-import com.iptv.plugin.Plugin;
-import com.iptv.plugin.firetv.ChengboPlugin;
+import com.iptv.source.Plugin;
+import com.iptv.source.firetv.plugin.ChengboPlugin;
 import com.iptv.source.ProtocolType;
 import com.iptv.source.Source;
-import com.iptv.utils.ZipHelper;
-import com.iptv.utils.HttpHelper;
+import com.iptv.source.utils.ZipHelper;
+import com.iptv.source.utils.HttpHelper;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -1,10 +1,10 @@
-package com.iptv.plugin.firetv;
+package com.iptv.source.firetv.plugin;
 
 import android.util.Log;
 import android.util.Xml;
 
-import com.iptv.plugin.Plugin;
-import com.iptv.utils.HttpHelper;
+import com.iptv.source.Plugin;
+import com.iptv.source.utils.HttpHelper;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
