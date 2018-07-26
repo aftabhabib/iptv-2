@@ -21,7 +21,7 @@ public interface Source {
     /**
      * 跳过
      */
-    int skip(int size) throws IOException;
+    long skip(long size) throws IOException;
 
     /**
      * 断开
