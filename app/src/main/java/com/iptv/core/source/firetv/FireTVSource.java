@@ -9,18 +9,25 @@ import com.iptv.core.channel.ChannelGroup;
 import com.iptv.core.channel.ChannelTable;
 import com.iptv.core.source.Plugin;
 import com.iptv.core.source.firetv.plugin.ChengboPlugin;
+import com.iptv.core.utils.OkHttp;
 import com.iptv.core.utils.ProtocolType;
 import com.iptv.core.source.Source;
-import com.iptv.core.source.utils.HttpHelper;
 
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import okhttp3.Request;
+import okhttp3.Response;
 
 public final class FireTVSource implements Source {
     private static final String TAG = "FireTVSource";
@@ -103,12 +110,12 @@ public final class FireTVSource implements Source {
 
         if (url.contains(SOURCE_PARAMETER_USERAGENT)) {
             /**
-             * HTTP/HTTPS协议，头部中的UserAgent字段
+             * HTTP/HTTPS协议，头部中的User-Agent字段
              */
             String[] results = url.split(SOURCE_PARAMETER_USERAGENT);
 
             url = results[0];
-            parameters.put("UserAgent", results[1]);
+            parameters.put("User-Agent", results[1]);
         }
 
         if (url.contains(SOURCE_PARAMETER_REFER)) {
@@ -154,21 +161,34 @@ public final class FireTVSource implements Source {
     }
 
     private boolean prepareConfig() {
-        byte[] content = HttpHelper.opGet(SOFT_TXT_URL, null);
-        if (content == null) {
-            Log.e(TAG, "get " + SOFT_TXT_URL + " fail");
+        Request request = OkHttp.createGetRequest(SOFT_TXT_URL, null);
+
+        Response response = null;
+        try {
+            response = OkHttp.getClient().newCall(request).execute();
+            if (response.isSuccessful()) {
+                mConfig = FireTVConfig.parse(response.body().string());
+            }
+            else {
+                throw new IOException(response.message());
+            }
+        }
+        catch (IOException e) {
+            Log.e(TAG, "GET " + SOFT_TXT_URL + " fail, " + e.getMessage());
+
+            if (response != null) {
+                response.close();
+            }
+
             return false;
         }
 
-        mConfig = FireTVConfig.parse(new String(content));
-
-        return mConfig != null;
+        return true;
     }
 
     private boolean prepareChannelTable() {
         if (isChannelListExpired()) {
             if (!downloadChannelList()) {
-                Log.e(TAG, "download channel list fail");
                 return false;
             }
 
@@ -194,10 +214,9 @@ public final class FireTVSource implements Source {
     }
 
     private boolean downloadChannelList() {
-        File zipFile = new File(mDataDir, System.currentTimeMillis() + ".zip");
+        File zipFile = new File(mDataDir, mConfig.getTvlistDate() + ".zip");
 
-        if (!HttpHelper.opDownload(TVLIST_ZIP_URL, null, zipFile)) {
-            Log.e(TAG, "download " + TVLIST_ZIP_URL + " fail");
+        if (!downloadSafely(zipFile)) {
             return false;
         }
 
@@ -206,10 +225,74 @@ public final class FireTVSource implements Source {
             return false;
         }
 
-        /**
-         * 解压之后就删除压缩包文件
-         */
         zipFile.delete();
+
+        return true;
+    }
+
+    private static boolean downloadSafely(File file) {
+        FileOutputStream output = null;
+        try {
+            output = new FileOutputStream(file);
+
+            if (!download(output)) {
+                /**
+                 * 下载失败，删除未完成的文件
+                 */
+                file.delete();
+            }
+        }
+        catch (FileNotFoundException e) {
+            //ignore
+        }
+        finally {
+            if (output != null) {
+                try {
+                    output.close();
+                }
+                catch (IOException e) {
+                    //ignore
+                }
+            }
+        }
+
+        return file.exists();
+    }
+
+    private static boolean download(FileOutputStream output) {
+        Request request = OkHttp.createGetRequest(TVLIST_ZIP_URL, null);
+
+        Response response = null;
+        try {
+            response = OkHttp.getClient().newCall(request).execute();
+            if (response.isSuccessful()) {
+                InputStream input = response.body().byteStream();
+
+                byte[] buf = new byte[1024];
+                while (true) {
+                    int bytesRead = input.read(buf);
+                    if (bytesRead == -1) {
+                        break;
+                    }
+
+                    output.write(buf, 0, bytesRead);
+                }
+
+                input.close();
+            }
+            else {
+                throw new IOException(response.message());
+            }
+        }
+        catch (IOException e) {
+            Log.e(TAG, "GET " + TVLIST_ZIP_URL + " error, " + e.getMessage());
+
+            if (response != null) {
+                response.close();
+            }
+
+            return false;
+        }
 
         return true;
     }
