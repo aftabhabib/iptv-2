@@ -9,25 +9,32 @@ import com.iptv.core.channel.ChannelTable;
 import com.iptv.core.channel.Channel;
 import com.iptv.core.source.Plugin;
 import com.iptv.core.source.Source;
-import com.iptv.core.source.utils.GzipHelper;
-import com.iptv.core.source.utils.HttpHelper;
+import com.iptv.core.utils.OkHttp;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
+
+import okhttp3.Request;
+import okhttp3.Response;
 
 public final class SuperTVSource implements Source {
     private static final String TAG = "SuperTVSource";
 
     private static final String CONFIG_URL = "http://119.29.74.92:8123/config.json";
-    private static final String IPTV_URL_FORMULAR = "https://119.29.74.92/iptv_auth?area=%s";
+    private static final String IPTV_URL_FORMULA = "https://119.29.74.92/iptv_auth?area=%s";
 
     private static final String LIVE_DB_NAME = "live.db";
     private static final String IPTV_TXT_NAME = "iptv.txt";
@@ -78,8 +85,9 @@ public final class SuperTVSource implements Source {
 
     @Override
     public Map<String, String> decodeSource(String source) {
-        String url = source;
         Map<String, String> parameters = new HashMap<String, String>();
+
+        String url = source;
 
         /**
          * TODO：源代码中的处理过程
@@ -98,34 +106,52 @@ public final class SuperTVSource implements Source {
     }
 
     private boolean prepareConfig() {
-        Map<String, String> property = new HashMap<String, String>();
-        property.put("User-Agent", "lgsg/1.0");
+        boolean ret = false;
 
-        byte[] content = HttpHelper.opGet(CONFIG_URL, property);
-        if (content == null) {
-            Log.e(TAG, "get config.json fail");
-            return false;
-        }
+        Map<String, String> properties = new HashMap<String, String>();
+        properties.put("User-Agent", "lgsg/1.0");
 
+        Request request = OkHttp.createGetRequest(CONFIG_URL, properties);
+        Response response = null;
         try {
-            mConfig = SuperTVConfig.parse(new String(content, "UTF-8"));
+            response = OkHttp.getClient().newCall(request).execute();
+            if (response.isSuccessful()) {
+                mConfig = SuperTVConfig.parse(response.body().string());
+
+                ret = true;
+            }
+            else {
+                Log.e(TAG, "GET " + CONFIG_URL + " fail, " + response.message());
+
+                response.close();
+            }
         }
-        catch (UnsupportedEncodingException e) {
-            //ignore
+        catch (IOException e) {
+            Log.e(TAG, "GET " + CONFIG_URL + " error");
+
+            if (response != null) {
+                response.close();
+            }
         }
 
-        return mConfig != null;
+        return ret;
     }
 
     private boolean prepareChannelTable() {
         File dbFile = new File(mDataDir, LIVE_DB_NAME);
 
-        if (isDatabaseExpired()) {
+        if (isChannelDBExpired()) {
             /**
              * 过期，重新下载
              */
-            if (!downloadDatabase(dbFile)) {
-                Log.e(TAG, "download " + dbFile.getName() + " fail");
+            if (!downloadChannelDB(dbFile)) {
+                /**
+                 * 删除未完成的文件
+                 */
+                if (dbFile.exists()) {
+                    dbFile.delete();
+                }
+
                 return false;
             }
 
@@ -140,7 +166,7 @@ public final class SuperTVSource implements Source {
         return readDatabase(dbFile);
     }
 
-    private boolean isDatabaseExpired() {
+    private boolean isChannelDBExpired() {
         long dbUptime = mSettings.getLong(SETTINGS_DB_UPTIME, DEFAULT_DB_UPTIME);
         if (dbUptime < mConfig.getDatabaseUptime()) {
             return true;
@@ -150,22 +176,76 @@ public final class SuperTVSource implements Source {
         }
     }
 
-    private boolean downloadDatabase(File dbFile) {
-        Map<String, String> property = new HashMap<String, String>();
-        property.put("User-Agent", "lgsg/1.0");
+    private boolean downloadChannelDB(File dbFile) {
+        Map<String, String> properties = new HashMap<String, String>();
+        properties.put("User-Agent", "lgsg/1.0");
 
-        byte[] content = HttpHelper.opGet(mConfig.getDatabaseUrl(), property);
-        if (content == null) {
-            Log.e(TAG, "get " + mConfig.getDatabaseUrl() + " fail");
-            return false;
+        return download(mConfig.getDatabaseUrl(), properties, dbFile);
+    }
+
+    private static boolean download(String url, Map<String, String> properties, File file) {
+        boolean ret = false;
+
+        Request request = OkHttp.createGetRequest(url, properties);
+        Response response = null;
+        try {
+            response = OkHttp.getClient().newCall(request).execute();
+            if (response.isSuccessful()) {
+                GZIPInputStream gzInput = new GZIPInputStream(response.body().byteStream());
+                ret = save(gzInput, file);
+                gzInput.close();
+            }
+            else {
+                Log.e(TAG, "GET " + url + " fail, " + response.message());
+
+                response.close();
+            }
+        }
+        catch (IOException e) {
+            Log.e(TAG, "GET " + url + " error");
+
+            if (response != null) {
+                response.close();
+            }
         }
 
-        if (!GzipHelper.extract(content, dbFile)) {
-            Log.e(TAG, "extract to " + dbFile.getName() + " fail");
-            return false;
+        return ret;
+    }
+
+    private static boolean save(InputStream input, File file) {
+        boolean ret = false;
+
+        FileOutputStream output = null;
+        try {
+            output = new FileOutputStream(file);
+
+            byte[] buf = new byte[1024];
+            while (true) {
+                int bytesRead = input.read(buf);
+                if (bytesRead == -1) {
+                    break;
+                }
+
+                output.write(buf, 0, bytesRead);
+            }
+
+            ret = true;
+        }
+        catch (IOException e) {
+            Log.e(TAG, "download error");
+        }
+        finally {
+            if (output != null) {
+                try {
+                    output.close();
+                }
+                catch (IOException e) {
+                    //ignore
+                }
+            }
         }
 
-        return true;
+        return ret;
     }
 
     private boolean readDatabase(File dbFile) {
@@ -200,69 +280,63 @@ public final class SuperTVSource implements Source {
             }
         }
         else {
-            /**
-             * IPTV列表文件没有版本或时间信息
-             */
             group.addChannels(IPTVListParser.parse(txtFile));
         }
 
         return group;
     }
 
-    private static boolean downloadIPTVList(File txtFile) {
-        String url = getIPTVUrl();
-
-        Map<String, String> property = new HashMap<String, String>();
-        property.put("User-Agent", "lgsg/1.0");
-
-        byte[] content = HttpHelper.opGet(url, property);
-        if (content == null) {
-            Log.e(TAG, "get " + url + " fail");
-            return false;
-        }
-
-        if (!GzipHelper.extract(content, txtFile)) {
-            Log.e(TAG, "extract to " + txtFile.getName() + " fail");
-            return false;
-        }
-
-        return true;
-    }
-
-    private static String getIPTVUrl() {
-        String url = "";
-
-        String area = getAreaByUserIp();
+    private boolean downloadIPTVList(File txtFile) {
+        String area = getAreaByUserIp("https://g3.le.com/r?format=1", null);
         if (area.isEmpty()) {
             Log.e(TAG, "can not get area by user ip");
-        }
-        else {
-            try {
-                url = String.format(IPTV_URL_FORMULAR, URLEncoder.encode(area, "UTF-8"));
-            }
-            catch (UnsupportedEncodingException e) {
-                //ignore
-            }
+            return false;
         }
 
-        return url;
+        String url = "";
+        try {
+            url = String.format(IPTV_URL_FORMULA, URLEncoder.encode(area, "UTF-8"));
+        }
+        catch (UnsupportedEncodingException e) {
+            //ignore
+        }
+
+        Map<String, String> properties = new HashMap<String, String>();
+        properties.put("User-Agent", "lgsg/1.0");
+
+        return download(url, properties, txtFile);
     }
 
-    private static String getAreaByUserIp() {
+    private static String getAreaByUserIp(String url, Map<String, String> properties) {
         String area = "";
 
-        byte[] content = HttpHelper.opGet("https://g3.le.com/r?format=1", null);
-        if (content == null) {
-            Log.e(TAG, "get le json fail");
-        }
-        else {
-            try {
-                JSONObject rootObj = new JSONObject(new String(content));
+        Request request = OkHttp.createGetRequest(url, properties);
+        Response response = null;
+        try {
+            response = OkHttp.getClient().newCall(request).execute();
+            if (response.isSuccessful()) {
+                String content = response.body().string();
 
-                area = rootObj.getString("desc");
+                try {
+                    JSONObject rootObj = new JSONObject(content);
+
+                    area = rootObj.getString("desc");
+                }
+                catch (JSONException e) {
+                    Log.e(TAG, "parse " + content + " error, " + e.getMessage());
+                }
             }
-            catch (JSONException e) {
-                Log.e(TAG, "parse le json fail");
+            else {
+                Log.e(TAG, "GET " + url + " fail, " + response.message());
+
+                response.close();
+            }
+        }
+        catch (IOException e) {
+            Log.e(TAG, "GET " + url + " error");
+
+            if (response != null) {
+                response.close();
             }
         }
 

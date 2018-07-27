@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -89,8 +90,9 @@ public final class FireTVSource implements Source {
 
     @Override
     public Map<String, String> decodeSource(String source) {
-        String url = source;
         Map<String, String> parameters = new HashMap<String, String>();
+
+        String url = source;
 
         if (url.endsWith(SOURCE_PARAMETER_AD)) {
             /**
@@ -161,29 +163,32 @@ public final class FireTVSource implements Source {
     }
 
     private boolean prepareConfig() {
-        Request request = OkHttp.createGetRequest(SOFT_TXT_URL, null);
+        boolean ret = false;
 
+        Request request = OkHttp.createGetRequest(SOFT_TXT_URL, null);
         Response response = null;
         try {
             response = OkHttp.getClient().newCall(request).execute();
             if (response.isSuccessful()) {
                 mConfig = FireTVConfig.parse(response.body().string());
+
+                ret = true;
             }
             else {
-                throw new IOException(response.message());
+                Log.e(TAG, "GET " + SOFT_TXT_URL + " fail, " + response.message());
+
+                response.close();
             }
         }
         catch (IOException e) {
-            Log.e(TAG, "GET " + SOFT_TXT_URL + " fail, " + e.getMessage());
+            Log.e(TAG, "GET " + SOFT_TXT_URL + " error");
 
             if (response != null) {
                 response.close();
             }
-
-            return false;
         }
 
-        return true;
+        return ret;
     }
 
     private boolean prepareChannelTable() {
@@ -216,34 +221,70 @@ public final class FireTVSource implements Source {
     private boolean downloadChannelList() {
         File zipFile = new File(mDataDir, mConfig.getTvlistDate() + ".zip");
 
-        if (!downloadSafely(zipFile)) {
+        if (!download(TVLIST_ZIP_URL, null, zipFile)) {
+            /**
+             * 删除未完成的文件
+             */
+            if (zipFile.exists()) {
+                zipFile.delete();
+            }
+
             return false;
         }
 
-        if (!extract(zipFile, mDataDir)) {
-            Log.e(TAG, "extract " + zipFile.getName() + " fail");
-            return false;
-        }
-
-        zipFile.delete();
-
-        return true;
+        return extract(zipFile, mDataDir);
     }
 
-    private static boolean downloadSafely(File file) {
+    private static boolean download(String url, Map<String, String> properties, File file) {
+        boolean ret = false;
+
+        Request request = OkHttp.createGetRequest(url, properties);
+        Response response = null;
+        try {
+            response = OkHttp.getClient().newCall(request).execute();
+            if (response.isSuccessful()) {
+                InputStream input = response.body().byteStream();
+                ret = save(input, file);
+                input.close();
+            }
+            else {
+                Log.e(TAG, "GET " + url + " fail, " + response.message());
+
+                response.close();
+            }
+        }
+        catch (IOException e) {
+            Log.e(TAG, "GET " + url + " error");
+
+            if (response != null) {
+                response.close();
+            }
+        }
+
+        return ret;
+    }
+
+    private static boolean save(InputStream input, File file) {
+        boolean ret = false;
+
         FileOutputStream output = null;
         try {
             output = new FileOutputStream(file);
 
-            if (!download(output)) {
-                /**
-                 * 下载失败，删除未完成的文件
-                 */
-                file.delete();
+            byte[] buf = new byte[1024];
+            while (true) {
+                int bytesRead = input.read(buf);
+                if (bytesRead == -1) {
+                    break;
+                }
+
+                output.write(buf, 0, bytesRead);
             }
+
+            ret = true;
         }
-        catch (FileNotFoundException e) {
-            //ignore
+        catch (IOException e) {
+            Log.e(TAG, "download error");
         }
         finally {
             if (output != null) {
@@ -256,68 +297,33 @@ public final class FireTVSource implements Source {
             }
         }
 
-        return file.exists();
-    }
-
-    private static boolean download(FileOutputStream output) {
-        Request request = OkHttp.createGetRequest(TVLIST_ZIP_URL, null);
-
-        Response response = null;
-        try {
-            response = OkHttp.getClient().newCall(request).execute();
-            if (response.isSuccessful()) {
-                InputStream input = response.body().byteStream();
-
-                byte[] buf = new byte[1024];
-                while (true) {
-                    int bytesRead = input.read(buf);
-                    if (bytesRead == -1) {
-                        break;
-                    }
-
-                    output.write(buf, 0, bytesRead);
-                }
-
-                input.close();
-            }
-            else {
-                throw new IOException(response.message());
-            }
-        }
-        catch (IOException e) {
-            Log.e(TAG, "GET " + TVLIST_ZIP_URL + " error, " + e.getMessage());
-
-            if (response != null) {
-                response.close();
-            }
-
-            return false;
-        }
-
-        return true;
+        return ret;
     }
 
     private static boolean extract(File file, File dir) {
+        boolean ret = false;
+
         try {
             ZipFile zipFile = new ZipFile(file);
 
             if (!zipFile.isValidZipFile()) {
                 Log.e(TAG, file.getName() + " is not zip format");
-                return false;
             }
+            else {
+                if (zipFile.isEncrypted()) {
+                    zipFile.setPassword("FiReTvtEst@Qq.cOm2");
+                }
 
-            if (zipFile.isEncrypted()) {
-                zipFile.setPassword("FiReTvtEst@Qq.cOm2");
+                zipFile.extractAll(dir.getPath());
+
+                ret = true;
             }
-
-            zipFile.extractAll(dir.getPath());
         }
         catch (ZipException e) {
-            Log.e(TAG, "extract error, " + e.getMessage());
-            return false;
+            Log.e(TAG, "extract " + file.getName() + " error, " + e.getMessage());
         }
 
-        return true;
+        return ret;
     }
 
     private boolean readChannelList() {
