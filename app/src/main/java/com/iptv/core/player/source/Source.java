@@ -1,12 +1,13 @@
 package com.iptv.core.player.source;
 
 import java.io.IOException;
+import java.util.Map;
 
 public interface Source {
     /**
      * 连接
      */
-    void connect(String url) throws IOException;
+    void connect(String url, Map<String, String> property) throws IOException;
 
     /**
      * 获取类型
