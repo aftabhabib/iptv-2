@@ -7,6 +7,7 @@ import android.os.Message;
 import android.view.Surface;
 
 import com.iptv.core.player.Player;
+import com.iptv.core.player.PlayerImpl;
 import com.iptv.core.source.Source;
 import com.iptv.core.source.firetv.FireTVSource;
 
@@ -217,10 +218,7 @@ class IPTVClientInternal extends Handler implements Player.Listener {
                 mDriver.notifyError(mSource.getName() + " decode " + source + " fail");
             }
             else {
-                /**
-                 * FIXME：根据url的类型创建对应的Player
-                 */
-                mPlayer = null;
+                mPlayer = new PlayerImpl();
                 mPlayer.setListener(this);
                 mPlayer.prepare(url, parameters);
 
