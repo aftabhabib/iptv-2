@@ -7,12 +7,12 @@ public interface Source {
     /**
      * 连接
      */
-    void connect(String url, Map<String, String> property) throws IOException;
+    boolean connect(String url, Map<String, String> property) throws IOException;
 
     /**
-     * 获取类型
+     * 获取MIME类型
      */
-    String getMime();
+    String getMIMEType();
 
     /**
      * 读数据
