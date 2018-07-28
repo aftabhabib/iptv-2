@@ -8,8 +8,8 @@ import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
 
-public class HLSPlaylist {
-    private static final String TAG = "HLSPlaylist";
+public class Playlist {
+    private static final String TAG = "Playlist";
 
     /**
      * required
@@ -24,7 +24,7 @@ public class HLSPlaylist {
     private List<MediaSegment> mSegmentList;
     private boolean mEndOfList = false;
 
-    private HLSPlaylist() {
+    private Playlist() {
         mSegmentList = new LinkedList<MediaSegment>();
     }
 
@@ -63,8 +63,8 @@ public class HLSPlaylist {
         mEndOfList = true;
     }
 
-    public static HLSPlaylist parse(String content) {
-        HLSPlaylist playlist = new HLSPlaylist();
+    public static Playlist parse(String content) {
+        Playlist playlist = new Playlist();
 
         BufferedReader reader = new BufferedReader(new StringReader(content));
         try {
