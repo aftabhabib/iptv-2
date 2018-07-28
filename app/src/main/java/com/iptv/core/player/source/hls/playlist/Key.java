@@ -5,8 +5,15 @@ public class Key {
     private static final String METHOD_AES_128 = "AES-128";
     private static final String METHOD_SAMPLE_AES = "SAMPLE-AES";
 
+    /**
+     * required
+     */
     private String mMethod;
     private String mUri;
+
+    /**
+     * optional
+     */
     private String mInitVector;
 
     private Key() {
@@ -29,38 +36,21 @@ public class Key {
         mInitVector = initVector;
     }
 
-    private static final String ATTR_METHOD = "METHOD";
-    private static final String ATTR_URI = "URI";
-    private static final String ATTR_IV = "IV";
-    private static final String ATTR_FORMAT = "KEYFORMAT";
-    private static final String ATTR_FORMAT_VERSIONS = "KEYFORMATVERSIONS";
-
-    public static Key create(String[] attribute) {
+    public static Key parse(String attributeList) {
         Key key = new Key();
 
-        for (int i = 0; i < attribute.length; i++) {
-            String[] result = attribute[i].split("=");
+        String[] attributeArray = attributeList.split(",");
+        for (int i = 0; i < attributeArray.length; i++) {
+            Attribute attribute = Attribute.parse(attributeArray[i]);
 
-            String attrName = result[0];
-            String attrValue = result[1];
-
-            if (attrName.equals(ATTR_METHOD)) {
-                key.setMethod(attrValue);
+            if (attribute.getKey().equals(Attribute.ATTR_METHOD)) {
+                key.setMethod(attribute.getValue());
             }
-            else if (attrName.equals(ATTR_URI)) {
-                key.setUri(attrValue);
+            else if (attribute.getKey().equals(Attribute.ATTR_URI)) {
+                key.setUri(attribute.getValue());
             }
-            else if (attrName.equals(ATTR_IV)) {
-                key.setInitVector(attrValue);
-            }
-            else if (attrName.equals(ATTR_FORMAT)) {
-                //
-            }
-            else if (attrName.equals(ATTR_FORMAT_VERSIONS)) {
-                //
-            }
-            else {
-                //ignore
+            else if (attribute.getKey().equals(Attribute.ATTR_IV)) {
+                key.setInitVector(attribute.getValue());
             }
         }
 

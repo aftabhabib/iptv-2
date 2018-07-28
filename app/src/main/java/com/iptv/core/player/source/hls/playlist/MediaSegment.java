@@ -16,11 +16,15 @@ public class MediaSegment {
         mUri = uri;
     }
 
+    public void setSequenceNumber(int sequenceNumber) {
+
+    }
+
     /**
      * 获取时长（单位：毫秒）
      */
-    public long getDuration() {
-        return (long)(mDuration * 1000);
+    public int getDuration() {
+        return (int)(mDuration * 1000);
     }
 
     /**
