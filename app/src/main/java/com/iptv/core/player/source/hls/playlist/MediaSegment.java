@@ -2,22 +2,14 @@ package com.iptv.core.player.source.hls.playlist;
 
 public class MediaSegment {
     private float mDuration;
-    private ByteRange mRange;
-    private boolean mIsDiscontinuous;
-    private Key mKey;
     private String mUri;
 
-    public MediaSegment(float duration, ByteRange range,
-                        boolean isDiscontinuous, Key key, String uri) {
-        mDuration = duration;
-        mRange = range;
-        mIsDiscontinuous = isDiscontinuous;
-        mKey = key;
-        mUri = uri;
-    }
+    private boolean mIsDiscontinuous;
+    private ByteRange mRange;
+    private Key mKey;
 
-    public void setSequenceNumber(int sequenceNumber) {
-
+    public MediaSegment() {
+        //ignore
     }
 
     /**
@@ -49,9 +41,95 @@ public class MediaSegment {
     }
 
     /**
-     * 获取解密密钥
+     * 是否加密
      */
-    public Key getKey() {
-        return mKey;
+    public boolean isEncrypted() {
+        return ((mKey != null) && mKey.isEncrypted());
+    }
+
+    private void setDuration(float duration) {
+        mDuration = duration;
+    }
+
+    private void setUri(String uri) {
+        mUri = uri;
+    }
+
+    private void setDiscontinuity() {
+        mIsDiscontinuous = true;
+    }
+
+    private void setRange(ByteRange range) {
+        mRange = range;
+    }
+
+    private void setKey(Key key) {
+        mKey = key;
+    }
+
+    public static class Builder {
+        /**
+         * required
+         */
+        private float mDuration;
+        private String mUri;
+
+        /**
+         * optional
+         */
+        private boolean mIsDiscontinuous;
+        private ByteRange mRange;
+        private Key mKey;
+
+        public Builder() {
+            //ignore
+        }
+
+        public Builder(Builder other) {
+            if (other.mKey != null) {
+                mKey = other.mKey;
+            }
+        }
+
+        public void setDuration(String duration) {
+            mDuration = Float.parseFloat(duration);
+        }
+
+        public void setUri(String uri) {
+            mUri = uri;
+        }
+
+        public void setDiscontinuity() {
+            mIsDiscontinuous = true;
+        }
+
+        public void setRange(ByteRange range) {
+            mRange = range;
+        }
+
+        public void setKey(Key key) {
+            mKey = key;
+        }
+
+        public MediaSegment build() {
+            MediaSegment segment = new MediaSegment();
+
+            segment.setDuration(mDuration);
+            segment.setUri(mUri);
+
+            if (mIsDiscontinuous) {
+                segment.setDiscontinuity();
+            }
+
+            if (mRange != null) {
+                segment.setRange(mRange);
+            }
+
+            if (mKey != null) {
+                segment.setKey(mKey);
+            }
+
+            return segment;
+        }
     }
 }

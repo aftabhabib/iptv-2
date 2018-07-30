@@ -5,8 +5,11 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class Playlist {
     private static final String TAG = "Playlist";
@@ -21,19 +24,30 @@ public class Playlist {
      * option
      */
     private int mMediaSequence = 0;
-    private List<MediaSegment> mSegmentList;
     private boolean mEndOfList = false;
+    private List<MediaSegment> mSegmentList;
+
+    private Map<String, RenditionGroup> mRenditionGroupTable;
+    private List<VariantStream> mStreamList;
 
     private Playlist() {
-        mSegmentList = new LinkedList<MediaSegment>();
+        //ignore
     }
 
     public int getVersion() {
         return mVersion;
     }
 
+    public int getMediaSequence() {
+        return mMediaSequence;
+    }
+
     public boolean isEndOfList() {
         return mEndOfList;
+    }
+
+    public boolean isMasterPlaylist() {
+        return mStreamList != null;
     }
 
     private void setVersion(int version) {
@@ -48,19 +62,39 @@ public class Playlist {
         mMediaSequence = mediaSequence;
     }
 
-    private void addSegment(MediaSegment segment) {
-        if (segment.getDuration() > mTargetDuration) {
-            Log.w(TAG, "segment duration must be less than or equal to the target duration");
-        }
+    private void setEndOfList() {
+        mEndOfList = true;
+    }
 
-        int sequenceNumber = mMediaSequence + mSegmentList.size();
-        segment.setSequenceNumber(sequenceNumber);
+    private void addSegment(MediaSegment segment) {
+        if (mSegmentList == null) {
+            mSegmentList = new LinkedList<MediaSegment>();
+        }
 
         mSegmentList.add(segment);
     }
 
-    private void setEndOfList() {
-        mEndOfList = true;
+    private void addMedia(Media media) {
+        if (mRenditionGroupTable == null) {
+            mRenditionGroupTable = new HashMap<String, RenditionGroup>();
+        }
+
+        if (!mRenditionGroupTable.containsKey(media.getGroupId())) {
+            /**
+             * this media belongs to a new rendition group
+             */
+            mRenditionGroupTable.put(media.getGroupId(), new RenditionGroup());
+        }
+
+        mRenditionGroupTable.get(media.getGroupId()).addMedia(media);
+    }
+
+    private void addStream(VariantStream stream) {
+        if (mStreamList == null) {
+            mStreamList = new ArrayList<VariantStream>(5);
+        }
+
+        mStreamList.add(stream);
     }
 
     public static Playlist parse(String content) {
@@ -68,13 +102,8 @@ public class Playlist {
 
         BufferedReader reader = new BufferedReader(new StringReader(content));
         try {
-            /**
-             * MediaSegment parameters
-             */
-            float duration = 0.0f;
-            ByteRange byteRange = null;
-            boolean isDiscontinuous = false;
-            Key key = null;
+            MediaSegment.Builder segmentBuilder = new MediaSegment.Builder();
+            VariantStream.Builder streamBuilder = null;
 
             while (true) {
                 String line = reader.readLine();
@@ -101,24 +130,21 @@ public class Playlist {
                 else if (line.startsWith(Tag.INF)) {
                     String value = line.substring(Tag.INF.length() + 1);
 
-                    String[] result = value.split(",");
-                    duration = Float.parseFloat(result[0]);
-                    /**
-                     * title一般不出现，也没有实际意义
-                     */
+                    segmentBuilder.setDuration(parseSegmentDuration(value));
                 }
-                else if (line.startsWith(Tag.RANGE)) {
-                    String value = line.substring(Tag.RANGE.length() + 1);
+                else if (line.startsWith(Tag.BYTE_RANGE)) {
+                    String value = line.substring(Tag.BYTE_RANGE.length() + 1);
 
-                    byteRange = ByteRange.parse(value);
+                    segmentBuilder.setRange(parseSegmentRange(value));
                 }
                 else if (line.equals(Tag.DISCONTINUITY)) {
-                    isDiscontinuous = true;
+
+                    segmentBuilder.setDiscontinuity();
                 }
                 else if (line.startsWith(Tag.KEY)) {
                     String value = line.substring(Tag.KEY.length() + 1);
 
-                    key = Key.parse(value);
+                    segmentBuilder.setKey(createSegmentKey(value));
                 }
                 /**
                  * Media Playlist Tags
@@ -146,20 +172,32 @@ public class Playlist {
                  */
                 else if (line.startsWith(Tag.MEDIA)) {
                     String value = line.substring(Tag.MEDIA.length() + 1);
+
+                    playlist.addMedia(createMedia(value));
+                }
+                else if (line.startsWith(Tag.STREAM_INF)) {
+                    String value = line.substring(Tag.STREAM_INF.length() + 1);
+
+                    streamBuilder = createStreamBuilder(value);
                 }
                 /**
-                 * Media Segment
+                 * Uri
                  */
                 else if (!line.startsWith("#")) {
-                    MediaSegment segment = new MediaSegment(
-                            duration, byteRange, isDiscontinuous, key, line);
-                    playlist.addSegment(segment);
+                    String uri = line;
 
-                    /**
-                     * 重置部分参数
-                     */
-                    byteRange = null;
-                    isDiscontinuous = false;
+                    if (streamBuilder != null) {
+                        streamBuilder.setUri(uri);
+
+                        playlist.addStream(streamBuilder.build());
+                    }
+                    else if (segmentBuilder != null) {
+                        segmentBuilder.setUri(uri);
+
+                        playlist.addSegment(segmentBuilder.build());
+
+                        segmentBuilder = new MediaSegment.Builder(segmentBuilder);
+                    }
                 }
             }
 
@@ -170,5 +208,110 @@ public class Playlist {
         }
 
         return playlist;
+    }
+
+    private static String parseSegmentDuration(String value) {
+        String[] result = value.split(",");
+
+        return result[0];
+    }
+
+    private static ByteRange parseSegmentRange(String byteRange) {
+        String[] result = byteRange.split("@");
+
+        if (result.length == 1) {
+            return new ByteRange(result[0]);
+        }
+        else {
+            return new ByteRange(result[0], result[1]);
+        }
+    }
+
+    public static Key createSegmentKey(String attributeList) {
+        Key.Builder builder = new Key.Builder();
+
+        String[] attributeArray = attributeList.split(",");
+        for (int i = 0; i < attributeArray.length; i++) {
+            Attribute attribute = Attribute.parse(attributeArray[i]);
+
+            if (attribute.getKey().equals(Attribute.ATTR_METHOD)) {
+                builder.setMethod(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_URI)) {
+                builder.setUri(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_IV)) {
+                builder.setInitVector(attribute.getValue());
+            }
+        }
+
+        return builder.build();
+    }
+
+    private static Media createMedia(String attributeList) {
+        Media.Builder builder = new Media.Builder();
+
+        String[] attributeArray = attributeList.split(",");
+        for (int i = 0; i < attributeArray.length; i++) {
+            Attribute attribute = Attribute.parse(attributeArray[i]);
+
+            if (attribute.getKey().equals(Attribute.ATTR_TYPE)) {
+                builder.setType(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_URI)) {
+                builder.setUri(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_GROUP_ID)) {
+                builder.setGroupId(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_LANGUAGE)) {
+                builder.setLanguage(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_NAME)) {
+                builder.setName(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_DEFAULT)) {
+                if (attribute.getValue().equals("YES")) {
+                    builder.setDefault();
+                }
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_AUTO_SELECT)) {
+                if (attribute.getValue().equals("YES")) {
+                    builder.setAutoSelect();
+                }
+            }
+        }
+
+        return builder.build();
+    }
+
+    private static VariantStream.Builder createStreamBuilder(String attributeList) {
+        VariantStream.Builder builder = new VariantStream.Builder();
+
+        String[] attributeArray = attributeList.split(",");
+        for (int i = 0; i < attributeArray.length; i++) {
+            Attribute attribute = Attribute.parse(attributeArray[i]);
+
+            if (attribute.getKey().equals(Attribute.ATTR_BANDWIDTH)) {
+                builder.setBandwidth(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_CODECS)) {
+                builder.setCodecs(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_RESOLUTION)) {
+                builder.setResolution(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_AUDIO)) {
+                builder.setAudioGroup(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_VIDEO)) {
+                builder.setVideoGroup(attribute.getValue());
+            }
+            else if (attribute.getKey().equals(Attribute.ATTR_SUBTITLE)) {
+                builder.setSubtitleGroup(attribute.getValue());
+            }
+        }
+
+        return builder;
     }
 }

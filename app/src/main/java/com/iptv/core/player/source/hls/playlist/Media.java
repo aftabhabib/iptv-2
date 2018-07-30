@@ -24,6 +24,10 @@ public class Media {
         //
     }
 
+    public String getGroupId() {
+        return mGroupId;
+    }
+
     public boolean isVideo() {
         return mType.equals(TYPE_VIDEO);
     }
@@ -34,6 +38,10 @@ public class Media {
 
     public boolean isSubtitle() {
         return mType.equals(TYPE_SUBTITLE);
+    }
+
+    public String getLanguage() {
+        return mLanguage;
     }
 
     public String getUri() {
@@ -52,12 +60,12 @@ public class Media {
         mType = type;
     }
 
-    private void setUri(String uri) {
-        mUri = uri;
-    }
-
     private void setGroupId(String groupId) {
         mGroupId = groupId;
+    }
+
+    private void setUri(String uri) {
+        mUri = uri;
     }
 
     private void setLanguage(String language) {
@@ -68,60 +76,89 @@ public class Media {
         mName = name;
     }
 
-    private void setDefault(boolean isDefault) {
-        mIsDefault = isDefault;
+    private void setDefault() {
+        mIsDefault = true;
     }
 
-    private void setAutoSelect(boolean isAutoSelect) {
-        mIsAutoSelect = isAutoSelect;
+    private void setAutoSelect() {
+        mIsAutoSelect = true;
     }
 
-    public static Media parse(String attributeList) {
-        Media media = new Media();
+    public static class Builder {
+        /**
+         * required
+         */
+        private String mType;
+        private String mGroupId;
 
-        String[] attributeArray = attributeList.split(",");
-        for (int i = 0; i < attributeArray.length; i++) {
-            Attribute attribute = Attribute.parse(attributeArray[i]);
+        /**
+         * optional
+         */
+        private String mUri;
+        private String mLanguage;
+        private String mName;
+        private boolean mIsDefault;
+        private boolean mIsAutoSelect;
 
-            if (attribute.getKey().equals(Attribute.ATTR_TYPE)) {
-                media.setType(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_URI)) {
-                media.setUri(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_GROUP_ID)) {
-                media.setGroupId(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_LANGUAGE)) {
-                media.setLanguage(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_NAME)) {
-                media.setName(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_DEFAULT)) {
-                if (attribute.getValue().equals("YES")) {
-                    media.setDefault(true);
-                }
-                else if (attribute.getValue().equals("NO")) {
-                    media.setDefault(false);
-                }
-                else {
-                    throw new IllegalArgumentException("must be YES or NO");
-                }
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_AUTO_SELECT)) {
-                if (attribute.getValue().equals("YES")) {
-                    media.setAutoSelect(true);
-                }
-                else if (attribute.getValue().equals("NO")) {
-                    media.setAutoSelect(false);
-                }
-                else {
-                    throw new IllegalArgumentException("must be YES or NO");
-                }
-            }
+        public Builder() {
+            //
         }
 
-        return media;
+        public void setType(String type) {
+            mType = type;
+        }
+
+        public void setGroupId(String groupId) {
+            mGroupId = groupId;
+        }
+
+        public void setUri(String uri) {
+            mUri = uri;
+        }
+
+        public void setLanguage(String language) {
+            mLanguage = language;
+        }
+
+        public void setName(String name) {
+            mName = name;
+        }
+
+        public void setDefault() {
+            mIsDefault = true;
+        }
+
+        public void setAutoSelect() {
+            mIsAutoSelect = true;
+        }
+
+        public Media build() {
+            Media media = new Media();
+
+            media.setType(mType);
+            media.setGroupId(mGroupId);
+
+            if (mUri != null) {
+                media.setUri(mUri);
+            }
+
+            if (mLanguage != null) {
+                media.setLanguage(mLanguage);
+            }
+
+            if (mName != null) {
+                media.setName(mName);
+            }
+
+            if (mIsDefault) {
+                media.setDefault();
+            }
+
+            if (mIsAutoSelect) {
+                media.setAutoSelect();
+            }
+
+            return media;
+        }
     }
 }

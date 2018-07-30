@@ -1,38 +1,39 @@
 package com.iptv.core.player.source.hls.playlist;
 
 public class ByteRange {
+    /**
+     * required
+     */
     private long mLength;
+
+    /**
+     * optional
+     */
     private long mOffset;
 
-    private ByteRange(long length, long offset) {
-        mLength = length;
-        mOffset = offset;
+    public ByteRange(String length) {
+        this(length, "");
     }
 
-    public long getLength() {
-        return mLength;
+    public ByteRange(String length, String offset) {
+        mLength = Long.parseLong(length);
+        mOffset = offset.isEmpty() ? -1 : Long.parseLong(offset);
     }
 
-    public long getOffset() {
-        return mOffset;
+    public boolean isRelative() {
+        return mOffset == -1;
     }
 
-    public static ByteRange parse(String byteRange) {
-        String[] result = byteRange.split("@");
-
-        long length = Long.parseLong(result[0]);
-
-        long offset;
-        if (result.length == 1) {
-            /**
-             * 依赖上一个片段的定义，即：currOffset = prevOffset + prevLength
-             */
-            offset = -1;
-        }
-        else {
-            offset = Long.parseLong(result[1]);
+    public void setOffset(ByteRange prevRange) {
+        if (!isRelative()) {
+            throw new IllegalStateException("offset is already defined");
         }
 
-        return new ByteRange(length, offset);
+        mOffset = prevRange.mOffset + prevRange.mLength;
+    }
+
+    @Override
+    public String toString() {
+        return "bytes=" + mOffset + "-" + (mOffset + mLength - 1);
     }
 }

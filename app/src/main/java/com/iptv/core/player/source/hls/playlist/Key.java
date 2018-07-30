@@ -36,24 +36,48 @@ public class Key {
         mInitVector = initVector;
     }
 
-    public static Key parse(String attributeList) {
-        Key key = new Key();
+    public static class Builder {
+        /**
+         * required
+         */
+        private String mMethod;
 
-        String[] attributeArray = attributeList.split(",");
-        for (int i = 0; i < attributeArray.length; i++) {
-            Attribute attribute = Attribute.parse(attributeArray[i]);
+        /**
+         * optional
+         */
+        private String mUri;
+        private String mInitVector;
 
-            if (attribute.getKey().equals(Attribute.ATTR_METHOD)) {
-                key.setMethod(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_URI)) {
-                key.setUri(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_IV)) {
-                key.setInitVector(attribute.getValue());
-            }
+        public Builder() {
+            //ignore
         }
 
-        return key;
+        public void setMethod(String method) {
+            mMethod = method;
+        }
+
+        public void setUri(String uri) {
+            mUri = uri;
+        }
+
+        public void setInitVector(String initVector) {
+            mInitVector = initVector;
+        }
+
+        public Key build() {
+            Key key = new Key();
+
+            key.setMethod(mMethod);
+
+            if (mUri != null) {
+                key.setUri(mUri);
+            }
+
+            if (mInitVector != null) {
+                key.setInitVector(mInitVector);
+            }
+
+            return key;
+        }
     }
 }

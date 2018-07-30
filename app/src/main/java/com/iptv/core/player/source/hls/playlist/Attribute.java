@@ -13,6 +13,13 @@ class Attribute {
 
     public static final String ATTR_URI = "URI";
 
+    public static final String ATTR_BANDWIDTH = "BANDWIDTH";
+    public static final String ATTR_CODECS = "CODECS";
+    public static final String ATTR_RESOLUTION = "RESOLUTION";
+    public static final String ATTR_AUDIO = "AUDIO";
+    public static final String ATTR_VIDEO = "VIDEO";
+    public static final String ATTR_SUBTITLE = "SUBTITLES";
+
     private String mKey;
     private String mValue;
 
