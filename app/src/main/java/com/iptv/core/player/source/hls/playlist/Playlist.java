@@ -1,19 +1,16 @@
 package com.iptv.core.player.source.hls.playlist;
 
-import android.util.Log;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class Playlist {
-    private static final String TAG = "Playlist";
-
     /**
      * required
      */
@@ -46,8 +43,29 @@ public class Playlist {
         return mEndOfList;
     }
 
-    public boolean isMasterPlaylist() {
+    public boolean isVariantPlaylist() {
         return mStreamList != null;
+    }
+
+    public VariantStream findStreamByBandwidth(int bandwidth) {
+        int index;
+
+        if (bandwidth > 0) {
+            for (index = 0; index < mStreamList.size(); index++) {
+                if (mStreamList.get(index).getBandwidth() > bandwidth) {
+                    break;
+                }
+            }
+
+            if (index > 0) {
+                index -= 1;
+            }
+        }
+        else {
+            index = mStreamList.size() - 1;
+        }
+
+        return mStreamList.get(index);
     }
 
     private void setVersion(int version) {
@@ -95,6 +113,15 @@ public class Playlist {
         }
 
         mStreamList.add(stream);
+    }
+
+    private void sortStreamByBandwidth() {
+        mStreamList.sort(new Comparator<VariantStream>() {
+            @Override
+            public int compare(VariantStream stream1, VariantStream stream2) {
+                return stream1.getBandwidth() - stream2.getBandwidth();
+            }
+        });
     }
 
     public static Playlist parse(String content) {
@@ -205,6 +232,13 @@ public class Playlist {
         }
         catch (IOException e) {
             //ignore
+        }
+
+        if (playlist.isVariantPlaylist()) {
+            /**
+             * 按照带宽排序
+             */
+            playlist.sortStreamByBandwidth();
         }
 
         return playlist;
