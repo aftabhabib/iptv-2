@@ -1,8 +1,10 @@
 package com.iptv.core.player.source.hls.playlist;
 
+import android.net.Uri;
+
 public class VariantStream {
     private int mBandwidth;
-    private String mUri;
+    private Uri mUri;
 
     private int mVideoWidth;
     private int mVideoHeight;
@@ -19,7 +21,7 @@ public class VariantStream {
         return mBandwidth;
     }
 
-    public String getUri(String uri) {
+    public Uri getUri() {
         return mUri;
     }
 
@@ -27,7 +29,7 @@ public class VariantStream {
         mBandwidth = bandwidth;
     }
 
-    private void setUri(String uri) {
+    private void setUri(Uri uri) {
         mUri = uri;
     }
 
@@ -56,7 +58,7 @@ public class VariantStream {
          * required
          */
         private int mBandwidth;
-        private String mUri;
+        private Uri mUri;
 
         /**
          * optional
@@ -106,7 +108,7 @@ public class VariantStream {
         }
 
         public void setUri(String uri) {
-            mUri = uri;
+            mUri = Uri.parse(uri);
         }
 
         public VariantStream build() {
