@@ -51,6 +51,9 @@ public class Playlist {
         int index;
 
         if (bandwidth > 0) {
+            /**
+             * 带宽已知，选择最接近的流
+             */
             for (index = 0; index < mStreamList.size(); index++) {
                 if (mStreamList.get(index).getBandwidth() > bandwidth) {
                     break;
@@ -62,6 +65,9 @@ public class Playlist {
             }
         }
         else {
+            /**
+             * 带宽未知，选择最大的流
+             */
             index = mStreamList.size() - 1;
         }
 
