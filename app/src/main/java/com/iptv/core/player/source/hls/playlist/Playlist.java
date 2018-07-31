@@ -25,25 +25,54 @@ public class Playlist {
     private List<MediaSegment> mSegmentList;
 
     private Map<String, RenditionGroup> mRenditionGroupTable;
+
     private List<VariantStream> mStreamList;
 
     private Playlist() {
-        //ignore
+        /**
+         * nothing
+         */
     }
 
+    /**
+     * 获取版本号
+     */
     public int getVersion() {
         return mVersion;
     }
 
+    /**
+     * 获取媒体序号
+     */
     public int getMediaSequence() {
         return mMediaSequence;
     }
 
+    /**
+     * 播放列表是否结束
+     */
     public boolean isEndOfList() {
         return mEndOfList;
     }
 
-    public boolean isVariantPlaylist() {
+    /**
+     * 是否包含RenditionGroup（一般是针对音频、字幕轨道）
+     */
+    public boolean containsAlternativeRenditions() {
+        return !mRenditionGroupTable.isEmpty();
+    }
+
+    /**
+     * 获取指定的RenditionGroup
+     */
+    public RenditionGroup getRenditionGroupTable(String groupId) {
+        return mRenditionGroupTable.get(groupId);
+    }
+
+    /**
+     * 是否定义了多个流（针对不同带宽）
+     */
+    public boolean isVariant() {
         return mStreamList != null;
     }
 
@@ -118,16 +147,17 @@ public class Playlist {
             mStreamList = new ArrayList<VariantStream>(5);
         }
 
-        mStreamList.add(stream);
-    }
-
-    private void sortStreamByBandwidth() {
-        mStreamList.sort(new Comparator<VariantStream>() {
-            @Override
-            public int compare(VariantStream stream1, VariantStream stream2) {
-                return stream1.getBandwidth() - stream2.getBandwidth();
+        /**
+         * 按照带宽由小到大的次序
+         */
+        int index;
+        for (index = 0; index < mStreamList.size(); index++) {
+            if (stream.getBandwidth() < mStreamList.get(index).getBandwidth()) {
+                break;
             }
-        });
+        }
+
+        mStreamList.add(index, stream);
     }
 
     public static Playlist parse(String content) {
@@ -135,7 +165,7 @@ public class Playlist {
 
         BufferedReader reader = new BufferedReader(new StringReader(content));
         try {
-            MediaSegment.Builder segmentBuilder = new MediaSegment.Builder();
+            MediaSegment.Builder segmentBuilder = null;
             VariantStream.Builder streamBuilder = null;
 
             while (true) {
@@ -163,21 +193,37 @@ public class Playlist {
                 else if (line.startsWith(Tag.INF)) {
                     String value = line.substring(Tag.INF.length() + 1);
 
-                    segmentBuilder.setDuration(parseSegmentDuration(value));
+                    if (segmentBuilder == null) {
+                        segmentBuilder = new MediaSegment.Builder();
+                    }
+
+                    segmentBuilder.setDuration(parseDuration(value));
                 }
                 else if (line.startsWith(Tag.BYTE_RANGE)) {
                     String value = line.substring(Tag.BYTE_RANGE.length() + 1);
 
-                    segmentBuilder.setRange(parseSegmentRange(value));
+                    if (segmentBuilder == null) {
+                        segmentBuilder = new MediaSegment.Builder();
+                    }
+
+                    segmentBuilder.setRange(value);
                 }
                 else if (line.equals(Tag.DISCONTINUITY)) {
+                    if (segmentBuilder == null) {
+                        segmentBuilder = new MediaSegment.Builder();
+                    }
 
                     segmentBuilder.setDiscontinuity();
                 }
                 else if (line.startsWith(Tag.KEY)) {
                     String value = line.substring(Tag.KEY.length() + 1);
+                    Key key = createKey(Attribute.parseList(value));
 
-                    segmentBuilder.setKey(createSegmentKey(value));
+                    if (segmentBuilder == null) {
+                        segmentBuilder = new MediaSegment.Builder();
+                    }
+
+                    segmentBuilder.setKey(key);
                 }
                 /**
                  * Media Playlist Tags
@@ -206,12 +252,14 @@ public class Playlist {
                 else if (line.startsWith(Tag.MEDIA)) {
                     String value = line.substring(Tag.MEDIA.length() + 1);
 
-                    playlist.addMedia(createMedia(value));
+                    Media media = createMedia(Attribute.parseList(value));
+                    playlist.addMedia(media);
                 }
                 else if (line.startsWith(Tag.STREAM_INF)) {
                     String value = line.substring(Tag.STREAM_INF.length() + 1);
 
-                    streamBuilder = createStreamBuilder(value);
+                    streamBuilder = new VariantStream.Builder();
+                    streamBuilder.setAttributeList(Attribute.parseList(value));
                 }
                 /**
                  * Uri
@@ -223,13 +271,13 @@ public class Playlist {
                         streamBuilder.setUri(uri);
 
                         playlist.addStream(streamBuilder.build());
+                        streamBuilder = null;
                     }
                     else if (segmentBuilder != null) {
                         segmentBuilder.setUri(uri);
 
                         playlist.addSegment(segmentBuilder.build());
-
-                        segmentBuilder = new MediaSegment.Builder(segmentBuilder);
+                        segmentBuilder = segmentBuilder.fork();
                     }
                 }
             }
@@ -240,118 +288,28 @@ public class Playlist {
             //ignore
         }
 
-        if (playlist.isVariantPlaylist()) {
-            /**
-             * 按照带宽排序
-             */
-            playlist.sortStreamByBandwidth();
-        }
-
         return playlist;
     }
 
-    private static String parseSegmentDuration(String value) {
+    private static String parseDuration(String value) {
         String[] result = value.split(",");
 
         return result[0];
     }
 
-    private static ByteRange parseSegmentRange(String byteRange) {
-        String[] result = byteRange.split("@");
-
-        if (result.length == 1) {
-            return new ByteRange(result[0]);
-        }
-        else {
-            return new ByteRange(result[0], result[1]);
-        }
-    }
-
-    public static Key createSegmentKey(String attributeList) {
+    public static Key createKey(List<Attribute> attributeList) {
         Key.Builder builder = new Key.Builder();
 
-        String[] attributeArray = attributeList.split(",");
-        for (int i = 0; i < attributeArray.length; i++) {
-            Attribute attribute = Attribute.parse(attributeArray[i]);
-
-            if (attribute.getKey().equals(Attribute.ATTR_METHOD)) {
-                builder.setMethod(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_URI)) {
-                builder.setUri(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_IV)) {
-                builder.setInitVector(attribute.getValue());
-            }
-        }
+        builder.setAttributeList(attributeList);
 
         return builder.build();
     }
 
-    private static Media createMedia(String attributeList) {
+    private static Media createMedia(List<Attribute> attributeList) {
         Media.Builder builder = new Media.Builder();
 
-        String[] attributeArray = attributeList.split(",");
-        for (int i = 0; i < attributeArray.length; i++) {
-            Attribute attribute = Attribute.parse(attributeArray[i]);
-
-            if (attribute.getKey().equals(Attribute.ATTR_TYPE)) {
-                builder.setType(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_URI)) {
-                builder.setUri(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_GROUP_ID)) {
-                builder.setGroupId(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_LANGUAGE)) {
-                builder.setLanguage(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_NAME)) {
-                builder.setName(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_DEFAULT)) {
-                if (attribute.getValue().equals("YES")) {
-                    builder.setDefault();
-                }
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_AUTO_SELECT)) {
-                if (attribute.getValue().equals("YES")) {
-                    builder.setAutoSelect();
-                }
-            }
-        }
+        builder.setAttributeList(attributeList);
 
         return builder.build();
-    }
-
-    private static VariantStream.Builder createStreamBuilder(String attributeList) {
-        VariantStream.Builder builder = new VariantStream.Builder();
-
-        String[] attributeArray = attributeList.split(",");
-        for (int i = 0; i < attributeArray.length; i++) {
-            Attribute attribute = Attribute.parse(attributeArray[i]);
-
-            if (attribute.getKey().equals(Attribute.ATTR_BANDWIDTH)) {
-                builder.setBandwidth(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_CODECS)) {
-                builder.setCodecs(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_RESOLUTION)) {
-                builder.setResolution(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_AUDIO)) {
-                builder.setAudioGroup(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_VIDEO)) {
-                builder.setVideoGroup(attribute.getValue());
-            }
-            else if (attribute.getKey().equals(Attribute.ATTR_SUBTITLE)) {
-                builder.setSubtitleGroup(attribute.getValue());
-            }
-        }
-
-        return builder;
     }
 }

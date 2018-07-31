@@ -2,109 +2,91 @@ package com.iptv.core.player.source.hls.playlist;
 
 import android.net.Uri;
 
-public class VariantStream {
-    private int mBandwidth;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public final class VariantStream {
+    private Map<String, String> mAttributeTable;
     private Uri mUri;
 
-    private int mVideoWidth;
-    private int mVideoHeight;
-
-    private String mAudioGroup;
-    private String mVideoGroup;
-    private String mSubtitleGroup;
-
-    private VariantStream() {
-        //ignore
+    private VariantStream(Map<String, String> attributeTable, Uri uri) {
+        mAttributeTable = attributeTable;
+        mUri = uri;
     }
 
+    /**
+     * 获取带宽
+     */
     public int getBandwidth() {
-        return mBandwidth;
+        String bandwidth = mAttributeTable.get(Attribute.ATTR_BANDWIDTH);
+
+        return Integer.parseInt(bandwidth);
     }
 
+    /**
+     * 获取URI
+     */
     public Uri getUri() {
         return mUri;
     }
 
-    private void setBandwidth(int bandwidth) {
-        mBandwidth = bandwidth;
+    /**
+     * 是否定义了VideoGroup
+     */
+    public boolean containsVideo() {
+        return mAttributeTable.containsKey(Attribute.ATTR_VIDEO);
     }
 
-    private void setUri(Uri uri) {
-        mUri = uri;
+    /**
+     * 获取VideoGroup的ID
+     */
+    public String getVideo() {
+        return mAttributeTable.get(Attribute.ATTR_VIDEO);
     }
 
-    private void setVideoWidth(int videoWidth) {
-        mVideoWidth = videoWidth;
+    /**
+     * 是否定义了AudioGroup
+     */
+    public boolean containsAudio() {
+        return mAttributeTable.containsKey(Attribute.ATTR_AUDIO);
     }
 
-    private void setVideoHeight(int videoHeight) {
-        mVideoHeight = videoHeight;
+    /**
+     * 获取AudioGroup的ID
+     */
+    public String getAudio() {
+        return mAttributeTable.get(Attribute.ATTR_AUDIO);
     }
 
-    private void setAudioGroup(String audioGroup) {
-        mAudioGroup = audioGroup;
+    /**
+     * 是否定义了SubtitleGroup
+     */
+    public boolean containsSubtitle() {
+        return mAttributeTable.containsKey(Attribute.ATTR_SUBTITLE);
     }
 
-    private void setVideoGroup(String videoGroup) {
-        mVideoGroup = videoGroup;
-    }
-
-    private void setSubtitleGroup(String subtitleGroup) {
-        mSubtitleGroup = subtitleGroup;
+    /**
+     * 获取SubtitleGroup的ID
+     */
+    public String getSubtitle() {
+        return mAttributeTable.get(Attribute.ATTR_SUBTITLE);
     }
 
     public static class Builder {
-        /**
-         * required
-         */
-        private int mBandwidth;
+        private Map<String, String> mAttributeTable;
         private Uri mUri;
 
-        /**
-         * optional
-         */
-        private int mVideoWidth;
-        private int mVideoHeight;
-
-        private String mAudioGroup;
-        private String mVideoGroup;
-        private String mSubtitleGroup;
-
         public Builder() {
-            //ignore
+            mAttributeTable = new HashMap<String, String>();
         }
 
-        public void setBandwidth(String bandwidth) {
-            mBandwidth = Integer.parseInt(bandwidth);
-        }
+        public void setAttributeList(List<Attribute> attributeList) {
+            for (int i = 0; i < attributeList.size(); i++) {
+                Attribute attribute = attributeList.get(i);
 
-        public void setCodecs(String codecs) {
-            String[] codecArray = codecs.split(",");
-
-            for (int i = 0; i < codecArray.length; i++) {
-                /**
-                 * TODO: codec type, profile and level
-                 */
+                mAttributeTable.put(attribute.getKey(), attribute.getValue());
             }
-        }
-
-        public void setResolution(String resolution) {
-            String[] result = resolution.split("x");
-
-            mVideoWidth = Integer.parseInt(result[0]);
-            mVideoHeight = Integer.parseInt(result[1]);
-        }
-
-        public void setAudioGroup(String audioGroup) {
-            mAudioGroup = audioGroup;
-        }
-
-        public void setVideoGroup(String videoGroup) {
-            mVideoGroup = videoGroup;
-        }
-
-        public void setSubtitleGroup(String subtitleGroup) {
-            mSubtitleGroup = subtitleGroup;
         }
 
         public void setUri(String uri) {
@@ -112,29 +94,7 @@ public class VariantStream {
         }
 
         public VariantStream build() {
-            VariantStream stream = new VariantStream();
-
-            stream.setBandwidth(mBandwidth);
-            stream.setUri(mUri);
-
-            if (mVideoWidth > 0 && mVideoHeight > 0) {
-                stream.setVideoWidth(mVideoWidth);
-                stream.setVideoHeight(mVideoHeight);
-            }
-
-            if (mAudioGroup != null) {
-                stream.setAudioGroup(mAudioGroup);
-            }
-
-            if (mVideoGroup != null) {
-                stream.setVideoGroup(mVideoGroup);
-            }
-
-            if (mSubtitleGroup != null) {
-                stream.setSubtitleGroup(mSubtitleGroup);
-            }
-
-            return stream;
+            return new VariantStream(mAttributeTable, mUri);
         }
     }
 }

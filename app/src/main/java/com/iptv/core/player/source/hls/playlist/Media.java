@@ -1,164 +1,105 @@
 package com.iptv.core.player.source.hls.playlist;
 
-public class Media {
-    private static final String TYPE_VIDEO = "VIDEO";
-    private static final String TYPE_AUDIO = "AUDIO";
-    private static final String TYPE_SUBTITLE = "SUBTITLES";
+import android.net.Uri;
 
-    /**
-     * required
-     */
-    private String mType;
-    private String mUri;
-    private String mGroupId;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-    /**
-     * optional
-     */
-    private String mLanguage;
-    private String mName;
-    private boolean mIsDefault;
-    private boolean mIsAutoSelect;
+public final class Media {
+    public static final String TYPE_VIDEO = "VIDEO";
+    public static final String TYPE_AUDIO = "AUDIO";
+    public static final String TYPE_SUBTITLE = "SUBTITLES";
 
-    private Media() {
-        //
+    private Map<String, String> mAttributeTable;
+
+    private Media(Map<String, String> attributeTable) {
+        mAttributeTable = attributeTable;
     }
 
+    /**
+     * 获取类型
+     */
+    public String getType() {
+        return mAttributeTable.get(Attribute.ATTR_TYPE);
+    }
+
+    /**
+     * 获取所属组的ID
+     */
     public String getGroupId() {
-        return mGroupId;
+        return mAttributeTable.get(Attribute.ATTR_GROUP_ID);
     }
 
-    public boolean isVideo() {
-        return mType.equals(TYPE_VIDEO);
+    /**
+     * 是否定义了媒体数据的URI
+     */
+    public boolean containsUri() {
+        return mAttributeTable.containsKey(Attribute.ATTR_URI);
     }
 
-    public boolean isAudio() {
-        return mType.equals(TYPE_AUDIO);
+    /**
+     * 获取媒体数据的URI
+     */
+    public Uri getUri() {
+        String uri = mAttributeTable.get(Attribute.ATTR_URI);
+
+        return Uri.parse(uri);
     }
 
-    public boolean isSubtitle() {
-        return mType.equals(TYPE_SUBTITLE);
-    }
-
-    public String getLanguage() {
-        return mLanguage;
-    }
-
-    public String getUri() {
-        return mUri;
-    }
-
+    /**
+     * 是不是默认的选择
+     */
     public boolean isDefault() {
-        return mIsDefault;
+        if (!mAttributeTable.containsKey(Attribute.ATTR_DEFAULT)) {
+            return false;
+        }
+        else {
+            String isDefault = mAttributeTable.get(Attribute.ATTR_DEFAULT);
+
+            if (isDefault.equals("YES")) {
+                return true;
+            }
+            else if (isDefault.equals("NO")) {
+                return false;
+            }
+            else {
+                throw new IllegalArgumentException("the value of DEFAULT attribute are YES or NO");
+            }
+        }
     }
 
-    public boolean isAutoSelect() {
-        return mIsAutoSelect;
+    /**
+     * 是否定义了语言
+     */
+    public boolean containsLanguage() {
+        return mAttributeTable.containsKey(Attribute.ATTR_LANGUAGE);
     }
 
-    private void setType(String type) {
-        mType = type;
-    }
-
-    private void setGroupId(String groupId) {
-        mGroupId = groupId;
-    }
-
-    private void setUri(String uri) {
-        mUri = uri;
-    }
-
-    private void setLanguage(String language) {
-        mLanguage = language;
-    }
-
-    private void setName(String name) {
-        mName = name;
-    }
-
-    private void setDefault() {
-        mIsDefault = true;
-    }
-
-    private void setAutoSelect() {
-        mIsAutoSelect = true;
+    /**
+     * 获取语言
+     */
+    public String getLanguage() {
+        return mAttributeTable.get(Attribute.ATTR_LANGUAGE);
     }
 
     public static class Builder {
-        /**
-         * required
-         */
-        private String mType;
-        private String mGroupId;
-
-        /**
-         * optional
-         */
-        private String mUri;
-        private String mLanguage;
-        private String mName;
-        private boolean mIsDefault;
-        private boolean mIsAutoSelect;
+        private Map<String, String> mAttributeTable;
 
         public Builder() {
-            //
+            mAttributeTable = new HashMap<String, String>();
         }
 
-        public void setType(String type) {
-            mType = type;
-        }
+        public void setAttributeList(List<Attribute> attributeList) {
+            for (int i = 0; i < attributeList.size(); i++) {
+                Attribute attribute = attributeList.get(i);
 
-        public void setGroupId(String groupId) {
-            mGroupId = groupId;
-        }
-
-        public void setUri(String uri) {
-            mUri = uri;
-        }
-
-        public void setLanguage(String language) {
-            mLanguage = language;
-        }
-
-        public void setName(String name) {
-            mName = name;
-        }
-
-        public void setDefault() {
-            mIsDefault = true;
-        }
-
-        public void setAutoSelect() {
-            mIsAutoSelect = true;
+                mAttributeTable.put(attribute.getKey(), attribute.getValue());
+            }
         }
 
         public Media build() {
-            Media media = new Media();
-
-            media.setType(mType);
-            media.setGroupId(mGroupId);
-
-            if (mUri != null) {
-                media.setUri(mUri);
-            }
-
-            if (mLanguage != null) {
-                media.setLanguage(mLanguage);
-            }
-
-            if (mName != null) {
-                media.setName(mName);
-            }
-
-            if (mIsDefault) {
-                media.setDefault();
-            }
-
-            if (mIsAutoSelect) {
-                media.setAutoSelect();
-            }
-
-            return media;
+            return new Media(mAttributeTable);
         }
     }
 }

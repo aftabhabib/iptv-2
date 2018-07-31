@@ -1,83 +1,84 @@
 package com.iptv.core.player.source.hls.playlist;
 
-public class Key {
-    private static final String METHOD_NONE = "NONE";
-    private static final String METHOD_AES_128 = "AES-128";
-    private static final String METHOD_SAMPLE_AES = "SAMPLE-AES";
+import android.net.Uri;
 
-    /**
-     * required
-     */
-    private String mMethod;
-    private String mUri;
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-    /**
-     * optional
-     */
-    private String mInitVector;
+public final class Key {
+    public static final String METHOD_NONE = "NONE";
+    public static final String METHOD_AES_128 = "AES-128";
+    public static final String METHOD_SAMPLE_AES = "SAMPLE-AES";
 
-    private Key() {
-        //ignore
+    private Map<String, String> mAttributeTable;
+
+    private Key(Map<String, String> attributeTable) {
+        mAttributeTable = attributeTable;
     }
 
+    /**
+     * 是否加密
+     */
     public boolean isEncrypted() {
-        return mMethod.equals(METHOD_NONE);
+        String method = mAttributeTable.get(Attribute.ATTR_METHOD);
+
+        return method.equals(METHOD_NONE);
     }
 
-    private void setMethod(String method) {
-        mMethod = method;
+    /**
+     * 获取加密方式
+     */
+    public String getMethod() {
+        return mAttributeTable.get(Attribute.ATTR_METHOD);
     }
 
-    private void setUri(String uri) {
-        mUri = uri;
+    /**
+     * 获取密钥数据的URI
+     */
+    public Uri getUri() {
+        String uri = mAttributeTable.get(Attribute.ATTR_URI);
+
+        return Uri.parse(uri);
     }
 
-    private void setInitVector(String initVector) {
-        mInitVector = initVector;
+    /**
+     * 是否定义了IV
+     */
+    public boolean containsInitVector() {
+        return mAttributeTable.containsKey(Attribute.ATTR_IV);
+    }
+
+    /**
+     * 获取IV
+     */
+    private byte[] getInitVector() {
+        String initVector = mAttributeTable.get(Attribute.ATTR_IV);
+        if (initVector.startsWith("0x")) {
+            initVector.substring(2);
+        }
+
+        return new BigInteger(initVector, 16).toByteArray();
     }
 
     public static class Builder {
-        /**
-         * required
-         */
-        private String mMethod;
-
-        /**
-         * optional
-         */
-        private String mUri;
-        private String mInitVector;
+        private Map<String, String> mAttributeTable;
 
         public Builder() {
-            //ignore
+            mAttributeTable = new HashMap<String, String>();
         }
 
-        public void setMethod(String method) {
-            mMethod = method;
-        }
+        public void setAttributeList(List<Attribute> attributeList) {
+            for (int i = 0; i < attributeList.size(); i++) {
+                Attribute attribute = attributeList.get(i);
 
-        public void setUri(String uri) {
-            mUri = uri;
-        }
-
-        public void setInitVector(String initVector) {
-            mInitVector = initVector;
+                mAttributeTable.put(attribute.getKey(), attribute.getValue());
+            }
         }
 
         public Key build() {
-            Key key = new Key();
-
-            key.setMethod(mMethod);
-
-            if (mUri != null) {
-                key.setUri(mUri);
-            }
-
-            if (mInitVector != null) {
-                key.setInitVector(mInitVector);
-            }
-
-            return key;
+            return new Key(mAttributeTable);
         }
     }
 }

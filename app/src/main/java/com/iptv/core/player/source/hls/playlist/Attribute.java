@@ -1,9 +1,18 @@
 package com.iptv.core.player.source.hls.playlist;
 
-class Attribute {
+import java.util.ArrayList;
+import java.util.List;
+
+final class Attribute {
+    /**
+     * Tag EXT-X-KEY
+     */
     public static final String ATTR_METHOD = "METHOD";
     public static final String ATTR_IV = "IV";
 
+    /**
+     * Tag EXT-X-MEDIA
+     */
     public static final String ATTR_TYPE = "TYPE";
     public static final String ATTR_GROUP_ID = "GROUP-ID";
     public static final String ATTR_LANGUAGE = "LANGUAGE";
@@ -11,8 +20,14 @@ class Attribute {
     public static final String ATTR_DEFAULT = "DEFAULT";
     public static final String ATTR_AUTO_SELECT = "AUTOSELECT";
 
+    /**
+     * Tag EXT-X-KEY and EXT-X-MEDIA
+     */
     public static final String ATTR_URI = "URI";
 
+    /**
+     * Tag EXT-X-STREAM-INF
+     */
     public static final String ATTR_BANDWIDTH = "BANDWIDTH";
     public static final String ATTR_CODECS = "CODECS";
     public static final String ATTR_RESOLUTION = "RESOLUTION";
@@ -36,9 +51,16 @@ class Attribute {
         return mValue;
     }
 
-    public static Attribute parse(String attribute) {
-        String[] result = attribute.split("=");
+    public static List<Attribute> parseList(String attributes) {
+        List<Attribute> attributeList = new ArrayList<>(10);
 
-        return new Attribute(result[0], result[1]);
+        String[] attributeArray = attributes.split(",");
+        for (int i = 0; i < attributeArray.length; i++) {
+            String[] result = attributeArray[i].split("=");
+
+            attributeList.add(new Attribute(result[0], result[1]));
+        }
+
+        return attributeList;
     }
 }

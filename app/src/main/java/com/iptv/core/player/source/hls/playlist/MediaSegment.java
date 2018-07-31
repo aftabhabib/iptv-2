@@ -2,7 +2,7 @@ package com.iptv.core.player.source.hls.playlist;
 
 import android.net.Uri;
 
-public class MediaSegment {
+public final class MediaSegment {
     private float mDuration;
     private Uri mUri;
 
@@ -10,8 +10,14 @@ public class MediaSegment {
     private ByteRange mRange;
     private Key mKey;
 
-    public MediaSegment() {
-        //ignore
+    private MediaSegment(float duration, Uri uri,
+                         boolean isDiscontinuous, ByteRange range, Key key) {
+        mDuration = duration;
+        mUri = uri;
+
+        mIsDiscontinuous = isDiscontinuous;
+        mRange = range;
+        mKey = key;
     }
 
     /**
@@ -22,16 +28,23 @@ public class MediaSegment {
     }
 
     /**
-     * 获取uri
+     * 获取媒体的uri
      */
     public Uri getUri() {
         return mUri;
     }
 
     /**
-     * 获取范围
+     * 是否是媒体数据的子范围
      */
-    public ByteRange getRange() {
+    public boolean isSubRange() {
+        return mRange != null;
+    }
+
+    /**
+     * 获取子范围
+     */
+    public ByteRange getSubRange() {
         return mRange;
     }
 
@@ -49,48 +62,20 @@ public class MediaSegment {
         return ((mKey != null) && mKey.isEncrypted());
     }
 
-    private void setDuration(float duration) {
-        mDuration = duration;
-    }
-
-    private void setUri(Uri uri) {
-        mUri = uri;
-    }
-
-    private void setDiscontinuity() {
-        mIsDiscontinuous = true;
-    }
-
-    private void setRange(ByteRange range) {
-        mRange = range;
-    }
-
-    private void setKey(Key key) {
-        mKey = key;
-    }
-
     public static class Builder {
-        /**
-         * required
-         */
         private float mDuration;
         private Uri mUri;
 
-        /**
-         * optional
-         */
-        private boolean mIsDiscontinuous;
-        private ByteRange mRange;
-        private Key mKey;
+        private boolean mIsDiscontinuous = false;
+        private ByteRange mRange = null;
+        private Key mKey = null;
+
+        private long mRangeOffset = -1;
 
         public Builder() {
-            //ignore
-        }
-
-        public Builder(Builder other) {
-            if (other.mKey != null) {
-                mKey = other.mKey;
-            }
+            /**
+             * nothing
+             */
         }
 
         public void setDuration(String duration) {
@@ -105,8 +90,13 @@ public class MediaSegment {
             mIsDiscontinuous = true;
         }
 
-        public void setRange(ByteRange range) {
-            mRange = range;
+        public void setRange(String range) {
+            String[] result = range.split("@");
+
+            long length = Long.parseLong(result[0]);
+            long offset = (result.length > 1) ? Long.parseLong(result[1]) : mRangeOffset;
+
+            mRange = new ByteRange(length, offset);
         }
 
         public void setKey(Key key) {
@@ -114,24 +104,31 @@ public class MediaSegment {
         }
 
         public MediaSegment build() {
-            MediaSegment segment = new MediaSegment();
+            return new MediaSegment(mDuration, mUri, mIsDiscontinuous, mRange, mKey);
+        }
 
-            segment.setDuration(mDuration);
-            segment.setUri(mUri);
-
-            if (mIsDiscontinuous) {
-                segment.setDiscontinuity();
-            }
+        public Builder fork() {
+            Builder builder = new Builder();
 
             if (mRange != null) {
-                segment.setRange(mRange);
+                /**
+                 * 下一个的Range定义可能是相对的
+                 */
+                builder.setRangeOffset(mRange.getOffset() + mRange.getLength());
             }
 
             if (mKey != null) {
-                segment.setKey(mKey);
+                /**
+                 * 直到下一个Key出现，都有效
+                 */
+                builder.setKey(mKey);
             }
 
-            return segment;
+            return builder;
+        }
+
+        private void setRangeOffset(long offset) {
+            mRangeOffset = offset;
         }
     }
 }
