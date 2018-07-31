@@ -74,23 +74,15 @@ public class Playlist {
     }
 
     /**
-     * 获取指定的RenditionGroup
+     * 获取指定RenditionGroup中的默认Rendition
      */
-    public RenditionGroup getRenditionGroup(String groupId) {
-        return mRenditionGroupTable.get(groupId);
-    }
-
-    /**
-     * 获取各个RenditionGroup中默认的Rendition
-     */
-    public List<Media> getDefaultRenditions() {
-        List<Media> renditionList = new ArrayList<Media>(mRenditionGroupTable.size());
-
-        for (RenditionGroup group : mRenditionGroupTable.values()) {
-            renditionList.add(group.getDefaultRendition());
+    public Media getDefaultRenditionInGroup(String groupId) {
+        RenditionGroup group = mRenditionGroupTable.get(groupId);
+        if (group == null) {
+            throw new IllegalStateException("rendition group " + groupId + " not found");
         }
 
-        return renditionList;
+        return group.getDefaultRendition();
     }
 
     /**

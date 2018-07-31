@@ -32,6 +32,20 @@ public final class VariantStream {
     }
 
     /**
+     * 是否定义了VideoRendition
+     */
+    public boolean containsVideoRendition() {
+        return mAttributeTable.containsKey(Attribute.ATTR_VIDEO);
+    }
+
+    /**
+     * 获取VideoRendition的GroupId
+     */
+    public String getVideoGroupId() {
+        return mAttributeTable.get(Attribute.ATTR_VIDEO);
+    }
+
+    /**
      * 是否定义了AudioRendition
      */
     public boolean containsAudioRendition() {
