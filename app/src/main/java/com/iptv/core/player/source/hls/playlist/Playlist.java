@@ -1,37 +1,41 @@
 package com.iptv.core.player.source.hls.playlist;
 
+import android.net.Uri;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class Playlist {
-    /**
-     * required
-     */
     private int mVersion;
-    private int mTargetDuration;
 
     /**
-     * option
+     * Media Playlist
      */
-    private int mMediaSequence = 0;
-    private boolean mEndOfList = false;
+    private int mMaxSegmentDuration;
+    private int mMediaSequence;
     private List<MediaSegment> mSegmentList;
+    private boolean mEndOfList;
 
+    /**
+     * Master Playlist
+     */
     private Map<String, RenditionGroup> mRenditionGroupTable;
-
     private List<VariantStream> mStreamList;
 
     private Playlist() {
-        /**
-         * nothing
-         */
+        mMaxSegmentDuration = 0;
+        mMediaSequence = 0;
+        mSegmentList = new LinkedList<MediaSegment>();
+        mEndOfList = false;
+
+        mRenditionGroupTable = new HashMap<String, RenditionGroup>();
+        mStreamList = new ArrayList<VariantStream>();
     }
 
     /**
@@ -39,6 +43,13 @@ public class Playlist {
      */
     public int getVersion() {
         return mVersion;
+    }
+
+    /**
+     * 获取媒体序号
+     */
+    public int getMaxSegmentDuration() {
+        return mMaxSegmentDuration;
     }
 
     /**
@@ -56,26 +67,42 @@ public class Playlist {
     }
 
     /**
-     * 是否包含RenditionGroup（一般是针对音频、字幕轨道）
+     * 是否定义了RenditionGroup
      */
-    public boolean containsAlternativeRenditions() {
+    public boolean containsRenditionGroup() {
         return !mRenditionGroupTable.isEmpty();
     }
 
     /**
      * 获取指定的RenditionGroup
      */
-    public RenditionGroup getRenditionGroupTable(String groupId) {
+    public RenditionGroup getRenditionGroup(String groupId) {
         return mRenditionGroupTable.get(groupId);
     }
 
     /**
-     * 是否定义了多个流（针对不同带宽）
+     * 获取各个RenditionGroup中默认的Rendition
      */
-    public boolean isVariant() {
-        return mStreamList != null;
+    public List<Media> getDefaultRenditions() {
+        List<Media> renditionList = new ArrayList<Media>(mRenditionGroupTable.size());
+
+        for (RenditionGroup group : mRenditionGroupTable.values()) {
+            renditionList.add(group.getDefaultRendition());
+        }
+
+        return renditionList;
     }
 
+    /**
+     * 是否定义了VariantStream
+     */
+    public boolean containsVariantStream() {
+        return !mStreamList.isEmpty();
+    }
+
+    /**
+     * 根据带宽选择合适的VariantStream
+     */
     public VariantStream findStreamByBandwidth(int bandwidth) {
         int index;
 
@@ -103,12 +130,19 @@ public class Playlist {
         return mStreamList.get(index);
     }
 
+    /**
+     * 是否定义了MediaSegment
+     */
+    public boolean containsMediaSegment() {
+        return !mSegmentList.isEmpty();
+    }
+
     private void setVersion(int version) {
         mVersion = version;
     }
 
     private void setTargetDuration(int targetDuration) {
-        mTargetDuration = targetDuration * 1000;
+        mMaxSegmentDuration = targetDuration * 1000;
     }
 
     private void setMediaSequence(int mediaSequence) {
@@ -120,18 +154,10 @@ public class Playlist {
     }
 
     private void addSegment(MediaSegment segment) {
-        if (mSegmentList == null) {
-            mSegmentList = new LinkedList<MediaSegment>();
-        }
-
         mSegmentList.add(segment);
     }
 
     private void addMedia(Media media) {
-        if (mRenditionGroupTable == null) {
-            mRenditionGroupTable = new HashMap<String, RenditionGroup>();
-        }
-
         if (!mRenditionGroupTable.containsKey(media.getGroupId())) {
             /**
              * this media belongs to a new rendition group
@@ -143,10 +169,6 @@ public class Playlist {
     }
 
     private void addStream(VariantStream stream) {
-        if (mStreamList == null) {
-            mStreamList = new ArrayList<VariantStream>(5);
-        }
-
         /**
          * 按照带宽由小到大的次序
          */
@@ -262,10 +284,10 @@ public class Playlist {
                     streamBuilder.setAttributeList(Attribute.parseList(value));
                 }
                 /**
-                 * Uri
+                 * URI
                  */
                 else if (!line.startsWith("#")) {
-                    String uri = line;
+                    Uri uri = Uri.parse(line);
 
                     if (streamBuilder != null) {
                         streamBuilder.setUri(uri);
@@ -297,7 +319,7 @@ public class Playlist {
         return result[0];
     }
 
-    public static Key createKey(List<Attribute> attributeList) {
+    private static Key createKey(List<Attribute> attributeList) {
         Key.Builder builder = new Key.Builder();
 
         builder.setAttributeList(attributeList);

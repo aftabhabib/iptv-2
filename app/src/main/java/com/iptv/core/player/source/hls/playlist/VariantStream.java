@@ -32,44 +32,30 @@ public final class VariantStream {
     }
 
     /**
-     * 是否定义了VideoGroup
+     * 是否定义了AudioRendition
      */
-    public boolean containsVideo() {
-        return mAttributeTable.containsKey(Attribute.ATTR_VIDEO);
-    }
-
-    /**
-     * 获取VideoGroup的ID
-     */
-    public String getVideo() {
-        return mAttributeTable.get(Attribute.ATTR_VIDEO);
-    }
-
-    /**
-     * 是否定义了AudioGroup
-     */
-    public boolean containsAudio() {
+    public boolean containsAudioRendition() {
         return mAttributeTable.containsKey(Attribute.ATTR_AUDIO);
     }
 
     /**
-     * 获取AudioGroup的ID
+     * 获取AudioRendition的GroupId
      */
-    public String getAudio() {
+    public String getAudioGroupId() {
         return mAttributeTable.get(Attribute.ATTR_AUDIO);
     }
 
     /**
-     * 是否定义了SubtitleGroup
+     * 是否定义了SubtitleRendition
      */
-    public boolean containsSubtitle() {
+    public boolean containsSubtitleRendition() {
         return mAttributeTable.containsKey(Attribute.ATTR_SUBTITLE);
     }
 
     /**
-     * 获取SubtitleGroup的ID
+     * 获取SubtitleRendition的GroupId
      */
-    public String getSubtitle() {
+    public String getSubtitleGroupId() {
         return mAttributeTable.get(Attribute.ATTR_SUBTITLE);
     }
 
@@ -89,8 +75,8 @@ public final class VariantStream {
             }
         }
 
-        public void setUri(String uri) {
-            mUri = Uri.parse(uri);
+        public void setUri(Uri uri) {
+            mUri = uri;
         }
 
         public VariantStream build() {

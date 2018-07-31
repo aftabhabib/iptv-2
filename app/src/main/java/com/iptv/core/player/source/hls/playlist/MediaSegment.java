@@ -82,8 +82,8 @@ public final class MediaSegment {
             mDuration = Float.parseFloat(duration);
         }
 
-        public void setUri(String uri) {
-            mUri = Uri.parse(uri);
+        public void setUri(Uri uri) {
+            mUri = uri;
         }
 
         public void setDiscontinuity() {
