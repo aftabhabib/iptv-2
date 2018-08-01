@@ -1,4 +1,4 @@
-package com.iptv.core.player.hls.playlist;
+package com.iptv.core.hls.playlist;
 
 public final class MediaSegment {
     private float mDuration;

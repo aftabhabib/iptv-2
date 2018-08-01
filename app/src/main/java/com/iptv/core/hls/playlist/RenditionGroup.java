@@ -1,4 +1,4 @@
-package com.iptv.core.player.hls.playlist;
+package com.iptv.core.hls.playlist;
 
 import java.util.ArrayList;
 import java.util.List;

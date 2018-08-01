@@ -1,4 +1,4 @@
-package com.iptv.core.player.hls.playlist;
+package com.iptv.core.hls.playlist;
 
 import java.io.BufferedReader;
 import java.io.IOException;
