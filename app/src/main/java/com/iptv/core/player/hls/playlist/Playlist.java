@@ -9,7 +9,20 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class Playlist {
+public final class Playlist {
+    private static final String TAG_M3U = "#EXTM3U";
+    private static final String TAG_VERSION = "#EXT-X-VERSION";
+    private static final String TAG_INF = "#EXTINF";
+    private static final String TAG_BYTE_RANGE = "#EXT-X-BYTERANGE";
+    private static final String TAG_DISCONTINUITY = "#EXT-X-DISCONTINUITY";
+    private static final String TAG_KEY = "#EXT-X-KEY";
+    private static final String TAG_TARGET_DURATION = "#EXT-X-TARGETDURATION";
+    private static final String TAG_MEDIA_SEQUENCE = "#EXT-X-MEDIA-SEQUENCE";
+    private static final String TAG_DISCONTINUITY_SEQUENCE = "#EXT-X-DISCONTINUITY-SEQUENCE";
+    private static final String TAG_END_LIST = "#EXT-X-ENDLIST";
+    private static final String TAG_MEDIA = "#EXT-X-MEDIA";
+    private static final String TAG_STREAM_INF = "#EXT-X-STREAM-INF";
+
     private int mVersion;
 
     /**
@@ -189,21 +202,21 @@ public class Playlist {
                 /**
                  * Basic Tags
                  */
-                if (line.equals(Tag.M3U)) {
+                if (line.equals(TAG_M3U)) {
                     /**
                      * must be the first line
                      */
                 }
-                else if (line.startsWith(Tag.VERSION)) {
-                    String value = line.substring(Tag.VERSION.length() + 1);
+                else if (line.startsWith(TAG_VERSION)) {
+                    String value = line.substring(TAG_VERSION.length() + 1);
 
                     playlist.setVersion(Integer.parseInt(value));
                 }
                 /**
                  * Media Segment Tags
                  */
-                else if (line.startsWith(Tag.INF)) {
-                    String value = line.substring(Tag.INF.length() + 1);
+                else if (line.startsWith(TAG_INF)) {
+                    String value = line.substring(TAG_INF.length() + 1);
 
                     if (segmentBuilder == null) {
                         segmentBuilder = new MediaSegment.Builder();
@@ -211,8 +224,8 @@ public class Playlist {
 
                     segmentBuilder.setDuration(parseDuration(value));
                 }
-                else if (line.startsWith(Tag.BYTE_RANGE)) {
-                    String value = line.substring(Tag.BYTE_RANGE.length() + 1);
+                else if (line.startsWith(TAG_BYTE_RANGE)) {
+                    String value = line.substring(TAG_BYTE_RANGE.length() + 1);
 
                     if (segmentBuilder == null) {
                         segmentBuilder = new MediaSegment.Builder();
@@ -220,15 +233,15 @@ public class Playlist {
 
                     segmentBuilder.setRange(value);
                 }
-                else if (line.equals(Tag.DISCONTINUITY)) {
+                else if (line.equals(TAG_DISCONTINUITY)) {
                     if (segmentBuilder == null) {
                         segmentBuilder = new MediaSegment.Builder();
                     }
 
                     segmentBuilder.setDiscontinuity();
                 }
-                else if (line.startsWith(Tag.KEY)) {
-                    String value = line.substring(Tag.KEY.length() + 1);
+                else if (line.startsWith(TAG_KEY)) {
+                    String value = line.substring(TAG_KEY.length() + 1);
                     Key key = createKey(Attribute.parseList(value));
 
                     if (segmentBuilder == null) {
@@ -240,35 +253,35 @@ public class Playlist {
                 /**
                  * Media Playlist Tags
                  */
-                else if (line.startsWith(Tag.TARGET_DURATION)) {
-                    String value = line.substring(Tag.TARGET_DURATION.length() + 1);
+                else if (line.startsWith(TAG_TARGET_DURATION)) {
+                    String value = line.substring(TAG_TARGET_DURATION.length() + 1);
 
                     playlist.setTargetDuration(Integer.parseInt(value));
                 }
-                else if (line.startsWith(Tag.MEDIA_SEQUENCE)) {
-                    String value = line.substring(Tag.MEDIA_SEQUENCE.length() + 1);
+                else if (line.startsWith(TAG_MEDIA_SEQUENCE)) {
+                    String value = line.substring(TAG_MEDIA_SEQUENCE.length() + 1);
 
                     playlist.setMediaSequence(Integer.parseInt(value));
                 }
-                else if (line.startsWith(Tag.DISCONTINUITY_SEQUENCE)) {
-                    String value = line.substring(Tag.DISCONTINUITY_SEQUENCE.length() + 1);
+                else if (line.startsWith(TAG_DISCONTINUITY_SEQUENCE)) {
+                    String value = line.substring(TAG_DISCONTINUITY_SEQUENCE.length() + 1);
 
                     playlist.setMediaSequence(Integer.parseInt(value));
                 }
-                else if (line.equals(Tag.END_LIST)) {
+                else if (line.equals(TAG_END_LIST)) {
                     playlist.setEndOfList();
                 }
                 /**
                  * Master Playlist Tags
                  */
-                else if (line.startsWith(Tag.MEDIA)) {
-                    String value = line.substring(Tag.MEDIA.length() + 1);
+                else if (line.startsWith(TAG_MEDIA)) {
+                    String value = line.substring(TAG_MEDIA.length() + 1);
 
                     Media media = createMedia(Attribute.parseList(value));
                     playlist.addMedia(media);
                 }
-                else if (line.startsWith(Tag.STREAM_INF)) {
-                    String value = line.substring(Tag.STREAM_INF.length() + 1);
+                else if (line.startsWith(TAG_STREAM_INF)) {
+                    String value = line.substring(TAG_STREAM_INF.length() + 1);
 
                     streamBuilder = new VariantStream.Builder();
                     streamBuilder.setAttributeList(Attribute.parseList(value));
@@ -291,6 +304,11 @@ public class Playlist {
                         playlist.addSegment(segmentBuilder.build());
                         segmentBuilder = segmentBuilder.fork();
                     }
+                }
+                else {
+                    /**
+                     * not support yet
+                     */
                 }
             }
 
