@@ -140,6 +140,13 @@ public final class Playlist {
         return !mSegmentList.isEmpty();
     }
 
+    /**
+     * 获取所有的MediaSegment
+     */
+    public MediaSegment[] getMediaSegments() {
+        return mSegmentList.toArray(new MediaSegment[mSegmentList.size()]);
+    }
+
     private void setVersion(int version) {
         mVersion = version;
     }

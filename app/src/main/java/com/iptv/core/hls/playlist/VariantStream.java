@@ -30,6 +30,36 @@ public final class VariantStream {
     }
 
     /**
+     * 是否定义了VideoCodec
+     */
+    public boolean containsVideoCodec() {
+        List<Codec> codecList = Codec.parseList(mAttributeTable.get(Attribute.ATTR_CODEC));
+
+        for (Codec codec : codecList) {
+            if (codec.isVideoType()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 是否定义了AudioCodec
+     */
+    public boolean containsAudioCodec() {
+        List<Codec> codecList = Codec.parseList(mAttributeTable.get(Attribute.ATTR_CODEC));
+
+        for (Codec codec : codecList) {
+            if (codec.isAudioType()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * 是否定义了VideoRendition
      */
     public boolean containsVideoRendition() {

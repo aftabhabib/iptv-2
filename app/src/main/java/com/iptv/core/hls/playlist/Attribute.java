@@ -29,7 +29,7 @@ final class Attribute {
      * Tag EXT-X-STREAM-INF
      */
     public static final String ATTR_BANDWIDTH = "BANDWIDTH";
-    public static final String ATTR_CODECS = "CODECS";
+    public static final String ATTR_CODEC = "CODECS";
     public static final String ATTR_RESOLUTION = "RESOLUTION";
     public static final String ATTR_AUDIO = "AUDIO";
     public static final String ATTR_VIDEO = "VIDEO";
