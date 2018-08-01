@@ -1,4 +1,4 @@
-package com.iptv.core.player.source.hls.playlist;
+package com.iptv.core.player.hls.playlist;
 
 public class Tag {
     public static final String M3U = "#EXTM3U";

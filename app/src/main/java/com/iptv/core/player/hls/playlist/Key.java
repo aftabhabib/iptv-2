@@ -1,4 +1,4 @@
-package com.iptv.core.player.source.hls.playlist;
+package com.iptv.core.player.hls.playlist;
 
 import android.net.Uri;
 
