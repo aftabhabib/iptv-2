@@ -1,7 +1,5 @@
 package com.iptv.core.player.hls.playlist;
 
-import android.net.Uri;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -279,7 +277,7 @@ public class Playlist {
                  * URI
                  */
                 else if (!line.startsWith("#")) {
-                    Uri uri = Uri.parse(line);
+                    String uri = line;
 
                     if (streamBuilder != null) {
                         streamBuilder.setUri(uri);

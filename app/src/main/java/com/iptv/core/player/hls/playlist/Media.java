@@ -1,7 +1,5 @@
 package com.iptv.core.player.hls.playlist;
 
-import android.net.Uri;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,19 +30,17 @@ public final class Media {
     }
 
     /**
-     * 是否定义了媒体数据的URI
+     * 是否定义了媒体的URI
      */
     public boolean containsUri() {
         return mAttributeTable.containsKey(Attribute.ATTR_URI);
     }
 
     /**
-     * 获取媒体数据的URI
+     * 获取媒体的URI
      */
-    public Uri getUri() {
-        String uri = mAttributeTable.get(Attribute.ATTR_URI);
-
-        return Uri.parse(uri);
+    public String getUri() {
+        return mAttributeTable.get(Attribute.ATTR_URI);
     }
 
     /**

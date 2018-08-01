@@ -1,16 +1,14 @@
 package com.iptv.core.player.hls.playlist;
 
-import android.net.Uri;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public final class VariantStream {
     private Map<String, String> mAttributeTable;
-    private Uri mUri;
+    private String mUri;
 
-    private VariantStream(Map<String, String> attributeTable, Uri uri) {
+    private VariantStream(Map<String, String> attributeTable, String uri) {
         mAttributeTable = attributeTable;
         mUri = uri;
     }
@@ -27,7 +25,7 @@ public final class VariantStream {
     /**
      * 获取URI
      */
-    public Uri getUri() {
+    public String getUri() {
         return mUri;
     }
 
@@ -75,7 +73,7 @@ public final class VariantStream {
 
     public static class Builder {
         private Map<String, String> mAttributeTable;
-        private Uri mUri;
+        private String mUri;
 
         public Builder() {
             mAttributeTable = new HashMap<String, String>();
@@ -89,7 +87,7 @@ public final class VariantStream {
             }
         }
 
-        public void setUri(Uri uri) {
+        public void setUri(String uri) {
             mUri = uri;
         }
 

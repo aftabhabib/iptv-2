@@ -1,7 +1,5 @@
 package com.iptv.core.player.hls.playlist;
 
-import android.net.Uri;
-
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
@@ -35,12 +33,10 @@ public final class Key {
     }
 
     /**
-     * 获取密钥数据的URI
+     * 获取密钥的URI
      */
-    public Uri getUri() {
-        String uri = mAttributeTable.get(Attribute.ATTR_URI);
-
-        return Uri.parse(uri);
+    public String getUri() {
+        return mAttributeTable.get(Attribute.ATTR_URI);
     }
 
     /**

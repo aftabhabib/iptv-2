@@ -1,16 +1,14 @@
 package com.iptv.core.player.hls.playlist;
 
-import android.net.Uri;
-
 public final class MediaSegment {
     private float mDuration;
-    private Uri mUri;
+    private String mUri;
 
     private boolean mIsDiscontinuous;
     private ByteRange mRange;
     private Key mKey;
 
-    private MediaSegment(float duration, Uri uri,
+    private MediaSegment(float duration, String uri,
                          boolean isDiscontinuous, ByteRange range, Key key) {
         mDuration = duration;
         mUri = uri;
@@ -30,7 +28,7 @@ public final class MediaSegment {
     /**
      * 获取媒体的uri
      */
-    public Uri getUri() {
+    public String getUri() {
         return mUri;
     }
 
@@ -64,7 +62,7 @@ public final class MediaSegment {
 
     public static class Builder {
         private float mDuration;
-        private Uri mUri;
+        private String mUri;
 
         private boolean mIsDiscontinuous = false;
         private ByteRange mRange = null;
@@ -82,7 +80,7 @@ public final class MediaSegment {
             mDuration = Float.parseFloat(duration);
         }
 
-        public void setUri(Uri uri) {
+        public void setUri(String uri) {
             mUri = uri;
         }
 
