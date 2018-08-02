@@ -134,17 +134,21 @@ public final class Playlist {
     }
 
     /**
-     * 是否定义了MediaSegment
+     * 是否定义了媒体片段
      */
     public boolean containsMediaSegment() {
         return !mSegmentList.isEmpty();
     }
 
     /**
-     * 获取所有的MediaSegment
+     * 移出媒体片段列表的头部
      */
-    public MediaSegment[] getMediaSegments() {
-        return mSegmentList.toArray(new MediaSegment[mSegmentList.size()]);
+    public MediaSegment removeMediaSegment() {
+        if (mSegmentList.isEmpty()) {
+            return null;
+        }
+
+        return mSegmentList.remove(0);
     }
 
     private void setVersion(int version) {
@@ -161,6 +165,10 @@ public final class Playlist {
 
     private void setEndOfList() {
         mEndOfList = true;
+    }
+
+    private int getNextMediaSequenceNumber() {
+        return mMediaSequence + mSegmentList.size();
     }
 
     private void addSegment(MediaSegment segment) {
@@ -307,6 +315,7 @@ public final class Playlist {
                     }
                     else if (segmentBuilder != null) {
                         segmentBuilder.setUri(uri);
+                        segmentBuilder.setSequenceNumber(playlist.getNextMediaSequenceNumber());
 
                         playlist.addSegment(segmentBuilder.build());
                         segmentBuilder = segmentBuilder.fork();
