@@ -1,6 +1,6 @@
 package com.iptv.core.hls.session;
 
-public class Utils {
+class Utils {
     /**
      * 如果uri是相对的，则基于masterUrl的主要部分组成一个url
      */

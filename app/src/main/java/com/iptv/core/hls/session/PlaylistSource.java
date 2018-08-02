@@ -5,61 +5,65 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import com.iptv.core.hls.playlist.MediaSegment;
 import com.iptv.core.hls.playlist.Playlist;
 import com.iptv.core.utils.OkHttp;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 import okhttp3.Request;
 import okhttp3.Response;
 
-public final class PlaylistSource extends Handler {
+final class PlaylistSource extends Handler {
     private static final String TAG = "PlaylistSource";
 
     private static final int MSG_LOAD_PLAYLIST = 0;
-    private static final int MSG_LOAD_MEDIASEGMENT = 1;
+    private static final int MSG_DOWNLOAD_MEDIASEGMENT = 1;
+
+    private Listener mListener;
 
     private String mUrl;
     private Map<String, String> mProperties;
 
     private Playlist mPlaylist;
 
-    public PlaylistSource(Looper looper, String url, Map<String, String> properties) {
+    public PlaylistSource(Looper looper, Listener listener,
+                          String url, Map<String, String> properties) {
         super(looper);
+
+        mListener = listener;
 
         mUrl = url;
         mProperties = properties;
     }
 
-    public void setPlaylist(Playlist playlist) {
-        mPlaylist = playlist;
+    public void loadPlaylist() {
+        Message msg = obtainMessage();
+        msg.what = MSG_LOAD_PLAYLIST;
+
+        msg.sendToTarget();
     }
 
-    public void start() {
-        if (mPlaylist == null) {
-            /**
-             * 加载Stream或Media的Playlist
-             */
-            sendMessage(MSG_LOAD_PLAYLIST);
-        }
-        else {
-            sendMessage(MSG_LOAD_MEDIASEGMENT);
-        }
-    }
+    public void downloadMediaSegment() {
+        Message msg = obtainMessage();
+        msg.what = MSG_DOWNLOAD_MEDIASEGMENT;
 
-    public void stop() {
-        removeCallbacksAndMessages(null);
+        msg.sendToTarget();
     }
 
     @Override
     public void handleMessage(Message msg) {
         switch (msg.what) {
             case MSG_LOAD_PLAYLIST: {
-                loadPlaylist();
+                onLoadPlaylist();
+
                 break;
             }
-            case MSG_LOAD_MEDIASEGMENT: {
+            case MSG_DOWNLOAD_MEDIASEGMENT: {
+                onDownloadMediaSegment();
+
                 break;
             }
             default: {
@@ -68,30 +72,29 @@ public final class PlaylistSource extends Handler {
         }
     }
 
-    private void sendMessage(int what) {
-        sendMessage(what, null);
-    }
-
-    private void sendMessage(int what, Object obj) {
-        Message msg = obtainMessage();
-        msg.what = what;
-        msg.obj = obj;
-
-        msg.sendToTarget();
-    }
-
-    private void loadPlaylist() {
+    private void onLoadPlaylist() {
         Request request = OkHttp.createGetRequest(mUrl, mProperties);
         Response response = null;
         try {
             response = OkHttp.getClient().newCall(request).execute();
             if (response.isSuccessful()) {
-                /**
-                 * 肯定是MediaPlaylist
-                 */
-                mPlaylist = Playlist.parse(response.body().string());
-
-                loadMediaSegment();
+                Playlist playlist = Playlist.parse(response.body().string());
+                if (playlist.containsVariantStream()) {
+                    /**
+                     * MasterPlaylist
+                     */
+                    mListener.onLoadMasterPlaylist(playlist);
+                }
+                else if (playlist.containsMediaSegment()) {
+                    /**
+                     * MediaPlaylist
+                     */
+                    mPlaylist = playlist;
+                    mListener.onLoadMediaPlaylist(this);
+                }
+                else {
+                    Log.e(TAG, "playlist is not supported");
+                }
             }
             else {
                 Log.e(TAG, "access " + mUrl + " fail, " + response.message());
@@ -108,7 +111,51 @@ public final class PlaylistSource extends Handler {
         }
     }
 
-    private void loadMediaSegment() {
+    private void onDownloadMediaSegment() {
+        MediaSegment segment = mPlaylist.removeMediaSegment();
 
+        Request request = OkHttp.createGetRequest(mUrl, mProperties);
+        Response response = null;
+        try {
+            response = OkHttp.getClient().newCall(request).execute();
+            if (response.isSuccessful()) {
+                InputStream input = response.body().byteStream();
+
+                /**
+                 *
+                 */
+
+
+            }
+            else {
+                Log.e(TAG, "access " + mUrl + " fail, " + response.message());
+
+                response.close();
+            }
+        }
+        catch (IOException e) {
+            Log.e(TAG, "network problems, " + e.getMessage());
+
+            if (response != null) {
+                response.close();
+            }
+        }
+    }
+
+    public interface Listener {
+        /**
+         * 加载了MasterPlaylist
+         */
+        void onLoadMasterPlaylist(Playlist playlist);
+
+        /**
+         * 加载了MediaPlaylist
+         */
+        void onLoadMediaPlaylist(PlaylistSource source);
+
+        /**
+         * 加载了MediaSegment
+         */
+        void onLoadMediaSegment(int size, int elapsedTime);
     }
 }
