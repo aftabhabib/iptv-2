@@ -66,6 +66,28 @@ public final class Media {
     }
 
     /**
+     * 是不是自动选择
+     */
+    public boolean isAutoSelect() {
+        if (!mAttributeTable.containsKey(Attribute.ATTR_AUTO_SELECT)) {
+            return false;
+        }
+        else {
+            String autoSelect = mAttributeTable.get(Attribute.ATTR_AUTO_SELECT);
+
+            if (autoSelect.equals("YES")) {
+                return true;
+            }
+            else if (autoSelect.equals("NO")) {
+                return false;
+            }
+            else {
+                throw new IllegalArgumentException("the value of AUTOSELECT attribute are YES or NO");
+            }
+        }
+    }
+
+    /**
      * 是否定义了语言
      */
     public boolean containsLanguage() {
