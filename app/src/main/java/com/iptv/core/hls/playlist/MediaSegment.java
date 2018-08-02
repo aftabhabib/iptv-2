@@ -3,15 +3,17 @@ package com.iptv.core.hls.playlist;
 public final class MediaSegment {
     private float mDuration;
     private String mUri;
+    private int mSequenceNumber;
 
     private boolean mIsDiscontinuous;
     private ByteRange mRange;
     private Key mKey;
 
-    private MediaSegment(float duration, String uri,
+    private MediaSegment(float duration, String uri, int sequenceNumber,
                          boolean isDiscontinuous, ByteRange range, Key key) {
         mDuration = duration;
         mUri = uri;
+        mSequenceNumber = sequenceNumber;
 
         mIsDiscontinuous = isDiscontinuous;
         mRange = range;
@@ -30,6 +32,13 @@ public final class MediaSegment {
      */
     public String getUri() {
         return mUri;
+    }
+
+    /**
+     * 获取媒体序号
+     */
+    public int getSequenceNumber(int sequenceNumber) {
+        return mSequenceNumber;
     }
 
     /**
@@ -63,6 +72,7 @@ public final class MediaSegment {
     public static class Builder {
         private float mDuration;
         private String mUri;
+        private int mSequenceNumber;
 
         private boolean mIsDiscontinuous = false;
         private ByteRange mRange = null;
@@ -84,6 +94,10 @@ public final class MediaSegment {
             mUri = uri;
         }
 
+        public void setSequenceNumber(int sequenceNumber) {
+            mSequenceNumber = sequenceNumber;
+        }
+
         public void setDiscontinuity() {
             mIsDiscontinuous = true;
         }
@@ -102,7 +116,8 @@ public final class MediaSegment {
         }
 
         public MediaSegment build() {
-            return new MediaSegment(mDuration, mUri, mIsDiscontinuous, mRange, mKey);
+            return new MediaSegment(mDuration, mUri, mSequenceNumber,
+                    mIsDiscontinuous, mRange, mKey);
         }
 
         public Builder fork() {
