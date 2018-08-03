@@ -1,6 +1,7 @@
 package com.iptv.core.hls.playlist;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 public final class MediaSegment {
     private float mDuration;
@@ -89,25 +90,40 @@ public final class MediaSegment {
      * 获取密钥的IV
      */
     public byte[] getKeyInitVector() {
-        String initVector;
+        byte[] iv;
 
         if (mKey.containsInitVector()) {
-            initVector = mKey.getInitVector();
+            String value = mKey.getInitVector();
 
-            if (!initVector.startsWith("0x") && !initVector.startsWith("0X")) {
+            if (!value.startsWith("0x") && !value.startsWith("0X")) {
                 throw new IllegalArgumentException("must be hexadecimal-sequence");
             }
 
-            initVector = initVector.substring(2);
+            value = value.substring(2);
+
+            if (value.length() != 32) {
+                throw new IllegalArgumentException("must be 128-bit");
+            }
+
+            iv = new BigInteger(value, 16).toByteArray();
         }
         else {
             /**
              * sequence number is to be used as the IV
              */
-            initVector = Long.toHexString(mSequenceNumber);
+            iv = new byte[16];
+
+            /**
+             * zero padding
+             */
+            Arrays.fill(iv, 0, 12, (byte)0x00);
+            iv[15] = (byte)(mSequenceNumber & 0xff);
+            iv[14] = (byte)((mSequenceNumber >> 8) & 0xff);
+            iv[13] = (byte)((mSequenceNumber >> 16) & 0xff);
+            iv[12] = (byte)((mSequenceNumber >> 24) & 0xff);
         }
 
-        return new BigInteger(initVector, 16).toByteArray();
+        return iv;
     }
 
     public static class Builder {
