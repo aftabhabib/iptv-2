@@ -69,6 +69,13 @@ public final class MediaSegment {
         return ((mKey != null) && mKey.isEncrypted());
     }
 
+    /**
+     * 获取密钥信息
+     */
+    public Key getKey() {
+        return mKey;
+    }
+
     public static class Builder {
         private float mDuration;
         private String mUri;
