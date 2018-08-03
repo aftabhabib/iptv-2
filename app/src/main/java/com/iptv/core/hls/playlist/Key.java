@@ -47,9 +47,33 @@ public final class Key {
     }
 
     /**
+     * 是否相同
+     */
+    public boolean isSame(Key other) {
+        if (mAttributeTable.entrySet().size() != other.mAttributeTable.entrySet().size()) {
+            return false;
+        }
+
+        for (Map.Entry<String, String> entry: mAttributeTable.entrySet()) {
+            String attrName = entry.getKey();
+            String attrValue = entry.getValue();
+
+            if (!other.mAttributeTable.containsKey(attrName)) {
+                return false;
+            }
+
+            if (!attrValue.equals(other.mAttributeTable.get(attrName))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * 获取IV
      */
-    private byte[] getInitVector() {
+    public byte[] getInitVector() {
         String initVector = mAttributeTable.get(Attribute.ATTR_IV);
         if (initVector.startsWith("0x")) {
             initVector.substring(2);
