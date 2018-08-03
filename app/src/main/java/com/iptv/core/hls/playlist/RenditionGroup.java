@@ -3,7 +3,7 @@ package com.iptv.core.hls.playlist;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class RenditionGroup {
+final class RenditionGroup {
     private List<Media> mMediaList;
 
     public RenditionGroup() {

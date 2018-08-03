@@ -2,7 +2,6 @@ package com.iptv.core.hls.playlist;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 final class AttributeList {
     private Map<String, String> mTable;
@@ -23,53 +22,6 @@ final class AttributeList {
      */
     public String getAttributeValue(String attributeName) {
         return mTable.get(attributeName);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            /**
-             * 同一个对象
-             */
-            return true;
-        }
-
-        if (obj instanceof AttributeList) {
-            AttributeList other = (AttributeList)obj;
-
-            if (size() != other.size()) {
-                /**
-                 * attribute的个数不同
-                 */
-                return false;
-            }
-
-            /**
-             * 再比较attribute是否一致
-             */
-            for (String name : nameSet()) {
-                 if (!other.containsAttribute(name)
-                         || !other.getAttributeValue(name).equals(getAttributeValue(name))) {
-                     /**
-                      * 没有这个名称的attribute或者值不相等
-                      */
-                     return false;
-                 }
-            }
-
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    private int size() {
-        return mTable.size();
-    }
-
-    private Set<String> nameSet() {
-        return mTable.keySet();
     }
 
     private void add(Attribute attribute) {

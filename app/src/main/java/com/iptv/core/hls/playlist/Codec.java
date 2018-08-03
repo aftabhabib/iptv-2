@@ -3,7 +3,7 @@ package com.iptv.core.hls.playlist;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Codec {
+final class Codec {
     /**
      * 仅列举了个别常见的，更多见http://mp4ra.org/#/codecs
      */

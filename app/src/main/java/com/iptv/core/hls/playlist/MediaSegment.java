@@ -1,5 +1,9 @@
 package com.iptv.core.hls.playlist;
 
+import java.math.BigInteger;
+import java.util.AbstractMap;
+import java.util.Map;
+
 public final class MediaSegment {
     private float mDuration;
     private String mUri;
@@ -42,17 +46,17 @@ public final class MediaSegment {
     }
 
     /**
-     * 是否是媒体数据的子范围
+     * 是否定义了范围
      */
-    public boolean isSubRange() {
+    public boolean containsRange() {
         return mRange != null;
     }
 
     /**
-     * 获取子范围
+     * 获取Range的值
      */
-    public ByteRange getSubRange() {
-        return mRange;
+    public String getRangeValue() {
+        return mRange.toString();
     }
 
     /**
@@ -70,10 +74,42 @@ public final class MediaSegment {
     }
 
     /**
-     * 获取解密密钥
+     * 是不是MediaSample加密
      */
-    public Key getDecryptKey() {
-        return mKey;
+    public boolean isMediaSampleEncrypted() {
+        return mKey.getMethod().equals(Key.METHOD_SAMPLE_AES);
+    }
+
+    /**
+     * 获取密钥的uri
+     */
+    public String getKeyUri() {
+        return mKey.getUri();
+    }
+
+    /**
+     * 获取密钥的IV
+     */
+    public byte[] getKeyInitVector() {
+        String initVector;
+
+        if (mKey.containsInitVector()) {
+            initVector = mKey.getInitVector();
+
+            if (!initVector.startsWith("0x") && !initVector.startsWith("0X")) {
+                throw new IllegalArgumentException("must be hexadecimal-sequence");
+            }
+
+            initVector = initVector.substring(2);
+        }
+        else {
+            /**
+             * sequence number is to be used as the IV
+             */
+            initVector = Long.toHexString(mSequenceNumber);
+        }
+
+        return new BigInteger(initVector, 16).toByteArray();
     }
 
     public static class Builder {

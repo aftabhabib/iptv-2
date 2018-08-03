@@ -1,6 +1,6 @@
 package com.iptv.core.hls.playlist;
 
-public final class ByteRange {
+final class ByteRange {
     private long mLength;
     private long mOffset;
 
