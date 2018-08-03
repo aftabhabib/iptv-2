@@ -37,7 +37,7 @@ public final class MediaSegment {
     /**
      * 获取媒体序号
      */
-    public int getSequenceNumber(int sequenceNumber) {
+    public int getSequenceNumber() {
         return mSequenceNumber;
     }
 
