@@ -1,15 +1,13 @@
 package com.iptv.core.hls.playlist;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public final class VariantStream {
-    private Map<String, String> mAttributeTable;
+    private AttributeList mAttributeList;
     private String mUri;
 
-    private VariantStream(Map<String, String> attributeTable, String uri) {
-        mAttributeTable = attributeTable;
+    private VariantStream(AttributeList attributeList, String uri) {
+        mAttributeList = attributeList;
         mUri = uri;
     }
 
@@ -17,7 +15,7 @@ public final class VariantStream {
      * 获取带宽
      */
     public int getBandwidth() {
-        String bandwidth = mAttributeTable.get(Attribute.ATTR_BANDWIDTH);
+        String bandwidth = mAttributeList.getAttributeValue(Attribute.ATTR_BANDWIDTH);
 
         return Integer.parseInt(bandwidth);
     }
@@ -33,7 +31,7 @@ public final class VariantStream {
      * 是否定义了VideoCodec
      */
     public boolean containsVideoCodec() {
-        List<Codec> codecList = Codec.parseList(mAttributeTable.get(Attribute.ATTR_CODEC));
+        List<Codec> codecList = Codec.parseList(mAttributeList.getAttributeValue(Attribute.ATTR_CODECS));
 
         for (Codec codec : codecList) {
             if (codec.isVideoType()) {
@@ -48,7 +46,7 @@ public final class VariantStream {
      * 是否定义了AudioCodec
      */
     public boolean containsAudioCodec() {
-        List<Codec> codecList = Codec.parseList(mAttributeTable.get(Attribute.ATTR_CODEC));
+        List<Codec> codecList = Codec.parseList(mAttributeList.getAttributeValue(Attribute.ATTR_CODECS));
 
         for (Codec codec : codecList) {
             if (codec.isAudioType()) {
@@ -63,58 +61,56 @@ public final class VariantStream {
      * 是否定义了VideoRendition
      */
     public boolean containsVideoRendition() {
-        return mAttributeTable.containsKey(Attribute.ATTR_VIDEO);
+        return mAttributeList.containsAttribute(Attribute.ATTR_VIDEO);
     }
 
     /**
      * 获取VideoRendition的GroupId
      */
     public String getVideoGroupId() {
-        return mAttributeTable.get(Attribute.ATTR_VIDEO);
+        return mAttributeList.getAttributeValue(Attribute.ATTR_VIDEO);
     }
 
     /**
      * 是否定义了AudioRendition
      */
     public boolean containsAudioRendition() {
-        return mAttributeTable.containsKey(Attribute.ATTR_AUDIO);
+        return mAttributeList.containsAttribute(Attribute.ATTR_AUDIO);
     }
 
     /**
      * 获取AudioRendition的GroupId
      */
     public String getAudioGroupId() {
-        return mAttributeTable.get(Attribute.ATTR_AUDIO);
+        return mAttributeList.getAttributeValue(Attribute.ATTR_AUDIO);
     }
 
     /**
      * 是否定义了SubtitleRendition
      */
     public boolean containsSubtitleRendition() {
-        return mAttributeTable.containsKey(Attribute.ATTR_SUBTITLE);
+        return mAttributeList.containsAttribute(Attribute.ATTR_SUBTITLES);
     }
 
     /**
      * 获取SubtitleRendition的GroupId
      */
     public String getSubtitleGroupId() {
-        return mAttributeTable.get(Attribute.ATTR_SUBTITLE);
+        return mAttributeList.getAttributeValue(Attribute.ATTR_SUBTITLES);
     }
 
     public static class Builder {
-        private Map<String, String> mAttributeTable;
+        private AttributeList mAttributeList;
         private String mUri;
 
         public Builder() {
-            mAttributeTable = new HashMap<String, String>();
+            /**
+             * nothing
+             */
         }
 
-        public void setAttributeList(List<Attribute> attributeList) {
-            for (int i = 0; i < attributeList.size(); i++) {
-                Attribute attribute = attributeList.get(i);
-
-                mAttributeTable.put(attribute.getKey(), attribute.getValue());
-            }
+        public void setAttributeList(String attributeList) {
+            mAttributeList = AttributeList.parse(attributeList);
         }
 
         public void setUri(String uri) {
@@ -122,7 +118,7 @@ public final class VariantStream {
         }
 
         public VariantStream build() {
-            return new VariantStream(mAttributeTable, mUri);
+            return new VariantStream(mAttributeList, mUri);
         }
     }
 }

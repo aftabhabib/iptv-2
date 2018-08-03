@@ -66,13 +66,13 @@ public final class MediaSegment {
      * 是否加密
      */
     public boolean isEncrypted() {
-        return ((mKey != null) && mKey.isEncrypted());
+        return (mKey != null) && !mKey.getMethod().equals(Key.METHOD_NONE);
     }
 
     /**
-     * 获取密钥信息
+     * 获取解密密钥
      */
-    public Key getKey() {
+    public Key getDecryptKey() {
         return mKey;
     }
 
@@ -132,7 +132,7 @@ public final class MediaSegment {
 
             if (mRange != null) {
                 /**
-                 * 下一个的Range定义可能是相对的
+                 * 下一个片段的Range定义可能是相对的
                  */
                 builder.setRangeOffset(mRange.getOffset() + mRange.getLength());
             }

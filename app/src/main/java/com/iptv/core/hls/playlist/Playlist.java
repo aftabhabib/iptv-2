@@ -257,7 +257,7 @@ public final class Playlist {
                 }
                 else if (line.startsWith(TAG_KEY)) {
                     String value = line.substring(TAG_KEY.length() + 1);
-                    Key key = createKey(Attribute.parseList(value));
+                    Key key = createKey(value);
 
                     if (segmentBuilder == null) {
                         segmentBuilder = new MediaSegment.Builder();
@@ -292,14 +292,14 @@ public final class Playlist {
                 else if (line.startsWith(TAG_MEDIA)) {
                     String value = line.substring(TAG_MEDIA.length() + 1);
 
-                    Media media = createMedia(Attribute.parseList(value));
+                    Media media = createMedia(value);
                     playlist.addMedia(media);
                 }
                 else if (line.startsWith(TAG_STREAM_INF)) {
                     String value = line.substring(TAG_STREAM_INF.length() + 1);
 
                     streamBuilder = new VariantStream.Builder();
-                    streamBuilder.setAttributeList(Attribute.parseList(value));
+                    streamBuilder.setAttributeList(value);
                 }
                 /**
                  * URI
@@ -343,7 +343,7 @@ public final class Playlist {
         return result[0];
     }
 
-    private static Key createKey(List<Attribute> attributeList) {
+    private static Key createKey(String attributeList) {
         Key.Builder builder = new Key.Builder();
 
         builder.setAttributeList(attributeList);
@@ -351,7 +351,7 @@ public final class Playlist {
         return builder.build();
     }
 
-    private static Media createMedia(List<Attribute> attributeList) {
+    private static Media createMedia(String attributeList) {
         Media.Builder builder = new Media.Builder();
 
         builder.setAttributeList(attributeList);

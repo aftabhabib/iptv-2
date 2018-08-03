@@ -1,8 +1,5 @@
 package com.iptv.core.hls.playlist;
 
-import java.util.ArrayList;
-import java.util.List;
-
 final class Attribute {
     /**
      * Tag EXT-X-KEY
@@ -29,38 +26,37 @@ final class Attribute {
      * Tag EXT-X-STREAM-INF
      */
     public static final String ATTR_BANDWIDTH = "BANDWIDTH";
-    public static final String ATTR_CODEC = "CODECS";
+    public static final String ATTR_CODECS = "CODECS";
     public static final String ATTR_RESOLUTION = "RESOLUTION";
     public static final String ATTR_AUDIO = "AUDIO";
     public static final String ATTR_VIDEO = "VIDEO";
-    public static final String ATTR_SUBTITLE = "SUBTITLES";
+    public static final String ATTR_SUBTITLES = "SUBTITLES";
 
-    private String mKey;
+    private String mName;
     private String mValue;
 
-    private Attribute(String key, String value) {
-        mKey = key;
+    private Attribute(String name, String value) {
+        mName = name;
         mValue = value;
     }
 
-    public String getKey() {
-        return mKey;
+    /**
+     * 获取Attribute的名称
+     */
+    public String getName() {
+        return mName;
     }
 
+    /**
+     * 获取Attribute的值
+     */
     public String getValue() {
         return mValue;
     }
 
-    public static List<Attribute> parseList(String attributes) {
-        List<Attribute> attributeList = new ArrayList<>(10);
+    public static Attribute parse(String attribute) {
+        String[] result = attribute.split("=");
 
-        String[] attributeArray = attributes.split(",");
-        for (int i = 0; i < attributeArray.length; i++) {
-            String[] result = attributeArray[i].split("=");
-
-            attributeList.add(new Attribute(result[0], result[1]));
-        }
-
-        return attributeList;
+        return new Attribute(result[0], result[1]);
     }
 }
