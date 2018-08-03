@@ -1,8 +1,6 @@
 package com.iptv.core.hls.playlist;
 
 import java.math.BigInteger;
-import java.util.AbstractMap;
-import java.util.Map;
 
 public final class MediaSegment {
     private float mDuration;
