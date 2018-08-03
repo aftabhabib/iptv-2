@@ -241,7 +241,7 @@ public class Session extends Handler implements PlaylistSource.Listener {
     }
 
     private void onNotifyMediaPlaylist(PlaylistSource source) {
-        source.downloadMediaSegment();
+        source.loadMediaSegment();
     }
 
     private void onNotifyMediaSegment(int size, int elapsedTime) {
