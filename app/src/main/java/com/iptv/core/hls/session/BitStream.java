@@ -16,7 +16,12 @@ public final class BitStream {
 
     private int readBit() throws IOException {
         if (mBitsLeft == 0) {
-            mByteValue = mInput.read();
+            int ret = mInput.read();
+            if (ret < 0) {
+                throw new EOFException();
+            }
+
+            mByteValue = ret;
             mBitsLeft = 8;
         }
 
