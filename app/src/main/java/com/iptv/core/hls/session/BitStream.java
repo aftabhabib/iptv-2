@@ -97,7 +97,13 @@ public final class BitStream {
              * 越过若干字节
              */
             while (numOfBits > 8) {
-                mInput.skip(1);
+                long ret = mInput.skip(1);
+                if (ret < 0) {
+                    throw new EOFException();
+                }
+                else if (ret == 0) {
+                    continue;
+                }
 
                 numOfBits -= 8;
             }
