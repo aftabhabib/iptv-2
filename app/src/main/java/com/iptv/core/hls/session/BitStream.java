@@ -1,5 +1,6 @@
 package com.iptv.core.hls.session;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -11,38 +12,6 @@ public final class BitStream {
 
     public BitStream(InputStream input) {
         mInput = input;
-    }
-
-    public void skip(int numOfBits) throws IOException {
-        if (numOfBits <= mBitsLeft) {
-            /**
-             * 在当前字节内
-             */
-            mBitsLeft -= numOfBits;
-        }
-        else {
-            /**
-             * 超出当前字节
-             */
-            numOfBits -= mBitsLeft;
-
-            /**
-             * 若干字节
-             */
-            while (numOfBits > 8) {
-                mInput.skip(1);
-
-                numOfBits -= 8;
-            }
-
-            /**
-             * 剩下的字节内
-             */
-            if (numOfBits > 0) {
-                mByteValue = mInput.read();
-                mBitsLeft = 8 - numOfBits;
-            }
-        }
     }
 
     private int readBit() throws IOException {
@@ -86,5 +55,59 @@ public final class BitStream {
 
     public long readUnsignedInt() throws IOException {
         return readBits(32) & 0xFFFFFFFFL;
+    }
+
+    public void readFully(byte[] buffer) throws IOException {
+        if (!isByteAlign()) {
+            throw new IllegalStateException();
+        }
+
+        int offset = 0;
+        do {
+            int ret = mInput.read(buffer, offset, buffer.length - offset);
+            if (ret < 0) {
+                throw new EOFException();
+            }
+
+            offset += ret;
+        }
+        while (offset < buffer.length);
+    }
+
+    public void skipBits(int numOfBits) throws IOException {
+        if (numOfBits <= mBitsLeft) {
+            /**
+             * 在当前字节内
+             */
+            mBitsLeft -= numOfBits;
+        }
+        else {
+            /**
+             * 越过当前字节
+             */
+            numOfBits -= mBitsLeft;
+            mBitsLeft = 0;
+
+            /**
+             * 越过若干字节
+             */
+            while (numOfBits > 8) {
+                mInput.skip(1);
+
+                numOfBits -= 8;
+            }
+
+            /**
+             * 不足一个字节
+             */
+            if (numOfBits > 0) {
+                mByteValue = mInput.read();
+                mBitsLeft = 8 - numOfBits;
+            }
+        }
+    }
+
+    private boolean isByteAlign() {
+        return mBitsLeft > 0;
     }
 }
