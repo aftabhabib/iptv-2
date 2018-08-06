@@ -73,9 +73,9 @@ public final class MediaSegment {
     }
 
     /**
-     * 是不是MediaSample加密
+     * 是不是Sample加密
      */
-    public boolean isMediaSampleEncrypted() {
+    public boolean isSampleEncrypted() {
         return mKey.getMethod().equals(Key.METHOD_SAMPLE_AES);
     }
 
