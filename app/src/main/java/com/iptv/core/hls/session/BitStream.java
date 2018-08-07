@@ -1,124 +1,151 @@
 package com.iptv.core.hls.session;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Arrays;
 
 public final class BitStream {
-    private InputStream mInput;
+    private byte[] mData;
 
-    private int mByteValue = 0;
-    private int mBitsLeft = 0;
+    private int mBytePos = 0;
+    private int mBitPos = 7;
 
-    public BitStream(InputStream input) {
-        mInput = input;
+    public BitStream(byte[] data) {
+        mData = data;
     }
 
-    private int readBit() throws IOException {
-        if (mBitsLeft == 0) {
-            int ret = mInput.read();
-            if (ret < 0) {
-                throw new EOFException();
-            }
-
-            mByteValue = ret;
-            mBitsLeft = 8;
-        }
-
-        int value = (mByteValue >> (mBitsLeft - 1)) & 0x01;
-        mBitsLeft--;
-
-        return value;
-    }
-
-    public long readBits(int numOfBits) throws IOException {
-        if (numOfBits <= 0 || numOfBits > 63) {
+    public int readBitsAsInt(int numOfBits) {
+        if (numOfBits <= 0 || numOfBits > 31) {
             throw new IllegalArgumentException();
         }
 
-        long value = 0;
-        do {
-            value |= (readBit() << (numOfBits - 1));
-            numOfBits--;
+        if (availableBits() < numOfBits) {
+            throw new IllegalStateException();
         }
-        while (numOfBits > 0);
+
+        int value = 0;
+
+        for (; numOfBits > 0; numOfBits--) {
+            value |= (readBit() << (numOfBits - 1));
+        }
 
         return value;
     }
 
-    public int readUnsignedByte() throws IOException {
-        return (int)(readBits(8) & 0xFFL);
-    }
+    public long readBitsAsLong(int numOfBits) {
+        if (numOfBits <= 31 || numOfBits > 63) {
+            throw new IllegalArgumentException();
+        }
 
-    public int readUnsignedShort() throws IOException {
-        return (int)(readBits(16) & 0xFFFL);
-    }
-
-    public int readUnsignedInt24() throws IOException {
-        return (int)(readBits(24) & 0xFFFFFFL);
-    }
-
-    public long readUnsignedInt() throws IOException {
-        return readBits(32) & 0xFFFFFFFFL;
-    }
-
-    public void readFully(byte[] buffer) throws IOException {
-        if (!isByteAlign()) {
+        if (availableBits() < numOfBits) {
             throw new IllegalStateException();
         }
 
-        int offset = 0;
-        do {
-            int ret = mInput.read(buffer, offset, buffer.length - offset);
-            if (ret < 0) {
-                throw new EOFException();
-            }
+        long value = 0;
 
-            offset += ret;
+        for (; numOfBits > 0; numOfBits--) {
+            value |= (readBit() << (numOfBits - 1));
         }
-        while (offset < buffer.length);
+
+        return value;
     }
 
-    public void skipBits(int numOfBits) throws IOException {
-        if (numOfBits <= mBitsLeft) {
-            /**
-             * 在当前字节内
-             */
-            mBitsLeft -= numOfBits;
+    public void skipBits(int numOfBits) {
+        if (availableBits() < numOfBits) {
+            throw new IllegalStateException();
         }
-        else {
-            /**
-             * 越过当前字节
-             */
-            numOfBits -= mBitsLeft;
-            mBitsLeft = 0;
 
-            /**
-             * 越过若干字节
-             */
-            while (numOfBits > 8) {
-                long ret = mInput.skip(1);
-                if (ret < 0) {
-                    throw new EOFException();
-                }
-                else if (ret == 0) {
-                    continue;
-                }
+        for (; numOfBits > 0; numOfBits--) {
+            mBitPos--;
+            if (mBitPos < 0) {
+                mBytePos++;
 
-                numOfBits -= 8;
-            }
-
-            /**
-             * 不足一个字节
-             */
-            if (numOfBits > 0) {
-                mByteValue = mInput.read();
-                mBitsLeft = 8 - numOfBits;
+                mBitPos = 7;
             }
         }
+    }
+
+    private int availableBits() {
+        return (mData.length - mBytePos - 1) * 8 + (mBitPos + 1);
+    }
+
+    private int readBit() {
+        int value = (mData[mBytePos] >> mBitPos) & 0x01;
+
+        mBitPos--;
+        if (mBitPos < 0) {
+            mBytePos++;
+
+            mBitPos = 7;
+        }
+
+        return value;
+    }
+
+    public int readUnsignedByte() {
+        if (!isByteAlign() || availableBytes() < 1) {
+            throw new IllegalStateException();
+        }
+
+        return (mData[mBytePos++] & 0xFF);
+    }
+
+    public int readUnsignedShort() {
+        if (!isByteAlign() || availableBytes() < 2) {
+            throw new IllegalStateException();
+        }
+
+        return ((mData[mBytePos++] & 0xFF) << 8)
+                | (mData[mBytePos++] & 0xFF);
+    }
+
+    public int readUnsignedInt24() {
+        if (!isByteAlign() || availableBytes() < 3) {
+            throw new IllegalStateException();
+        }
+
+        return ((mData[mBytePos++] & 0xFF) << 16)
+                | ((mData[mBytePos++] & 0xFF) << 8)
+                | (mData[mBytePos++] & 0xFF);
+    }
+
+    public long readUnsignedInt() {
+        if (!isByteAlign() || availableBytes() < 4) {
+            throw new IllegalStateException();
+        }
+
+        return ((mData[mBytePos++] & 0xFFL) << 24)
+                | ((mData[mBytePos++] & 0xFFL) << 16)
+                | ((mData[mBytePos++] & 0xFFL) << 8)
+                | (mData[mBytePos++] & 0xFFL);
+    }
+
+    public byte[] readBytes(int numOfBytes) {
+        if (!isByteAlign() || availableBytes() < numOfBytes) {
+            throw new IllegalStateException();
+        }
+
+        byte[] value = Arrays.copyOfRange(mData, mBytePos, mBytePos + numOfBytes);
+        mBytePos += numOfBytes;
+
+        return value;
+    }
+
+    public void skipBytes(int numOfBytes) {
+        if (!isByteAlign() || availableBytes() < numOfBytes) {
+            throw new IllegalStateException();
+        }
+
+        mBytePos += numOfBytes;
     }
 
     private boolean isByteAlign() {
-        return mBitsLeft > 0;
+        return mBitPos == 7;
+    }
+
+    private int availableBytes() {
+        return mData.length - mBytePos;
+    }
+
+    public boolean isEOF() {
+        return (mBytePos == mData.length) && (mBitPos == 7);
     }
 }
