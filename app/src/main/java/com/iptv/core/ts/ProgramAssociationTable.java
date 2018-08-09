@@ -79,18 +79,11 @@ class ProgramAssociationTable {
     }
 
     /**
-     * 是否包含这个节目
-     */
-    public boolean containsProgram(int programNumber) {
-        return mTable.containsKey(programNumber);
-    }
-
-    /**
      * 获取program_number对应的program_map_PID
      */
     public int getProgramMapPacketId(int programNumber) {
-        if (!containsProgram(programNumber)) {
-            throw new IllegalArgumentException("program not exist");
+        if (!mTable.containsKey(programNumber)) {
+            throw new IllegalArgumentException("invalid program number");
         }
 
         return mTable.get(programNumber);
