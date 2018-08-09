@@ -3,83 +3,124 @@ package com.iptv.core.ts;
 import java.util.HashMap;
 import java.util.Map;
 
-class ProgramMapTable extends HashMap<Integer, ProgramMapTable.ProgramDefinition> {
+/**
+ * PMT
+ */
+class ProgramMapTable {
+    private Map<Integer, ProgramDefinition> mTable;
+
     public ProgramMapTable() {
-        super();
+        mTable = new HashMap<Integer, ProgramDefinition>();
     }
 
-    public void addSection(Section section) {
-        if (!containsKey(section.getProgramNumber())) {
+    /**
+     * 是否包含指定节目的定义
+     */
+    public boolean containsProgramDefinition(int programNumber) {
+        return mTable.containsKey(programNumber);
+    }
+
+    /**
+     * 放入section
+     */
+    public void putSection(Section section) {
+        if (!containsProgramDefinition(section.getProgramNumber())) {
             /**
-             * 还没有这个节目的定义
+             * new section
              */
-            put(section.getProgramNumber(),
-                    new ProgramDefinition(section.getVersion(), section.getElementTable()));
+            mTable.put(section.getProgramNumber(), section.getProgramDefinition());
         }
         else {
             /**
-             * 已经有这个节目的定义了，检查版本
+             * already exist
              */
-            ProgramDefinition programDef = get(section.getProgramNumber());
-            if (programDef.isNewVersion(section.getVersion())) {
+            ProgramDefinition oldDefinition = mTable.get(section.getProgramNumber());
+            ProgramDefinition newDefinition = section.getProgramDefinition();
+
+            if (oldDefinition.isExpired(newDefinition.getVersion())) {
                 /**
-                 * 版本更新
+                 * update
                  */
-                put(section.getProgramNumber(),
-                        new ProgramDefinition(section.getVersion(), section.getElementTable()));
+                mTable.put(section.getProgramNumber(), newDefinition);
             }
         }
     }
 
+    /**
+     * 获取program_number对应的program_element
+     */
+    public Map<Integer, Integer> getProgramElement(int programNumber) {
+        if (!containsProgramDefinition(programNumber)) {
+            throw new IllegalStateException("program definition not exist");
+        }
+
+        ProgramDefinition programDefinition = mTable.get(programNumber);
+        return programDefinition.getContent();
+    }
+
+    /**
+     * PMT被分为若干个section，一个section中有一个节目的定义
+     */
     public static class Section {
-        private int mVersion;
-
         private int mProgramNumber;
-        private Map<Integer, Integer> mElementTable;
 
-        public Section(int version, int programNumber, Map<Integer, Integer> elementTable) {
-            mVersion = version;
+        private ProgramDefinition mProgramDefinition;
 
+        public Section(int programNumber, ProgramDefinition programDefinition) {
             mProgramNumber = programNumber;
-            mElementTable = elementTable;
+            mProgramDefinition = programDefinition;
         }
 
-        public int getVersion() {
-            return mVersion;
-        }
-
+        /**
+         * 节目号
+         */
         public int getProgramNumber() {
             return mProgramNumber;
         }
 
-        public Map<Integer, Integer> getElementTable() {
-            return mElementTable;
+        /**
+         * 节目定义
+         */
+        public ProgramDefinition getProgramDefinition() {
+            return mProgramDefinition;
         }
     }
 
-    class ProgramDefinition {
-        private int mVersion;
-        private Map<Integer, Integer> mElementTable;
+    public static Section parseSection(byte[] data) {
+        return null;
+    }
 
-        public ProgramDefinition(int version, Map<Integer, Integer> elementTable) {
+    /**
+     * 节目定义
+     */
+    public static class ProgramDefinition {
+        private int mVersion;
+        private Map<Integer, Integer> mContent;
+
+        public ProgramDefinition(int version, Map<Integer, Integer> content) {
             mVersion = version;
-            mElementTable = elementTable;
+            mContent = content;
         }
 
-        public boolean isNewVersion(int version) {
+        /**
+         * 版本
+         */
+        public int getVersion() {
+            return mVersion;
+        }
+
+        /**
+         * 是否过期
+         */
+        public boolean isExpired(int version) {
             return mVersion != version;
         }
 
-        public boolean isElementaryPacketId(int packetId) {
-            return mElementTable.containsKey(packetId);
-        }
-
-        public int getElementType(int packetId) {
-            if (!mElementTable.containsKey(packetId)) {
-                throw new IllegalStateException();
-            }
-
-            return mElementTable.get(packetId);
+        /**
+         * 内容（elementary_PID与stream_type的映射关系）
+         */
+        public Map<Integer, Integer> getContent() {
+            return mContent;
         }
     }
 }
