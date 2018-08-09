@@ -1,82 +1,116 @@
 package com.iptv.core.ts;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-class ProgramAssociationTable extends HashMap<Integer, Integer> {
+/**
+ * PAT
+ */
+class ProgramAssociationTable {
     private int mVersion;
-    private boolean[] mReceivedSection;
 
-    public ProgramAssociationTable(int version, int sectionSize) {
-        super();
+    private int mTotalSection;
+    private int mExpectedSection;
 
+    private Map<Integer, Integer> mTable;
+
+    public ProgramAssociationTable(int version, int totalSection) {
         mVersion = version;
 
-        mReceivedSection = new boolean[sectionSize];
-        Arrays.fill(mReceivedSection, false);
+        mTotalSection = totalSection;
+        mExpectedSection = 0;
+
+        mTable = new HashMap<Integer, Integer>();
     }
 
-    public boolean isNewVersion(int version) {
+    /**
+     * PAT是否过期
+     */
+    public boolean isExpired(int version) {
         return mVersion != version;
     }
 
-    public void addSection(Section section) {
-        if (!mReceivedSection[section.getNumber()]) {
-            putAll(section.getSegment());
-
-            mReceivedSection[section.getNumber()] = true;
-        }
+    /**
+     * 是不是期待的Section
+     */
+    public boolean isExpectedSection(Section section) {
+        return section.getIndex() == mExpectedSection;
     }
 
+    /**
+     * 放入期待的Section
+     */
+    public void putExpectedSection(Section section) {
+        if (!isExpectedSection(section)) {
+            throw new IllegalStateException("not expected section");
+        }
+
+        mTable.putAll(section.getContent());
+
+        /**
+         * next expected section
+         */
+        mExpectedSection++;
+    }
+
+    /**
+     * PAT是否结束（所有的Section都放入了）
+     */
     public boolean isComplete() {
-        for (int i = 0; i < mReceivedSection.length; i++) {
-            if (!mReceivedSection[i]) {
-                return false;
-            }
-        }
-
-        return true;
+        return mExpectedSection == mTotalSection;
     }
 
+    /**
+     * PAT被分成若干个section
+     */
     public static class Section {
         private int mTableVersion;
 
-        private int mNumber;
-        private int mLastNumber;
+        private int mIndex;
+        private int mTotal;
 
-        private int mTransportStreamId;
-        private Map<Integer, Integer> mSegment;
+        private Map<Integer, Integer> mContent;
 
-        public Section(int tableVersion, int number, int lastNumber,
-                       int transportStreamId, Map<Integer, Integer> segment) {
+        public Section(int tableVersion, int index, int total,
+                       Map<Integer, Integer> content) {
             mTableVersion = tableVersion;
 
-            mNumber = number;
-            mLastNumber = lastNumber;
+            mIndex = index;
+            mTotal = total;
 
-            mTransportStreamId = transportStreamId;
-            mSegment = segment;
+            mContent = content;
         }
 
+        /**
+         * PAT的版本号
+         */
         public int getTableVersion() {
             return mTableVersion;
         }
 
-        public int getNumber() {
-            return mNumber;
+        /**
+         * 索引
+         */
+        public int getIndex() {
+            return mIndex;
         }
 
-        public int getLastNumber() {
-            return mLastNumber;
+        /**
+         * 总数
+         */
+        public int getTotal() {
+            return mTotal;
         }
 
-        public int getTransportStreamId() {
-            return mTransportStreamId;
+        /**
+         * 内容（program_number与program_map_PID的对应关系）
+         */
+        public Map<Integer, Integer> getContent() {
+            return mContent;
         }
+    }
 
-        public Map<Integer, Integer> getSegment() {
-            return mSegment;
-        }
+    public static Section parseSection(byte[] data) {
+        return null;
     }
 }
