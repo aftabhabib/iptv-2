@@ -61,6 +61,17 @@ class ProgramAssociationTable {
     }
 
     /**
+     * 获取program_number对应的program_map_PID
+     */
+    public int getProgramMapPacketId(int programNumber) {
+        if (!mTable.containsKey(programNumber)) {
+            throw new IllegalArgumentException("program not exist");
+        }
+
+        return mTable.get(programNumber);
+    }
+
+    /**
      * PAT被分成若干个section
      */
     public static class Section {
