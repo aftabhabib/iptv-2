@@ -22,7 +22,7 @@ class PayloadUnit {
             /**
              * counter is 4 bits field
              */
-            return ((mCounter + 1) & 0x0f) == counter;
+            return ((mCounter + 1) & 0x0f) != counter;
         }
     }
 
