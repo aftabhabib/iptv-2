@@ -1,6 +1,9 @@
 package com.iptv.core.ts;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,10 +64,32 @@ class ProgramAssociationTable {
     }
 
     /**
+     * 创建节目列表
+     */
+    public List<Program> createProgramList() {
+        List<Program> programList = new ArrayList<Program>(mTable.size());
+
+        Iterator<Integer> it = mTable.keySet().iterator();
+        while (it.hasNext()) {
+            int programNumber = it.next();
+            programList.add(new Program(programNumber));
+        }
+
+        return programList;
+    }
+
+    /**
+     * 是否包含这个节目
+     */
+    public boolean containsProgram(int programNumber) {
+        return mTable.containsKey(programNumber);
+    }
+
+    /**
      * 获取program_number对应的program_map_PID
      */
     public int getProgramMapPacketId(int programNumber) {
-        if (!mTable.containsKey(programNumber)) {
+        if (!containsProgram(programNumber)) {
             throw new IllegalArgumentException("program not exist");
         }
 
