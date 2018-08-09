@@ -64,6 +64,13 @@ class ProgramAssociationTable {
     }
 
     /**
+     * 指定的PID是否是program_map_PID
+     */
+    public boolean isProgramMapPacketId(int packetId) {
+        return mTable.containsValue(packetId);
+    }
+
+    /**
      * 创建节目列表
      */
     public List<Program> createProgramList() {
