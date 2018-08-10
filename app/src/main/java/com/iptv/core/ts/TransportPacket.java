@@ -8,19 +8,21 @@ public class TransportPacket {
 
     private int mPacketId;
 
-    private boolean mPayloadUnitStart;
-    private int mCounter;
+    private boolean mIsPayloadUnitStart;
+    private int mContinuityCounter;
 
-    private byte[] mPayload;
+    private long mProgramClockReference;
+    private byte[] mPayloadData;
 
-    private TransportPacket(int packetId, boolean payloadUnitStart,
-                            int counter, byte[] payload) {
+    private TransportPacket(int packetId, boolean isPayloadUnitStart, int continuityCounter,
+                            long programClockReference, byte[] payloadData) {
         mPacketId = packetId;
 
-        mPayloadUnitStart = payloadUnitStart;
-        mCounter = counter;
+        mIsPayloadUnitStart = isPayloadUnitStart;
+        mContinuityCounter = continuityCounter;
 
-        mPayload = payload;
+        mProgramClockReference = programClockReference;
+        mPayloadData = payloadData;
     }
 
     /**
@@ -31,24 +33,38 @@ public class TransportPacket {
     }
 
     /**
-     * 负载是否是新的单元
+     * 是否包含负载数据
+     */
+    public boolean containsPayloadData() {
+        return mPayloadData != null;
+    }
+
+    /**
+     * 获取连续性计数
+     */
+    public int getContinuityCounter() {
+        return mContinuityCounter;
+    }
+
+    /**
+     * 负载数据是否是负载单元的起始
      */
     public boolean isPayloadUnitStart() {
-        return mPayloadUnitStart;
+        return mIsPayloadUnitStart;
     }
 
     /**
-     * 获取（包序）计数
+     * 获取负载数据
      */
-    public int getCounter() {
-        return mCounter;
+    public byte[] getPayloadData() {
+        return mPayloadData;
     }
 
     /**
-     * 获取负载
+     * 获取节目时钟参考
      */
-    public byte[] getPayload() {
-        return mPayload;
+    public long getProgramClockReference() {
+        return mProgramClockReference;
     }
 
     public static TransportPacket parse(byte[] data) {
