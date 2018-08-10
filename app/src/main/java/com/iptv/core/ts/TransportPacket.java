@@ -11,17 +11,15 @@ public class TransportPacket {
     private boolean mIsPayloadUnitStart;
     private int mContinuityCounter;
 
-    private long mProgramClockReference;
     private byte[] mPayloadData;
 
-    private TransportPacket(int packetId, boolean isPayloadUnitStart, int continuityCounter,
-                            long programClockReference, byte[] payloadData) {
+    private TransportPacket(int packetId, boolean isPayloadUnitStart,
+                            int continuityCounter, byte[] payloadData) {
         mPacketId = packetId;
 
         mIsPayloadUnitStart = isPayloadUnitStart;
         mContinuityCounter = continuityCounter;
 
-        mProgramClockReference = programClockReference;
         mPayloadData = payloadData;
     }
 
@@ -58,13 +56,6 @@ public class TransportPacket {
      */
     public byte[] getPayloadData() {
         return mPayloadData;
-    }
-
-    /**
-     * 获取节目时钟参考
-     */
-    public long getProgramClockReference() {
-        return mProgramClockReference;
     }
 
     public static TransportPacket parse(byte[] data) {
