@@ -1,9 +1,7 @@
 package com.iptv.core.ts;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,55 +10,41 @@ import java.util.Map;
 class ProgramAssociationTable {
     private int mVersion;
 
-    private int mTotalSection;
-    private int mExpectedSection;
+    /**
+     * The section_number of the first section in the Program Association Table shall be 0x00.
+     * It shall be incremented by 1 with each additional section in the Program Association Table.
+     */
+    private int mNextSectionNumber = 0;
+    private Map<Integer, Integer> mTable = new HashMap<Integer, Integer>();
 
-    private Map<Integer, Integer> mTable;
-
-    public ProgramAssociationTable(int version, int totalSection) {
+    /**
+     * 构造函数
+     */
+    public ProgramAssociationTable(int version) {
         mVersion = version;
-
-        mTotalSection = totalSection;
-        mExpectedSection = 0;
-
-        mTable = new HashMap<Integer, Integer>();
     }
 
     /**
-     * PAT是否过期
+     * 获取版本
      */
-    public boolean isExpired(int version) {
-        return mVersion != version;
+    public int getVersion() {
+        return mVersion;
     }
 
     /**
-     * 是不是期待的Section
+     * 获取下一个section的序号
      */
-    public boolean isExpectedSection(Section section) {
-        return section.getIndex() == mExpectedSection;
+    public int getNextSectionNumber() {
+        return mNextSectionNumber;
     }
 
     /**
-     * 放入期待的Section
+     * 放入section
      */
-    public void putExpectedSection(Section section) {
-        if (!isExpectedSection(section)) {
-            throw new IllegalStateException("not expected section");
-        }
-
+    public void putSection(Section section) {
         mTable.putAll(section.getContent());
 
-        /**
-         * next expected section
-         */
-        mExpectedSection++;
-    }
-
-    /**
-     * PAT是否结束（所有的Section都放入了）
-     */
-    public boolean isComplete() {
-        return mExpectedSection == mTotalSection;
+        mNextSectionNumber = section.getSectionNumber() + 1;
     }
 
     /**
@@ -71,29 +55,15 @@ class ProgramAssociationTable {
     }
 
     /**
-     * 创建节目列表
+     * 选择节目（默认是第一个）
      */
-    public List<Program> createProgramList() {
-        List<Program> programList = new ArrayList<Program>(mTable.size());
-
+    public Program selectProgram() {
         Iterator<Integer> it = mTable.keySet().iterator();
-        while (it.hasNext()) {
-            int programNumber = it.next();
-            programList.add(new Program(programNumber));
+        if (!it.hasNext()) {
+            throw new IllegalStateException("no declared program");
         }
 
-        return programList;
-    }
-
-    /**
-     * 获取program_number对应的program_map_PID
-     */
-    public int getProgramMapPacketId(int programNumber) {
-        if (!mTable.containsKey(programNumber)) {
-            throw new IllegalArgumentException("invalid program number");
-        }
-
-        return mTable.get(programNumber);
+        return new Program(it.next());
     }
 
     /**
@@ -125,16 +95,16 @@ class ProgramAssociationTable {
         }
 
         /**
-         * 索引
+         * section的序号
          */
-        public int getIndex() {
+        public int getSectionNumber() {
             return mIndex;
         }
 
         /**
-         * 总数
+         * 最后一个section的序号
          */
-        public int getTotal() {
+        public int getLastSectionNumber() {
             return mTotal;
         }
 
