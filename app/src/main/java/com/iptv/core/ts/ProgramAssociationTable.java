@@ -57,6 +57,13 @@ class ProgramAssociationTable {
     }
 
     /**
+     * 获取已知节目的个数
+     */
+    public int size() {
+        return mTable.size();
+    }
+
+    /**
      * 获取节目列表
      */
     public List<Program> getProgramList() {
