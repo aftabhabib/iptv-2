@@ -1,7 +1,9 @@
 package com.iptv.core.ts;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -55,15 +57,17 @@ class ProgramAssociationTable {
     }
 
     /**
-     * 选择节目（默认是第一个）
+     * 获取节目列表
      */
-    public Program selectProgram() {
+    public List<Program> getProgramList() {
+        List<Program> programList = new ArrayList<Program>(mTable.size());
+
         Iterator<Integer> it = mTable.keySet().iterator();
-        if (!it.hasNext()) {
-            throw new IllegalStateException("no declared program");
+        while (it.hasNext()) {
+            programList.add(new Program(it.next()));
         }
 
-        return new Program(it.next());
+        return programList;
     }
 
     /**

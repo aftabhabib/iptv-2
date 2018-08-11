@@ -14,61 +14,64 @@ class ProgramMapTable {
     }
 
     /**
-     * 是否包含指定节目的定义
+     * 是否包含指定节目的映射
      */
-    public boolean containsProgramDefinition(int programNumber) {
+    public boolean containsProgramMap(int programNumber) {
         return mTable.containsKey(programNumber);
+    }
+
+    /**
+     * 获取指定节目映射的版本
+     */
+    public int getProgramMapVersion(int programNumber) {
+        if (!containsProgramMap(programNumber)) {
+            return -1;
+        }
+
+        return mTable.get(programNumber).getVersion();
     }
 
     /**
      * 放入section
      */
     public void putSection(Section section) {
-        if (!containsProgramDefinition(section.getProgramNumber())) {
-            /**
-             * new section
-             */
-            mTable.put(section.getProgramNumber(), section.getProgramDefinition());
-        }
-        else {
-            /**
-             * already exist
-             */
-            ProgramDefinition oldDefinition = mTable.get(section.getProgramNumber());
-            ProgramDefinition newDefinition = section.getProgramDefinition();
+        ProgramDefinition programDef = new ProgramDefinition(
+                section.getVersion(), section.getContent());
 
-            if (oldDefinition.isExpired(newDefinition.getVersion())) {
-                /**
-                 * update
-                 */
-                mTable.put(section.getProgramNumber(), newDefinition);
-            }
-        }
+        mTable.put(section.getProgramNumber(), programDef);
     }
 
     /**
-     * 获取program_number对应的program_element
+     * 获取指定节目的映射
      */
-    public Map<Integer, Integer> getProgramElement(int programNumber) {
-        if (!containsProgramDefinition(programNumber)) {
-            throw new IllegalStateException("program definition not exist");
+    public Map<Integer, Integer> getProgramMap(int programNumber) {
+        if (!containsProgramMap(programNumber)) {
+            return null;
         }
 
-        ProgramDefinition programDefinition = mTable.get(programNumber);
-        return programDefinition.getContent();
+        return mTable.get(programNumber).getContent();
     }
 
     /**
-     * PMT被分为若干个section，一个section中有一个节目的定义
+     * PMT被分为若干个section
      */
     public static class Section {
         private int mProgramNumber;
 
-        private ProgramDefinition mProgramDefinition;
+        /**
+         * The version number shall be incremented by 1 modulo 32
+         * when a change in the information carried within the section occurs.
+         * Version number refers to the definition of a single program,
+         * and therefore to a single section
+         */
+        private int mVersion;
+        private Map<Integer, Integer> mContent;
 
-        public Section(int programNumber, ProgramDefinition programDefinition) {
+        public Section(int programNumber, int version, Map<Integer, Integer> content) {
             mProgramNumber = programNumber;
-            mProgramDefinition = programDefinition;
+
+            mVersion = version;
+            mContent = content;
         }
 
         /**
@@ -79,10 +82,17 @@ class ProgramMapTable {
         }
 
         /**
-         * 节目定义
+         * 版本
          */
-        public ProgramDefinition getProgramDefinition() {
-            return mProgramDefinition;
+        public int getVersion() {
+            return mVersion;
+        }
+
+        /**
+         * 内容（elementary_PID与stream_type的映射关系）
+         */
+        public Map<Integer, Integer> getContent() {
+            return mContent;
         }
     }
 
@@ -93,7 +103,7 @@ class ProgramMapTable {
     /**
      * 节目定义
      */
-    public static class ProgramDefinition {
+    class ProgramDefinition {
         private int mVersion;
         private Map<Integer, Integer> mContent;
 
@@ -102,23 +112,10 @@ class ProgramMapTable {
             mContent = content;
         }
 
-        /**
-         * 版本
-         */
         public int getVersion() {
             return mVersion;
         }
 
-        /**
-         * 是否过期
-         */
-        public boolean isExpired(int version) {
-            return mVersion != version;
-        }
-
-        /**
-         * 内容（elementary_PID与stream_type的映射关系）
-         */
         public Map<Integer, Integer> getContent() {
             return mContent;
         }
