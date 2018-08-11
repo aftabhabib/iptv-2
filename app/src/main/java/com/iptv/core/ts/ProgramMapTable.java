@@ -53,6 +53,13 @@ class ProgramMapTable {
     }
 
     /**
+     * 获取已知节目映射的个数
+     */
+    public int size() {
+        return mTable.size();
+    }
+
+    /**
      * PMT被分为若干个section
      */
     public static class Section {
