@@ -8,13 +8,13 @@ final class ProgramAssociationSection {
     private int mSectionNumber;
     private int mLastSectionNumber;
 
-    private Map<Integer, Integer> mAssociations;
+    private Map<Integer, Program> mAssociations;
 
     /**
      * 构造函数
      */
     private ProgramAssociationSection(int tableVersion, int sectionNumber, int lastSectionNumber,
-                   Map<Integer, Integer> associations) {
+                   Map<Integer, Program> associations) {
         mTableVersion = tableVersion;
 
         mSectionNumber = sectionNumber;
@@ -45,9 +45,9 @@ final class ProgramAssociationSection {
     }
 
     /**
-     * 节目关联（program_number与program_map_PID的对应关系）
+     * 关联
      */
-    public Map<Integer, Integer> getAssociations() {
+    public Map<Integer, Program> getAssociations() {
         return mAssociations;
     }
 

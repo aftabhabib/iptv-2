@@ -12,14 +12,14 @@ import java.util.Map;
  */
 final class ProgramAssociationTable {
     private int mVersion;
-    private Map<Integer, Integer> mTable;
+    private Map<Integer, Program> mTable;
 
     /**
      * 构造函数
      */
     public ProgramAssociationTable(int version) {
         mVersion = version;
-        mTable = new HashMap<Integer, Integer>();
+        mTable = new HashMap<Integer, Program>();
     }
 
     /**
@@ -30,17 +30,17 @@ final class ProgramAssociationTable {
     }
 
     /**
-     * 放入节目关联（program_number与program_map_PID的对应关系）
+     * 放入新的关联
      */
-    public void putAssociations(Map<Integer, Integer> associations) {
+    public void putAssociations(Map<Integer, Program> associations) {
         mTable.putAll(associations);
     }
 
     /**
-     * 指定的PID是否是program_map_PID
+     * 是否包含对应program_map_PID的节目
      */
-    public boolean isMapPacketId(int packetId) {
-        return mTable.containsValue(packetId);
+    public boolean containsProgram(int packetId) {
+        return mTable.containsKey(packetId);
     }
 
     /**
@@ -48,10 +48,7 @@ final class ProgramAssociationTable {
      */
     public Program[] toProgramArray() {
         List<Program> programList = new ArrayList<Program>(mTable.size());
-
-        for (Integer programNumber : mTable.keySet()) {
-            programList.add(new Program(programNumber));
-        }
+        programList.addAll(mTable.values());
 
         /**
          * 按节目号排序
