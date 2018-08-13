@@ -10,6 +10,9 @@ final class ProgramAssociationSection {
 
     private Map<Integer, Integer> mAssociations;
 
+    /**
+     * 构造函数
+     */
     private ProgramAssociationSection(int tableVersion, int sectionNumber, int lastSectionNumber,
                    Map<Integer, Integer> associations) {
         mTableVersion = tableVersion;
@@ -48,6 +51,9 @@ final class ProgramAssociationSection {
         return mAssociations;
     }
 
+    /**
+     * 解析数据，创建section
+     */
     public static ProgramAssociationSection parse(byte[] data) {
         return null;
     }
