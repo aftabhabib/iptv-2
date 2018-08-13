@@ -4,23 +4,24 @@ package com.iptv.core.ts;
  * transport_packet
  */
 public class TransportPacket {
-    private static final int PACKET_SIZE = 188;
+    public static final int PACKET_SIZE = 188;
 
     private int mPacketId;
+    private byte[] mPayloadData;
 
     private boolean mIsPayloadUnitStart;
     private int mContinuityCounter;
 
-    private byte[] mPayloadData;
-
-    private TransportPacket(int packetId, boolean isPayloadUnitStart,
-                            int continuityCounter, byte[] payloadData) {
+    /**
+     * 构造函数
+     */
+    private TransportPacket(int packetId, byte[] payloadData,
+                            boolean isPayloadUnitStart, int continuityCounter) {
         mPacketId = packetId;
+        mPayloadData = payloadData;
 
         mIsPayloadUnitStart = isPayloadUnitStart;
         mContinuityCounter = continuityCounter;
-
-        mPayloadData = payloadData;
     }
 
     /**
@@ -38,6 +39,13 @@ public class TransportPacket {
     }
 
     /**
+     * 获取负载数据
+     */
+    public byte[] getPayloadData() {
+        return mPayloadData;
+    }
+
+    /**
      * 获取连续性计数
      */
     public int getContinuityCounter() {
@@ -52,12 +60,8 @@ public class TransportPacket {
     }
 
     /**
-     * 获取负载数据
+     * 解析数据，创建TransportPacket
      */
-    public byte[] getPayloadData() {
-        return mPayloadData;
-    }
-
     public static TransportPacket parse(byte[] data) {
         return null;
     }
