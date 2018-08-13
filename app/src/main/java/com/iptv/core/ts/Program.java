@@ -2,7 +2,7 @@ package com.iptv.core.ts;
 
 import java.util.Map;
 
-class Program {
+final class Program {
     private int mProgramNumber;
 
     private int mMapVersion;
