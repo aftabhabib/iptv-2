@@ -1,6 +1,6 @@
 package com.iptv.core.ts;
 
-public class PESPacket {
+final class PESPacket {
     private long mPresentationTimeStamp;
     private long mDecodingTimeStamp;
 
@@ -11,6 +11,18 @@ public class PESPacket {
         mDecodingTimeStamp = dts;
 
         mPayloadData = payloadData;
+    }
+
+    public long getPresentationTimeStamp() {
+        return mPresentationTimeStamp;
+    }
+
+    public long getDecodingTimeStamp() {
+        return mDecodingTimeStamp;
+    }
+
+    public byte[] getPayloadData() {
+        return mPayloadData;
     }
 
     public static PESPacket parse(byte[] data) {
