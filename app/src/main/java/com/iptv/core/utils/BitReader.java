@@ -1,151 +1,126 @@
 package com.iptv.core.utils;
 
-import java.util.Arrays;
-
 public final class BitReader {
-    private byte[] mData;
+    private static final int BITS_PER_BYTE = 8;
 
-    private int mBytePos = 0;
-    private int mBitPos = 7;
+    private byte[] mBuffer;
+    private int mOffset;
+    private int mLength;
 
-    public BitReader(byte[] data) {
-        mData = data;
+    private int mAvailableBitsInByte = BITS_PER_BYTE;
+
+    /**
+     * 构造函数
+     */
+    public BitReader(byte[] buffer) {
+        this(buffer, buffer.length);
     }
 
-    public int readBitsAsInt(int numOfBits) {
-        if (numOfBits <= 0 || numOfBits > 31) {
-            throw new IllegalArgumentException();
+    /**
+     * 构造函数
+     */
+    public BitReader(byte[] buffer, int length) {
+        this(buffer, 0, length);
+    }
+
+    /**
+     * 构造函数
+     */
+    public BitReader(byte[] buffer, int offset, int length) {
+        if (offset < 0 || offset >= buffer.length) {
+            throw new IllegalArgumentException("invalid offset");
         }
 
-        if (availableBits() < numOfBits) {
-            throw new IllegalStateException();
+        if (length < 0 || offset + length > buffer.length) {
+            throw new IllegalArgumentException("invalid length");
+        }
+
+        mBuffer = buffer;
+        mOffset = offset;
+        mLength = length;
+    }
+
+    /**
+     * 还有多少比特可读
+     */
+    public int available() {
+        return mAvailableBitsInByte + (mLength - 1) * BITS_PER_BYTE;
+    }
+
+    /**
+     * 读一比特
+     */
+    private int readBit() {
+        int value = (mBuffer[mOffset] >> (mAvailableBitsInByte - 1)) & 0x01;
+
+        mAvailableBitsInByte--;
+
+        if (mAvailableBitsInByte == 0) {
+            mOffset++;
+            mLength--;
+
+            if (mLength > 0) {
+                mAvailableBitsInByte = BITS_PER_BYTE;
+            }
+        }
+
+        return value;
+    }
+
+    /**
+     * 跳过若干比特
+     */
+    public void skip(int count) {
+        if (count < 0 || count > available()) {
+            throw new IllegalArgumentException("invalid count");
+        }
+
+        while (count > 0) {
+            readBit();
+
+            count--;
+        }
+    }
+
+    /**
+     * 读若干比特，输出为int型
+     */
+    public int readInt(int count) {
+        if (count < 0 || count > available()) {
+            throw new IllegalArgumentException("invalid count");
+        }
+
+        if (count > 31) {
+            throw new IllegalArgumentException("count should be less than 32");
         }
 
         int value = 0;
 
-        for (; numOfBits > 0; numOfBits--) {
-            value |= (readBit() << (numOfBits - 1));
+        while (count > 0) {
+            value = (value << 1) | readBit();
         }
 
         return value;
     }
 
-    public long readBitsAsLong(int numOfBits) {
-        if (numOfBits <= 31 || numOfBits > 63) {
-            throw new IllegalArgumentException();
+    /**
+     * 读若干比特，输出为long型
+     */
+    public long readLong(int count) {
+        if (count < 0 || count > available()) {
+            throw new IllegalArgumentException("invalid count");
         }
 
-        if (availableBits() < numOfBits) {
-            throw new IllegalStateException();
+        if (count > 63) {
+            throw new IllegalArgumentException("count should be less than 64");
         }
 
         long value = 0;
 
-        for (; numOfBits > 0; numOfBits--) {
-            value |= (readBit() << (numOfBits - 1));
+        while (count > 0) {
+            value = (value << 1) | readBit();
         }
 
         return value;
-    }
-
-    public void skipBits(int numOfBits) {
-        if (availableBits() < numOfBits) {
-            throw new IllegalStateException();
-        }
-
-        for (; numOfBits > 0; numOfBits--) {
-            mBitPos--;
-            if (mBitPos < 0) {
-                mBytePos++;
-
-                mBitPos = 7;
-            }
-        }
-    }
-
-    public int availableBits() {
-        return (mData.length - mBytePos - 1) * 8 + (mBitPos + 1);
-    }
-
-    private int readBit() {
-        int value = (mData[mBytePos] >> mBitPos) & 0x01;
-
-        mBitPos--;
-        if (mBitPos < 0) {
-            mBytePos++;
-
-            mBitPos = 7;
-        }
-
-        return value;
-    }
-
-    public int readUnsignedByte() {
-        if (!isByteAlign() || availableBytes() < 1) {
-            throw new IllegalStateException();
-        }
-
-        return (mData[mBytePos++] & 0xFF);
-    }
-
-    public int readUnsignedShort() {
-        if (!isByteAlign() || availableBytes() < 2) {
-            throw new IllegalStateException();
-        }
-
-        return ((mData[mBytePos++] & 0xFF) << 8)
-                | (mData[mBytePos++] & 0xFF);
-    }
-
-    public int readUnsignedInt24() {
-        if (!isByteAlign() || availableBytes() < 3) {
-            throw new IllegalStateException();
-        }
-
-        return ((mData[mBytePos++] & 0xFF) << 16)
-                | ((mData[mBytePos++] & 0xFF) << 8)
-                | (mData[mBytePos++] & 0xFF);
-    }
-
-    public long readUnsignedInt() {
-        if (!isByteAlign() || availableBytes() < 4) {
-            throw new IllegalStateException();
-        }
-
-        return ((mData[mBytePos++] & 0xFFL) << 24)
-                | ((mData[mBytePos++] & 0xFFL) << 16)
-                | ((mData[mBytePos++] & 0xFFL) << 8)
-                | (mData[mBytePos++] & 0xFFL);
-    }
-
-    public byte[] readBytes(int numOfBytes) {
-        if (!isByteAlign() || availableBytes() < numOfBytes) {
-            throw new IllegalStateException();
-        }
-
-        byte[] value = Arrays.copyOfRange(mData, mBytePos, mBytePos + numOfBytes);
-        mBytePos += numOfBytes;
-
-        return value;
-    }
-
-    public void skipBytes(int numOfBytes) {
-        if (!isByteAlign() || availableBytes() < numOfBytes) {
-            throw new IllegalStateException();
-        }
-
-        mBytePos += numOfBytes;
-    }
-
-    private boolean isByteAlign() {
-        return mBitPos == 7;
-    }
-
-    public int availableBytes() {
-        return mData.length - mBytePos;
-    }
-
-    public boolean isEOF() {
-        return (mBytePos == mData.length) && (mBitPos == 7);
     }
 }
