@@ -5,8 +5,8 @@ import java.util.Map;
 final class Program {
     private int mProgramNumber;
 
-    private int mMapVersion;
-    private Map<Integer, Element> mElements;
+    private int mMapVersion = -1;
+    private Map<Integer, Element> mElements = null;
 
     /**
      * 构造函数
@@ -23,6 +23,21 @@ final class Program {
     }
 
     /**
+     * 是否有定义（映射版本和包含的元素）
+     */
+    public boolean containsDefinition() {
+        return ((mMapVersion != -1) && (mElements != null));
+    }
+
+    /**
+     * 设置定义（映射版本和包含的元素）
+     */
+    public void setDefinition(int mapVersion, Map<Integer, Element> elements) {
+        mMapVersion = mapVersion;
+        mElements = elements;
+    }
+
+    /**
      * 节目映射版本
      */
     public int getMapVersion() {
@@ -30,17 +45,13 @@ final class Program {
     }
 
     /**
-     * 设置定义（映射版本和包含的元素）
-     */
-    public void setDefinition(int version, Map<Integer, Element> elements) {
-        mMapVersion = version;
-        mElements = elements;
-    }
-
-    /**
      * 是否包含对应elementary_PID的元素
      */
     public boolean containsElement(int packetId) {
+        if (mElements == null) {
+            throw new IllegalStateException("no definition yet");
+        }
+
         return mElements.containsKey(packetId);
     }
 
