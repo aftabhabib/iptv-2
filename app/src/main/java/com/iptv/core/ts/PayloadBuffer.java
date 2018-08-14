@@ -2,7 +2,7 @@ package com.iptv.core.ts;
 
 import java.util.Arrays;
 
-class PayloadBuffer {
+final class PayloadBuffer {
     private static final int CAPACITY = 128 * 1024;
 
     private byte[] mBuffer;
