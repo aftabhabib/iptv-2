@@ -73,8 +73,7 @@ final class ProgramAssociationSection {
          * check section length
          */
         if ((sectionLength < 9)
-                || (sectionLength > reader.available() / 8)
-                || ((sectionLength - 9) % 4 > 0)) {
+                || (sectionLength > reader.available() / 8)) {
             return null;
         }
 
@@ -87,25 +86,34 @@ final class ProgramAssociationSection {
         int sectionNumber = reader.readInt(8);
         int lastSectionNumber = reader.readInt(8);
 
-        Map<Integer, Program> association = new HashMap<Integer, Program>();
+        Map<Integer, Program> associations = new HashMap<Integer, Program>();
+        if (sectionLength - 9 > 0) {
+            int availableLength = sectionLength - 9;
 
-        int count = (sectionLength - 9) / 4;
-        while (count > 0) {
-            int programNumber = reader.readInt(16);
-
-            reader.skip(3);
-            int packetId = reader.readInt(13);
-
-            if (programNumber == 0) {
+            while (availableLength > 0) {
                 /**
-                 * network_PID, ignore
+                 * check
                  */
-            }
-            else {
-                association.put(packetId, new Program(programNumber));
-            }
+                if (availableLength < 4) {
+                    return null;
+                }
 
-            count--;
+                int programNumber = reader.readInt(16);
+
+                reader.skip(3);
+                int packetId = reader.readInt(13);
+
+                if (programNumber == 0) {
+                    /**
+                     * network_PID, ignore
+                     */
+                }
+                else {
+                    associations.put(packetId, new Program(programNumber));
+                }
+
+                availableLength -= 4;
+            }
         }
 
         /**
@@ -113,6 +121,6 @@ final class ProgramAssociationSection {
          */
         reader.skip(32);
 
-        return new ProgramAssociationSection(version, sectionNumber, lastSectionNumber, association);
+        return new ProgramAssociationSection(version, sectionNumber, lastSectionNumber, associations);
     }
 }
