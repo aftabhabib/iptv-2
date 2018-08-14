@@ -2,6 +2,7 @@ package com.iptv.core.ts;
 
 import android.util.Log;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,9 +26,7 @@ public class TransportStream {
     public void putPacket(TransportPacket packet) {
         int packetId = packet.getPacketId();
 
-        if (isProgramAssociationTable(packetId)
-                || isProgramMapTable(packetId)
-                || isActiveProgramElement(packetId)) {
+        if (isProgramSpecificInformation(packetId) || isActiveProgramElement(packetId)) {
             if (packet.containsPayloadData()) {
                 onReceiveTransportPacket(packet);
             }
@@ -44,11 +43,30 @@ public class TransportStream {
         }
     }
 
+    private boolean isProgramSpecificInformation(int packetId) {
+        if (isProgramAssociationTable(packetId)
+                || isConditionalAccessTable(packetId)
+                || isTransportStreamDescriptionTable(packetId)
+                || isProgramMapTable(packetId)) {
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * 数据包是PAT
      */
     private boolean isProgramAssociationTable(int packetId) {
         return packetId == 0x00;
+    }
+
+    private boolean isConditionalAccessTable(int packetId) {
+        return packetId == 0x01;
+    }
+
+    private boolean isTransportStreamDescriptionTable(int packetId) {
+        return packetId == 0x02;
     }
 
     /**
@@ -103,7 +121,9 @@ public class TransportStream {
         }
         else {
             if (buffer.isEmpty()) {
-                Log.w(TAG, "data is not the start of payload unit, discard");
+                /**
+                 * buffer empty, wait the start of a new payload unit
+                 */
             }
             else {
                 buffer.write(packet.getPayloadData());
@@ -120,22 +140,12 @@ public class TransportStream {
     }
 
     private void onReceivePayloadUnit(int packetId, byte[] payloadUnit) {
-        if (isProgramAssociationTable(packetId)) {
-            ProgramAssociationSection section = ProgramAssociationSection.parse(payloadUnit);
-            if (section != null) {
-                onReceiveProgramAssociationSection(section);
-            }
-            else {
-                Log.e(TAG, "program association section is malformed");
-            }
-        }
-        else if (isProgramMapTable(packetId)) {
-            ProgramMapSection section = ProgramMapSection.parse(payloadUnit);
-            if (section != null) {
-                onReceiveProgramMapSection(packetId, section);
-            }
-            else {
-                Log.e(TAG, "program map section is malformed");
+        if (isProgramSpecificInformation(packetId)) {
+            int pointerField = payloadUnit[0];
+            if (pointerField < payloadUnit.length - 1) {
+                byte[] sectionData =
+                        Arrays.copyOfRange(payloadUnit, 1 + pointerField, payloadUnit.length);
+                onReceiveProgramSpecificInformation(packetId, sectionData);
             }
         }
         else {
@@ -143,9 +153,26 @@ public class TransportStream {
             if (pesPacket != null) {
                 onReceivePESPacket(packetId, pesPacket);
             }
-            else {
-                Log.e(TAG, "pes packet is malformed");
+        }
+    }
+
+    private void onReceiveProgramSpecificInformation(int packetId, byte[] sectionData) {
+        if (isProgramAssociationTable(packetId)) {
+            ProgramAssociationSection section = ProgramAssociationSection.parse(sectionData);
+            if (section != null) {
+                onReceiveProgramAssociationSection(section);
             }
+        }
+        else if (isProgramMapTable(packetId)) {
+            ProgramMapSection section = ProgramMapSection.parse(sectionData);
+            if (section != null) {
+                onReceiveProgramMapSection(packetId, section);
+            }
+        }
+        else {
+            /**
+             * we do not care, ignore
+             */
         }
     }
 
@@ -189,10 +216,10 @@ public class TransportStream {
              */
             program.setDefinition(section.getVersion(), section.getElements());
 
+            /**
+             * default selection, choose the first program
+             */
             if (mActiveProgram == null) {
-                /**
-                 * default selection, the first program
-                 */
                 mActiveProgram = program;
             }
         }
