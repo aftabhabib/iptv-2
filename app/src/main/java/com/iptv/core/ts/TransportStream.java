@@ -1,14 +1,10 @@
 package com.iptv.core.ts;
 
-import android.util.Log;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class TransportStream {
-    private static final String TAG = "TransportStream";
-
     private Map<Integer, PayloadBuffer> mPayloadBufferTable;
 
     private ProgramAssociationTable mProgramAssociationTable = null;
@@ -16,6 +12,9 @@ public class TransportStream {
 
     private Program mActiveProgram = null;
 
+    /**
+     * 构造函数
+     */
     public TransportStream() {
         mPayloadBufferTable = new HashMap<Integer, PayloadBuffer>();
     }
@@ -32,7 +31,7 @@ public class TransportStream {
             }
             else {
                 /**
-                 * no payload data, ignore
+                 * no payload data, discard
                  */
             }
         }
@@ -61,10 +60,16 @@ public class TransportStream {
         return packetId == 0x00;
     }
 
+    /**
+     * 数据包是CAT
+     */
     private boolean isConditionalAccessTable(int packetId) {
         return packetId == 0x01;
     }
 
+    /**
+     * 数据包是TSDT
+     */
     private boolean isTransportStreamDescriptionTable(int packetId) {
         return packetId == 0x02;
     }
@@ -131,6 +136,9 @@ public class TransportStream {
         }
     }
 
+    /**
+     * 获取PID对应的PayloadBuffer（如果没有，则新建）
+     */
     private PayloadBuffer getPayloadBuffer(int packetId) {
         if (!mPayloadBufferTable.containsKey(packetId)) {
             mPayloadBufferTable.put(packetId, new PayloadBuffer());
@@ -139,6 +147,9 @@ public class TransportStream {
         return mPayloadBufferTable.get(packetId);
     }
 
+    /**
+     * 收到负载单元
+     */
     private void onReceivePayloadUnit(int packetId, byte[] payloadUnit) {
         if (isProgramSpecificInformation(packetId)) {
             int pointerField = payloadUnit[0];
@@ -156,6 +167,9 @@ public class TransportStream {
         }
     }
 
+    /**
+     * 收到ProgramSpecificInformation
+     */
     private void onReceiveProgramSpecificInformation(int packetId, byte[] sectionData) {
         if (isProgramAssociationTable(packetId)) {
             ProgramAssociationSection section = ProgramAssociationSection.parse(sectionData);
@@ -176,6 +190,9 @@ public class TransportStream {
         }
     }
 
+    /**
+     * 收到ProgramAssociationTable的片段
+     */
     private void onReceiveProgramAssociationSection(ProgramAssociationSection section) {
         if (mProgramAssociationTable == null) {
             /**
@@ -207,6 +224,9 @@ public class TransportStream {
         }
     }
 
+    /**
+     * 收到ProgramMapTable的片段
+     */
     private void onReceiveProgramMapSection(int packetId, ProgramMapSection section) {
         Program program = mProgramAssociationTable.getProgram(packetId);
 
@@ -233,6 +253,9 @@ public class TransportStream {
         }
     }
 
+    /**
+     * 收到PES包
+     */
     private void onReceivePESPacket(int packetId, PESPacket pesPacket) {
         Element element = mActiveProgram.getElement(packetId);
         element.putPESPacket(pesPacket);
