@@ -44,22 +44,13 @@ final class ProgramAssociationTable {
     }
 
     /**
-     * 返回节目数组
+     * 获取对应program_map_PID的节目
      */
-    public Program[] toProgramArray() {
-        List<Program> programList = new ArrayList<Program>(mTable.size());
-        programList.addAll(mTable.values());
+    public Program getProgram(int packetId) {
+        if (!containsProgram(packetId)) {
+            return null;
+        }
 
-        /**
-         * 按节目号排序
-         */
-        Collections.sort(programList, new Comparator<Program>() {
-            @Override
-            public int compare(Program program1, Program program2) {
-                return program1.getProgramNumber() - program2.getProgramNumber();
-            }
-        });
-
-        return programList.toArray(new Program[mTable.size()]);
+        return mTable.get(packetId);
     }
 }
