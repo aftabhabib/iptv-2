@@ -1,5 +1,8 @@
 package com.iptv.core.ts;
 
+import com.iptv.core.utils.BitReader;
+
+import java.util.HashMap;
 import java.util.Map;
 
 final class ProgramAssociationSection {
@@ -55,6 +58,61 @@ final class ProgramAssociationSection {
      * 解析数据，创建section
      */
     public static ProgramAssociationSection parse(byte[] data) {
-        return null;
+        BitReader reader = new BitReader(data);
+
+        int tableId = reader.readInt(8);
+        if (tableId != 0x00) {
+            return null;
+        }
+
+        reader.skip(1);
+        reader.skip(1);
+        reader.skip(2);
+        int sectionLength = reader.readInt(12);
+        /**
+         * check section length
+         */
+        if ((sectionLength < 9)
+                || (sectionLength > reader.available() / 8)
+                || ((sectionLength - 9) % 4 > 0)) {
+            return null;
+        }
+
+        reader.skip(16);
+
+        reader.skip(2);
+        int version = reader.readInt(5);
+        reader.skip(1);
+
+        int sectionNumber = reader.readInt(8);
+        int lastSectionNumber = reader.readInt(8);
+
+        Map<Integer, Program> association = new HashMap<Integer, Program>();
+
+        int count = (sectionLength - 9) / 4;
+        while (count > 0) {
+            int programNumber = reader.readInt(16);
+
+            reader.skip(3);
+            int packetId = reader.readInt(13);
+
+            if (programNumber == 0) {
+                /**
+                 * network_PID, ignore
+                 */
+            }
+            else {
+                association.put(packetId, new Program(programNumber));
+            }
+
+            count--;
+        }
+
+        /**
+         * FIXME: CRC verify
+         */
+        reader.skip(32);
+
+        return new ProgramAssociationSection(version, sectionNumber, lastSectionNumber, association);
     }
 }
