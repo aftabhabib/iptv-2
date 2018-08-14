@@ -1,5 +1,7 @@
 package com.iptv.core.utils;
 
+import java.util.Arrays;
+
 public final class BitReader {
     private static final int BITS_PER_BYTE = 8;
 
@@ -122,5 +124,21 @@ public final class BitReader {
         }
 
         return value;
+    }
+
+    /**
+     * 读剩余的数据（字节为单位）
+     */
+    public byte[] readAvailableData() {
+        if (mAvailableBitsInByte < BITS_PER_BYTE) {
+            throw new IllegalStateException("not byte align");
+        }
+
+        byte[] data = Arrays.copyOfRange(mBuffer, mOffset, mLength);
+
+        mOffset += mLength;
+        mLength = 0;
+
+        return data;
     }
 }
