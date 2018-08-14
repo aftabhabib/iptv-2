@@ -2,13 +2,13 @@ package com.iptv.core.hls.session;
 
 import java.util.Arrays;
 
-public final class BitStream {
+public final class BitReader {
     private byte[] mData;
 
     private int mBytePos = 0;
     private int mBitPos = 7;
 
-    public BitStream(byte[] data) {
+    public BitReader(byte[] data) {
         mData = data;
     }
 
@@ -63,7 +63,7 @@ public final class BitStream {
         }
     }
 
-    private int availableBits() {
+    public int availableBits() {
         return (mData.length - mBytePos - 1) * 8 + (mBitPos + 1);
     }
 
@@ -141,7 +141,7 @@ public final class BitStream {
         return mBitPos == 7;
     }
 
-    private int availableBytes() {
+    public int availableBytes() {
         return mData.length - mBytePos;
     }
 
