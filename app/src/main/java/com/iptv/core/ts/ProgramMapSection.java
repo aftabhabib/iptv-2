@@ -44,6 +44,9 @@ final class ProgramMapSection {
      */
     public static ProgramMapSection parse(byte[] data) {
         BitReader reader = new BitReader(data);
+        if (reader.available() < 16 * 8) {
+            return null;
+        }
 
         int tableId = reader.readInt(8);
         if (tableId != 0x02) {

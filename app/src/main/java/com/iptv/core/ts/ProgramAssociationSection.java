@@ -59,6 +59,9 @@ final class ProgramAssociationSection {
      */
     public static ProgramAssociationSection parse(byte[] data) {
         BitReader reader = new BitReader(data);
+        if (reader.available() < 12 * 8) {
+            return null;
+        }
 
         int tableId = reader.readInt(8);
         if (tableId != 0x00) {

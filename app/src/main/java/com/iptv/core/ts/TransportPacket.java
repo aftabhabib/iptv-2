@@ -65,11 +65,10 @@ public class TransportPacket {
      * 解析数据，创建TransportPacket
      */
     public static TransportPacket parse(byte[] data) {
-        if (data == null || data.length != PACKET_SIZE) {
-            throw new IllegalArgumentException("invalid data");
-        }
-
         BitReader reader = new BitReader(data);
+        if (reader.available() < PACKET_SIZE * 8) {
+            return null;
+        }
 
         int syncByte = reader.readInt(8);
         if (syncByte != 0x47) {
@@ -85,6 +84,9 @@ public class TransportPacket {
         int adaptionFieldControl = reader.readInt(2);
         int continuityCounter = reader.readInt(4);
 
+        byte[] payload = null;
+        int availableLength = PACKET_SIZE - 4;
+
         if ((adaptionFieldControl & 0x02) > 0) {
             int adaptionFieldLength = reader.readInt(8);
 
@@ -92,7 +94,7 @@ public class TransportPacket {
                 /**
                  * check adaption field length
                  */
-                if (adaptionFieldLength * 8 > reader.available()) {
+                if (adaptionFieldLength > availableLength - 1) {
                     return null;
                 }
 
@@ -101,19 +103,19 @@ public class TransportPacket {
                  */
                 reader.skip(adaptionFieldLength * 8);
             }
-        }
 
-        byte[] payload = null;
+            availableLength -= (1 + adaptionFieldLength);
+        }
 
         if ((adaptionFieldControl & 0x01) > 0) {
             /**
              * check payload length
              */
-            if (reader.available() / 8 == 0) {
+            if (availableLength == 0) {
                 return null;
             }
 
-            payload = reader.readAvailableData();
+            payload = reader.readBytes(availableLength);
         }
 
         return new TransportPacket(packetId, payload,
