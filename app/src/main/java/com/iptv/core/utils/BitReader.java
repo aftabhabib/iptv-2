@@ -127,17 +127,21 @@ public final class BitReader {
     }
 
     /**
-     * 读剩余的数据（字节为单位）
+     * 读若干字节
      */
-    public byte[] readAvailableData() {
+    public byte[] readBytes(int length) {
+        if (length < 0 && length * 8 > available()) {
+            throw new IllegalArgumentException("invalid length");
+        }
+
         if (mAvailableBitsInByte < BITS_PER_BYTE) {
             throw new IllegalStateException("not byte align");
         }
 
-        byte[] data = Arrays.copyOfRange(mBuffer, mOffset, mLength);
+        byte[] data = Arrays.copyOfRange(mBuffer, mOffset, length);
 
-        mOffset += mLength;
-        mLength = 0;
+        mOffset += length;
+        mLength -= length;
 
         return data;
     }
