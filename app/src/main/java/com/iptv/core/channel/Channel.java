@@ -1,6 +1,6 @@
 package com.iptv.core.channel;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 /**
  * 频道信息
@@ -45,16 +45,16 @@ public class Channel {
      */
     public static class Builder {
         private String mName;
-        private Vector<String> mSourceList;
-        private Vector<String> mGroupIdList;
+        private ArrayList<String> mSourceList;
+        private ArrayList<String> mGroupIdList;
 
         /**
          * 构造函数
          */
         public Builder() {
             mName = "未知";
-            mSourceList = new Vector<String>();
-            mGroupIdList = new Vector<String>();
+            mSourceList = new ArrayList<String>();
+            mGroupIdList = new ArrayList<String>();
         }
 
         /**
