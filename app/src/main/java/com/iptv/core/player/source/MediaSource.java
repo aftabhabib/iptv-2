@@ -3,7 +3,7 @@ package com.iptv.core.player.source;
 import java.io.IOException;
 import java.util.Map;
 
-public interface Source {
+public interface MediaSource {
     /**
      * 连接
      */
