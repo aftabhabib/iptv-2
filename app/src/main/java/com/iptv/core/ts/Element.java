@@ -11,6 +11,7 @@ final class Element {
     public static final int STREAM_TYPE_H264_VIDEO = 0x1b;
 
     private int mStreamType;
+    private AccessUnitBuffer mAccessUnitBuffer = null;
 
     /**
      * 构造函数
@@ -62,9 +63,37 @@ final class Element {
     }
 
     /**
-     * 放入PES包
+     * 写入PES包
      */
-    public void putPESPacket(PESPacket pesPacket) {
-        //
+    public void writePESPacket(PESPacket pesPacket) {
+        /**
+         * we only process video/audio stream
+         */
+        if (!pesPacket.isVideoStream() && !pesPacket.isAudioStream()) {
+            return;
+        }
+
+        if (mAccessUnitBuffer == null) {
+            /**
+             * AccessUnit buffer init
+             */
+            mAccessUnitBuffer = new AccessUnitBuffer();
+        }
+
+        if (pesPacket.containsPayloadData()) {
+            mAccessUnitBuffer.writePayload(pesPacket.getPayloadData(),
+                    pesPacket.getPresentationTimeStamp(), pesPacket.getDecodingTimeStamp());
+        }
+    }
+
+    /**
+     * 读取AccessUnit
+     */
+    public AccessUnit readAccessUnit() {
+        if (mAccessUnitBuffer == null) {
+            return null;
+        }
+
+        return mAccessUnitBuffer.read();
     }
 }
