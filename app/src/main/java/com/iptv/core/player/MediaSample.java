@@ -1,4 +1,4 @@
-package com.iptv.core.hls.session;
+package com.iptv.core.player;
 
 import java.nio.ByteBuffer;
 

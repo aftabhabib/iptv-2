@@ -1,4 +1,4 @@
-package com.iptv.core.player.source;
+package com.iptv.core.player;
 
 import java.io.IOException;
 import java.util.Map;
