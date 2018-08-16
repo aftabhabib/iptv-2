@@ -1,84 +1,90 @@
 package com.iptv.core.channel;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Vector;
 
 /**
- * 频道
+ * 频道信息
  */
-public class Channel implements Parcelable {
+public class Channel {
     private String mName;
-    private List<String> mSourceList;
-    private List<String> mGroupIdList;
+    private String[] mSources;
+    private String[] mGroupIds;
 
-    public Channel() {
-        mName = "";
-        mSourceList = new ArrayList<String>(10);
-        mGroupIdList = new ArrayList<String>(5);
-    }
-
-    protected Channel(Parcel in) {
-        mName = in.readString();
-        in.readStringList(mSourceList);
-        in.readStringList(mGroupIdList);
-    }
-
-    @Override
-    public void writeToParcel(Parcel out, int flags) {
-        out.writeString(mName);
-        out.writeStringList(mSourceList);
-        out.writeStringList(mGroupIdList);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Creator<Channel> CREATOR = new Creator<Channel>() {
-        @Override
-        public Channel createFromParcel(Parcel in) {
-            return new Channel(in);
-        }
-
-        @Override
-        public Channel[] newArray(int size) {
-            return new Channel[size];
-        }
-    };
-
-    public void setName(String name) {
+    /**
+     * 构造函数
+     */
+    private Channel(String name, String[] sources, String[] groupIds) {
         mName = name;
+        mSources = sources;
+        mGroupIds = groupIds;
     }
 
+    /**
+     * 获取频道名称
+     */
     public String getName() {
         return mName;
     }
 
-    public void addSource(String source) {
-        mSourceList.add(source);
+    /**
+     * 获取频道源
+     */
+    public String[] getSources() {
+        return mSources;
     }
 
-    public List<String> getSourceList() {
-        return mSourceList;
+    /**
+     * 获取分组id
+     */
+    public String[] getGroupIds() {
+        return mGroupIds;
     }
 
-    public int getSourceCount() {
-        return mSourceList.size();
-    }
+    /**
+     * 构造器
+     */
+    public static class Builder {
+        private String mName;
+        private Vector<String> mSourceList;
+        private Vector<String> mGroupIdList;
 
-    public String getSource(int index) {
-        return mSourceList.get(index);
-    }
+        /**
+         * 构造函数
+         */
+        public Builder() {
+            mName = "未知";
+            mSourceList = new Vector<String>();
+            mGroupIdList = new Vector<String>();
+        }
 
-    public void addGroupId(String groupId) {
-        mGroupIdList.add(groupId);
-    }
+        /**
+         * 设置频道名称
+         */
+        public void setName(String name) {
+            mName = name;
+        }
 
-    public List<String> getGroupIdList() {
-        return mGroupIdList;
+        /**
+         * 增加源
+         */
+        public void addSource(String source) {
+            mSourceList.add(source);
+        }
+
+        /**
+         * 增加分组id
+         */
+        public void addGroupId(String groupId) {
+            mGroupIdList.add(groupId);
+        }
+
+        /**
+         * 创建频道
+         */
+        public Channel build() {
+            return new Channel(mName,
+                    mSourceList.toArray(new String[mSourceList.size()]),
+                    mGroupIdList.toArray(new String[mGroupIdList.size()]));
+        }
     }
 }
