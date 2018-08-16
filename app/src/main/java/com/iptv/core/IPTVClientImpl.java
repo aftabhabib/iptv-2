@@ -8,10 +8,8 @@ import android.view.Surface;
 
 import com.iptv.core.player.Player;
 import com.iptv.core.player.PlayerImpl;
-import com.iptv.core.source.Source;
-import com.iptv.core.source.firetv.FireTVSource;
-
-import java.util.Map;
+import com.iptv.core.source.Resource;
+import com.iptv.core.source.ResourceFactory;
 
 public class IPTVClientImpl implements IPTVClient {
     private static final String TAG = "IPTVClientImpl";
@@ -26,7 +24,7 @@ public class IPTVClientImpl implements IPTVClient {
     private HandlerThread mDriverThread;
     private Handler mHandler;
 
-    private Source mSource;
+    private Resource mSource;
     private Player mPlayer;
 
     private Listener mListener = null;
@@ -40,7 +38,7 @@ public class IPTVClientImpl implements IPTVClient {
 
         mHandler = new Handler(mDriverThread.getLooper(), mHandlerCallback);
 
-        mSource = new FireTVSource(context);
+        mSource = ResourceFactory.createResource(ResourceFactory.RESOURCE_TYPE_FIRETV, context);
         mPlayer = new PlayerImpl(context);
     }
 
