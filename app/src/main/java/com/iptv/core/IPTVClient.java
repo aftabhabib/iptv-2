@@ -36,7 +36,7 @@ public interface IPTVClient {
     void loadChannelTable();
 
     /**
-     * 选择频道源
+     * 加载频道源
      */
     void loadMedia(String url);
 
