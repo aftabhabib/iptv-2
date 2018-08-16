@@ -1,9 +1,8 @@
 package com.iptv.core;
 
-import android.content.Context;
 import android.view.Surface;
 
-import com.iptv.core.channel.ChannelTable;
+import com.iptv.core.channel.ChannelGroup;
 
 public interface IPTVClient {
     /**
@@ -11,14 +10,14 @@ public interface IPTVClient {
      */
     interface Listener {
         /**
-         * 频道表载入完毕
+         * 加载频道表完毕
          */
-        void onLoadComplete(ChannelTable channelTable);
+        void onLoadChannelTableComplete(ChannelGroup[] groups);
 
         /**
-         * 频道源准备好了
+         * 加载媒体完毕
          */
-        void onPrepareComplete();
+        void onLoadMediaComplete();
 
         /**
          * 出错
@@ -32,9 +31,14 @@ public interface IPTVClient {
     void setListener(Listener listener);
 
     /**
-     * 载入频道信息
+     * 加载频道表
      */
-    void load(Context context);
+    void loadChannelTable();
+
+    /**
+     * 选择频道源
+     */
+    void loadMedia(String url);
 
     /**
      * 设置输出画面
@@ -42,24 +46,19 @@ public interface IPTVClient {
     void setOutputSurface(Surface surface);
 
     /**
-     * 设置频道源
-     */
-    void setChannelSource(String source);
-
-    /**
      * 开始播放
      */
     void startPlay();
 
     /**
-     * 设置音量
-     */
-    void setVolume(float volume);
-
-    /**
      * 停止播放
      */
     void stopPlay();
+
+    /**
+     * 设置音量
+     */
+    void setVolume(float volume);
 
     /**
      * 释放
