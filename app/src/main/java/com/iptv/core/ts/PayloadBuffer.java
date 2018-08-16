@@ -10,6 +10,9 @@ final class PayloadBuffer {
 
     private int mLastContinuityCounter;
 
+    /**
+     * 构造函数
+     */
     public PayloadBuffer() {
         mBuffer = new byte[CAPACITY];
         mOffset = 0;
@@ -79,8 +82,7 @@ final class PayloadBuffer {
      */
     public byte[] read() {
         byte[] data = Arrays.copyOfRange(mBuffer, 0, mOffset);
-
-        clear();
+        mOffset = 0;
 
         return data;
     }
