@@ -128,10 +128,26 @@ public abstract class AbstractResource implements Resource {
     }
 
     /**
-     * 获取共享首选项
+     * 是否包含首选项
      */
-    protected SharedPreferences getSharedPreferences() {
-        return mSharedPreferences;
+    protected boolean containsPreference(String key) {
+        return mSharedPreferences.contains(key);
+    }
+
+    /**
+     * 获取首选项
+     */
+    protected String getPreference(String key) {
+        return mSharedPreferences.getString(key, "");
+    }
+
+    /**
+     * 新增（或变更）首选项
+     */
+    protected void putPreference(String key, String value) {
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.putString(key, value);
+        editor.commit();
     }
 
     /**
