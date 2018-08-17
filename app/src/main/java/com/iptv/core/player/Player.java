@@ -5,16 +5,19 @@ import android.view.Surface;
 import java.util.Map;
 
 public interface Player {
+    /**
+     * 事件回调
+     */
     interface Listener {
         /**
-         * 媒体数据准备好了
+         * 加载媒体
          */
-        void onPrepareComplete();
+        void onLoadMedia();
 
         /**
          * 出错
          */
-        void onError(String desc);
+        void onError(String error);
     }
 
     /**
@@ -23,9 +26,14 @@ public interface Player {
     void setListener(Listener listener);
 
     /**
-     * 准备媒体数据
+     * 设置媒体源
      */
-    void prepare(String url, Map<String, String> properties);
+    void setDataSource(String url, Map<String, String> properties);
+
+    /**
+     * 加载媒体
+     */
+    void loadMedia();
 
     /**
      * 设置输出画面
@@ -33,12 +41,12 @@ public interface Player {
     void setOutputSurface(Surface surface);
 
     /**
-     * 开始
+     * 开始播放
      */
     void start();
 
     /**
-     * 停止
+     * 停止播放
      */
     void stop();
 
