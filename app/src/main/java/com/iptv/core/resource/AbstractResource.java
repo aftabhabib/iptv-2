@@ -1,4 +1,4 @@
-package com.iptv.core.source;
+package com.iptv.core.resource;
 
 import android.content.Context;
 import android.content.SharedPreferences;

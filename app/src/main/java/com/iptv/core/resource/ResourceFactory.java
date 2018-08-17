@@ -1,9 +1,9 @@
-package com.iptv.core.source;
+package com.iptv.core.resource;
 
 import android.content.Context;
 
-import com.iptv.core.source.firetv.FireTVSource;
-import com.iptv.core.source.supertv.SuperTVSource;
+import com.iptv.core.resource.firetv.FireTVResource;
+import com.iptv.core.resource.supertv.SuperTVSource;
 
 /**
  * 资源工厂
@@ -18,7 +18,7 @@ public final class ResourceFactory {
     public static Resource createResource(int type, Context context) {
         switch (type) {
             case RESOURCE_TYPE_FIRETV: {
-                return new FireTVSource(context);
+                return new FireTVResource(context);
             }
             case RESOURCE_TYPE_SUPERTV: {
                 return new SuperTVSource(context);

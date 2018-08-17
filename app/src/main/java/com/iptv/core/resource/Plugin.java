@@ -1,4 +1,4 @@
-package com.iptv.core.source;
+package com.iptv.core.resource;
 
 /**
  * 插件
