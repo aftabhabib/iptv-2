@@ -18,7 +18,7 @@ public interface Resource {
         void onLoadChannelTable(ChannelGroup[] groups);
 
         /**
-         * 解码url响应
+         * 解码数据源响应
          */
         void onDecodeSource(String url, Map<String, String> properties);
 
