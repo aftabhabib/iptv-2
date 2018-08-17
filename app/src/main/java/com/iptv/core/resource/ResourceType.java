@@ -7,12 +7,12 @@ public final class ResourceType {
     /**
      * 应用
      */
-    public static final int APP_FIRETV = 0;
+    public static final int APP_FAKE = 0;
 
     /**
      * 网站
      */
-    public static final int WEBSITE_TEST = 100;
+    public static final int WEBSITE_FAKE = 100;
 
     /**
      * 构造函数（私有属性，不允许创建实例）
