@@ -1,5 +1,8 @@
 package com.iptv.core.utils;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -8,6 +11,7 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class OkHttp {
     private static final int CONNECT_TIMEOUT = 5;
@@ -17,9 +21,34 @@ public class OkHttp {
     private static OkHttpClient sClient = null;
 
     /**
-     * Client
+     * GET
      */
-    public static OkHttpClient getClient() {
+    public static Response get(String url, Map<String, String> properties) throws IOException {
+        Request request = OkHttp.createGetRequest(url, properties);
+
+        return OkHttp.getClient().newCall(request).execute();
+    }
+
+    /**
+     * 数据另存为
+     */
+    public static void saveData(InputStream input, OutputStream output) throws IOException {
+        byte[] buf = new byte[1024];
+
+        while (true) {
+            int bytesRead = input.read(buf);
+            if (bytesRead == -1) {
+                break;
+            }
+
+            output.write(buf, 0, bytesRead);
+        }
+    }
+
+    /**
+     * 获取Client（参考文档中的介绍：Client是可复用的，每个请求视为一个Call）
+     */
+    private static OkHttpClient getClient() {
         if (sClient == null) {
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
@@ -35,9 +64,27 @@ public class OkHttp {
     }
 
     /**
-     * POST request
+     * 创建GET请求
      */
-    public static Request createPostRequest(String url, Map<String, String> property, RequestBody body) {
+    private static Request createGetRequest(String url, Map<String, String> property) {
+        Request.Builder builder = new Request.Builder();
+
+        builder.url(url);
+        builder.get();
+
+        if (property != null && !property.isEmpty()) {
+            for (Map.Entry<String, String> entry : property.entrySet()) {
+                builder.addHeader(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * 创建POST请求
+     */
+    private static Request createPostRequest(String url, Map<String, String> property, RequestBody body) {
         Request.Builder builder = new Request.Builder();
 
         builder.url(url);
@@ -54,34 +101,16 @@ public class OkHttp {
     }
 
     /**
-     * GET request
+     * 创建POST请求的文本负载
      */
-    public static Request createGetRequest(String url, Map<String, String> property) {
-        Request.Builder builder = new Request.Builder();
-
-        builder.url(url);
-        builder.get();
-
-        if (property != null && !property.isEmpty()) {
-            for (Map.Entry<String, String> entry : property.entrySet()) {
-                builder.addHeader(entry.getKey(), entry.getValue());
-            }
-        }
-
-        return builder.build();
-    }
-
-    /**
-     * Text body for POST request
-     */
-    public static RequestBody createTextBody(String text, String mime) {
+    private static RequestBody createTextBody(String text, String mime) {
         return RequestBody.create(MediaType.parse(mime), text);
     }
 
     /**
-     * Form body for POST request
+     * 创建POST请求的表格负载
      */
-    public static RequestBody createFormBody(Map<String, String> form) {
+    private static RequestBody createFormBody(Map<String, String> form) {
         FormBody.Builder builder = new FormBody.Builder();
 
         for (Map.Entry<String, String> entry : form.entrySet()) {
@@ -92,9 +121,11 @@ public class OkHttp {
     }
 
     /**
-     * 不允许创建实例
+     * 构造函数（私有属性，不允许创建实例）
      */
     private OkHttp() {
-        //ignore
+        /**
+         * nothing
+         */
     }
 }
