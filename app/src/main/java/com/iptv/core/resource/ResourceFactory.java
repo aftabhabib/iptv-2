@@ -11,6 +11,10 @@ public final class ResourceFactory {
      */
     public static Resource createResource(int type, Context context) {
         switch (type) {
+            case ResourceType.APP_FAKE:
+            case ResourceType.WEBSITE_FAKE: {
+                return null;
+            }
             default: {
                 return null;
             }
