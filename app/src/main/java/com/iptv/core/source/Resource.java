@@ -34,11 +34,6 @@ public interface Resource {
     void setListener(Listener listener);
 
     /**
-     * 获取名称
-     */
-    String getName();
-
-    /**
      * 加载频道表
      */
     void loadChannelTable();

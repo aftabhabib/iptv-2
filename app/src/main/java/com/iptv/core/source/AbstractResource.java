@@ -1,12 +1,14 @@
 package com.iptv.core.source;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 
 import com.iptv.core.channel.ChannelGroup;
 
+import java.io.File;
 import java.util.Map;
 
 /**
@@ -16,20 +18,31 @@ public abstract class AbstractResource implements Resource {
     private static final int MSG_LOAD_CHANNEL_TABLE = 0;
     private static final int MSG_DECODE_SOURCE = 1;
 
+    private File mFilesDir;
+    private SharedPreferences mSharedPreferences;
+
     private HandlerThread mDriverThread;
     private Handler mHandler;
 
-    private Listener mListener;
+    private Listener mListener = null;
 
     /**
      * 构造函数
      */
     public AbstractResource(Context context) {
+        mFilesDir = context.getDir(getName(), 0);
+        mSharedPreferences = context.getSharedPreferences(getName(), 0);
+
         mDriverThread = new HandlerThread("resource driver thread");
         mDriverThread.start();
 
         mHandler = new Handler(mDriverThread.getLooper(), mHandlerCallback);
     }
+
+    /**
+     * 获取名称
+     */
+    protected abstract String getName();
 
     @Override
     public void setListener(Listener listener) {
@@ -106,6 +119,20 @@ public abstract class AbstractResource implements Resource {
      * 响应解码数据源
      */
     protected abstract void onDecodeSource(String source);
+
+    /**
+     * 获取档案目录
+     */
+    protected File getFilesDir() {
+        return mFilesDir;
+    }
+
+    /**
+     * 获取共享首选项
+     */
+    protected SharedPreferences getSharedPreferences() {
+        return mSharedPreferences;
+    }
 
     /**
      * 通知出错
