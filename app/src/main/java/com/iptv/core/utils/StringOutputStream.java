@@ -1,7 +1,6 @@
 package com.iptv.core.utils;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
@@ -16,7 +15,7 @@ public class StringOutputStream extends OutputStream {
     }
 
     @Override
-    public void write(int value) throws IOException {
+    public void write(int value) {
         mBuffer.write(value);
     }
 
