@@ -30,22 +30,6 @@ public class OkHttp {
     }
 
     /**
-     * 数据另存为
-     */
-    public static void saveData(InputStream input, OutputStream output) throws IOException {
-        byte[] buf = new byte[1024];
-
-        while (true) {
-            int bytesRead = input.read(buf);
-            if (bytesRead == -1) {
-                break;
-            }
-
-            output.write(buf, 0, bytesRead);
-        }
-    }
-
-    /**
      * 获取Client（参考文档中的介绍：Client是可复用的，每个请求视为一个Call）
      */
     private static OkHttpClient getClient() {
