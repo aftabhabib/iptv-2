@@ -10,26 +10,17 @@ import java.io.InputStream;
  * 参数
  */
 final class SoftParameters {
-    private String[] mParameters = null;
+    private String mContent;
 
     /**
      * 构造函数
      */
     public SoftParameters() {
-        /**
-         * nothing
-         */
+        mContent = "";
     }
 
     /**
-     * 是否有数据
-     */
-    public boolean isEmpty() {
-        return mParameters == null;
-    }
-
-    /**
-     * 写入数据
+     * 写入内容
      */
     public boolean write(InputStream input) {
         StringOutputStream output = new StringOutputStream();
@@ -40,10 +31,7 @@ final class SoftParameters {
             /**
              * 参数与参数之间通过“|”分隔
              */
-            String content = output.toString();
-            if (!content.isEmpty() && content.contains("|")) {
-                mParameters = content.split("|");
-            }
+            mContent = output.toString();
         }
         catch (IOException e) {
             /**
@@ -51,20 +39,18 @@ final class SoftParameters {
              */
         }
 
-        return mParameters != null;
+        return mContent.isEmpty();
     }
 
     /**
-     * 获取频道列表文件的日期
+     * 解析
      */
-    public String getTVListDate() {
-        return mParameters[0];
-    }
-
-    /**
-     * 获取Key（意义不明）
-     */
-    public String getKey() {
-        return mParameters[3];
+    public String[] parse() {
+        if (mContent.contains("|")) {
+            return mContent.split("|");
+        }
+        else {
+            return new String[] { mContent };
+        }
     }
 }

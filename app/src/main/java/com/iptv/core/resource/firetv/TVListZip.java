@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * 频道列表下载器
+ * 频道包
  */
 final class TVListZip {
     private File mFile;
@@ -23,13 +23,6 @@ final class TVListZip {
      */
     public TVListZip(File dir) {
         mFile = new File(dir, "tvlist.zip");
-    }
-
-    /**
-     * 是否存在
-     */
-    public boolean exists() {
-        return mFile.exists();
     }
 
     /**
@@ -63,6 +56,13 @@ final class TVListZip {
             }
         }
 
+        return mFile.exists();
+    }
+
+    /**
+     * 是否存在
+     */
+    public boolean exists() {
         return mFile.exists();
     }
 
