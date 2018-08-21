@@ -1,6 +1,7 @@
 package com.iptv.core.resource.firetv;
 
 import android.content.Context;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
@@ -36,8 +37,8 @@ public final class FireTVResource extends AbstractResource {
     /**
      * 构造函数
      */
-    public FireTVResource(Context context) {
-        super(context);
+    public FireTVResource(Looper looper, Context context) {
+        super(looper, context);
     }
 
     @Override
@@ -56,7 +57,14 @@ public final class FireTVResource extends AbstractResource {
     }
 
     @Override
-    protected boolean onHandleMessage(Message msg) {
+    public void release() {
+        /**
+         * nothing
+         */
+    }
+
+    @Override
+    public void handleMessage(Message msg) {
         switch (msg.what) {
             case MSG_GET_SOFT_PARAMETERS: {
                 onGetSoftParameters();
@@ -90,11 +98,9 @@ public final class FireTVResource extends AbstractResource {
                 /**
                  * message not handled
                  */
-                return false;
+                break;
             }
         }
-
-        return true;
     }
 
     /**
@@ -265,6 +271,6 @@ public final class FireTVResource extends AbstractResource {
             url = plugin.translate(url);
         }
 
-        notifySource(url, sourceSpec.getProperties());
+        notifyDataSource(url, sourceSpec.getProperties());
     }
 }

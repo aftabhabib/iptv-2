@@ -20,7 +20,7 @@ public interface Resource {
         /**
          * 解码数据源响应
          */
-        void onDecodeSource(String url, Map<String, String> properties);
+        void onDecodeUrl(String url, Map<String, String> properties);
 
         /**
          * 出错
