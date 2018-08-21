@@ -7,7 +7,7 @@ public final class ResourceType {
     /**
      * 应用
      */
-    public static final int APP_FAKE = 0;
+    public static final int APP_FIRETV = 0; //星火直播
 
     /**
      * 网站

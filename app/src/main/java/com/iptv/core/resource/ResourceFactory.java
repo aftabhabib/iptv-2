@@ -2,6 +2,8 @@ package com.iptv.core.resource;
 
 import android.content.Context;
 
+import com.iptv.core.resource.firetv.FireTVResource;
+
 /**
  * 资源工厂
  */
@@ -11,9 +13,8 @@ public final class ResourceFactory {
      */
     public static Resource createResource(int type, Context context) {
         switch (type) {
-            case ResourceType.APP_FAKE:
-            case ResourceType.WEBSITE_FAKE: {
-                return null;
+            case ResourceType.APP_FIRETV: {
+                return new FireTVResource(context);
             }
             default: {
                 return null;
