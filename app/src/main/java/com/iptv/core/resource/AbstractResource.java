@@ -15,9 +15,6 @@ import java.util.Map;
  * 资源（虚基类）
  */
 public abstract class AbstractResource implements Resource {
-    private static final int MSG_LOAD_CHANNEL_TABLE = 0;
-    private static final int MSG_DECODE_SOURCE = 1;
-
     private File mFilesDir;
     private SharedPreferences mSharedPreferences;
 
@@ -50,16 +47,6 @@ public abstract class AbstractResource implements Resource {
     }
 
     @Override
-    public void loadChannelTable() {
-        sendMessage(MSG_LOAD_CHANNEL_TABLE);
-    }
-
-    @Override
-    public void decodeSource(String source) {
-        sendMessage(MSG_DECODE_SOURCE, source);
-    }
-
-    @Override
     public void release() {
         mDriverThread.quitSafely();
     }
@@ -67,14 +54,14 @@ public abstract class AbstractResource implements Resource {
     /**
      * 发送消息
      */
-    private void sendMessage(int what) {
+    protected void sendMessage(int what) {
         mHandler.sendEmptyMessage(what);
     }
 
     /**
      * 发送消息
      */
-    private void sendMessage(int what, Object obj) {
+    protected void sendMessage(int what, Object obj) {
         Message msg = mHandler.obtainMessage();
         msg.what = what;
         msg.obj = obj;
@@ -89,36 +76,14 @@ public abstract class AbstractResource implements Resource {
 
         @Override
         public boolean handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_LOAD_CHANNEL_TABLE: {
-                    onLoadChannelTable();
-
-                    break;
-                }
-                case MSG_DECODE_SOURCE: {
-                    String source = (String)msg.obj;
-                    onDecodeSource(source);
-
-                    break;
-                }
-                default: {
-                    return false;
-                }
-            }
-
-            return true;
+            return onHandleMessage(msg);
         }
     };
 
     /**
-     * 响应加载频道表
+     * 响应消息处理
      */
-    protected abstract void onLoadChannelTable();
-
-    /**
-     * 响应解码数据源
-     */
-    protected abstract void onDecodeSource(String source);
+    protected abstract boolean onHandleMessage(Message msg);
 
     /**
      * 获取档案目录

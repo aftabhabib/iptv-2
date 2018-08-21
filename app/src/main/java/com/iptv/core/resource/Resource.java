@@ -39,9 +39,9 @@ public interface Resource {
     void loadChannelTable();
 
     /**
-     * 解码数据源
+     * 解码频道源url
      */
-    void decodeSource(String source);
+    void decodeUrl(String url);
 
     /**
      * 释放
