@@ -71,4 +71,13 @@ public class ProtocolType {
 
         return false;
     }
+
+    /**
+     * 构造函数（私有属性，不允许创建实例）
+     */
+    private ProtocolType() {
+        /**
+         * nothing
+         */
+    }
 }
