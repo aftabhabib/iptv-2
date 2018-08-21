@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
-public class StringOutputStream extends OutputStream {
+public final class StringOutputStream extends OutputStream {
     private ByteArrayOutputStream mBuffer;
 
     /**
