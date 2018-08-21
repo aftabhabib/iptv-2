@@ -28,9 +28,6 @@ final class SoftParameters {
         try {
             IOUtils.save(input, output);
 
-            /**
-             * 参数与参数之间通过“|”分隔
-             */
             mContent = output.toString();
         }
         catch (IOException e) {
