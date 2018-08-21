@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 
-public final class Key {
+final class Key {
     private String mContent;
 
     /**
