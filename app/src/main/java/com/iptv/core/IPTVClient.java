@@ -3,6 +3,7 @@ package com.iptv.core;
 import android.view.Surface;
 
 import com.iptv.core.channel.ChannelGroup;
+import com.iptv.core.player.Manifest;
 
 public interface IPTVClient {
     /**
@@ -12,12 +13,12 @@ public interface IPTVClient {
         /**
          * 加载频道表完毕
          */
-        void onLoadChannelTableComplete(ChannelGroup[] groups);
+        void onLoadChannelTable(ChannelGroup[] groups);
 
         /**
          * 加载媒体完毕
          */
-        void onLoadMediaComplete();
+        void onLoadMedia(Manifest manifest);
 
         /**
          * 出错
@@ -54,6 +55,11 @@ public interface IPTVClient {
      * 停止播放
      */
     void stopPlay();
+
+    /**
+     * 选择轨道
+     */
+    void selectTrack(int trackIndex);
 
     /**
      * 设置音量
