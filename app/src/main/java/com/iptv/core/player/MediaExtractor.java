@@ -4,10 +4,20 @@ public interface MediaExtractor {
     /**
      * 设置源
      */
-    void setMediaSource(MediaSource source);
+    void setDataSource(DataSource source);
 
     /**
-     * 读取Sample
+     * 获取元信息
      */
-    MediaSample readSample();
+    MetaData getMetaData();
+
+    /**
+     * 获取所有轨道
+     */
+    MediaTrack[] getTracks();
+
+    /**
+     * 选择轨道
+     */
+    void selectTrack(int trackIndex);
 }
