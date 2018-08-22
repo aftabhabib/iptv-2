@@ -12,7 +12,7 @@ public interface MediaTrack {
     MetaData getMetaData();
 
     /**
-     * 读取一个采样
+     * 读取采样数据
      */
-    MediaSample readSample();
+    MediaBuffer read();
 }
