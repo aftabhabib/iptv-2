@@ -6,8 +6,6 @@ import android.os.Message;
 import android.util.Log;
 
 import com.iptv.core.resource.AbstractResource;
-import com.iptv.core.resource.Plugin;
-import com.iptv.core.resource.PluginManager;
 import com.iptv.core.resource.firetv.plugin.ChengboPlugin;
 import com.iptv.core.resource.firetv.plugin.KingSoftLivePlugin;
 import com.iptv.core.utils.OkHttp;
