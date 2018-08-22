@@ -12,7 +12,7 @@ public interface Player {
         /**
          * 加载媒体
          */
-        void onLoadMedia();
+        void onLoadMedia(Manifest manifest);
 
         /**
          * 出错
@@ -49,6 +49,11 @@ public interface Player {
      * 停止播放
      */
     void stop();
+
+    /**
+     * 选择轨道
+     */
+    void selectTrack(int trackIndex);
 
     /**
      * 设置音量
