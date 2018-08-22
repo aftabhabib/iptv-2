@@ -1,18 +1,12 @@
 package com.iptv.core.player;
 
 import java.io.IOException;
-import java.util.Map;
 
-public interface MediaSource {
+public interface DataSource {
     /**
-     * 连接
+     * 获取元信息
      */
-    boolean connect(String url, Map<String, String> property) throws IOException;
-
-    /**
-     * 获取MIME类型
-     */
-    String getMIMEType();
+    MetaData getMetaData();
 
     /**
      * 读数据
@@ -25,7 +19,7 @@ public interface MediaSource {
     long skip(long size) throws IOException;
 
     /**
-     * 断开
+     * 释放
      */
-    void disconnect();
+    void release();
 }
