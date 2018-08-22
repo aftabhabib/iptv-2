@@ -7,6 +7,40 @@ import java.util.Map;
  * 元信息
  */
 public class MetaData {
+    /**
+     * Stream
+     */
+    public static final String KEY_MIME = "mime";
+    public static final String KEY_BANDWIDTH = "bandwidth";
+    public static final String KEY_LANGUAGE = "language";
+    public static final String KEY_DECODING_TIMESTAMP = "decoding_timestamp";
+    public static final String KEY_PRESENTATION_TIMESTAMP = "presentation_timestamp";
+
+    /**
+     * Video
+     */
+    public static final String KEY_VIDEO_COLOR_SPACE = "color_space";
+    public static final String KEY_VIDEO_WIDTH = "width";
+    public static final String KEY_VIDEO_HEIGHT = "height";
+    public static final String KEY_VIDEO_FRAME_RATE = "frame_rate";
+    public static final String KEY_VIDEO_ROTATE = "rotate";
+
+    /**
+     * Audio
+     */
+    public static final String KEY_AUDIO_BITS_PER_SAMPLE = "bits_per_sample";
+    public static final String KEY_AUDIO_CHANNELS = "channels";
+    public static final String KEY_AUDIO_SAMPLE_RATE = "sample_rate";
+
+    /**
+     * Codec
+     */
+    public static final String KEY_PROFILE = "profile";
+    public static final String KEY_LEVEL = "level";
+    public static final String KEY_BITRATE = "bitrate";
+    public static final String KEY_ES_DESCRIPTORS = "es_descriptors";
+    public static final String KEY_AVC_CONFIGURATION = "avc_configuration";
+
     private Map<String, Object> mTable;
 
     /**
@@ -28,6 +62,13 @@ public class MetaData {
      */
     public String getString(String key) {
         return (String)mTable.get(key);
+    }
+
+    /**
+     * 以布尔类型读值
+     */
+    public boolean getBoolean(String key) {
+        return (boolean)mTable.get(key);
     }
 
     /**
@@ -62,6 +103,13 @@ public class MetaData {
      * 放入字符串类型的值
      */
     public void putString(String key, String value) {
+        mTable.put(key, value);
+    }
+
+    /**
+     * 放入布尔类型的值
+     */
+    public void putBoolean(String key, boolean value) {
         mTable.put(key, value);
     }
 
