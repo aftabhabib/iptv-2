@@ -2,68 +2,97 @@ package com.iptv.core.player.source;
 
 import android.util.Log;
 
+import com.iptv.core.player.DataSource;
 import com.iptv.core.utils.OkHttp;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import okhttp3.Request;
 import okhttp3.Response;
 
-public class HttpSource implements Source {
+public class HttpSource implements DataSource {
     private static final String TAG = "HttpSource";
 
-    private String mContentType = "";
+    private String mUrl;
+    private Map<String, String> mProperties;
+
+    private long mContentSize = -1;
     private InputStream mContentInput = null;
 
-    public HttpSource() {
-        //ignore
+    /**
+     * 构造函数
+     */
+    public HttpSource(String url, Map<String, String> properties) {
+        mUrl = url;
+        mProperties = properties;
     }
 
-    @Override
-    public boolean connect(String url, Map<String, String> property) throws IOException {
-        boolean ret = false;
+    /**
+     * 连接
+     */
+    public boolean connect() {
+        Response response = null;
 
-        Request request = OkHttp.createGetRequest(url, property);
-        Response response = OkHttp.getClient().newCall(request).execute();
-        if (response.isSuccessful()) {
-            mContentType = response.header("Content-Type");
-            mContentInput = response.body().byteStream();
+        try {
+            response = OkHttp.get(mUrl, mProperties);
 
-            ret = true;
+            if (response.isSuccessful()) {
+                String contentLength = response.header("Content-Length", "-1");
+                mContentSize = Long.parseLong(contentLength);
+
+                mContentInput = response.body().byteStream();
+            }
+            else {
+                Log.e(TAG, "connect fail, " + response.message());
+            }
         }
-        else {
-            Log.e(TAG, "connect fail, " + response.message());
-
-            response.close();
+        catch (IOException e) {
+            Log.e(TAG, "connect error");
+        }
+        finally {
+            if (mContentInput == null) {
+                response.close();
+            }
         }
 
-        return ret;
+        return mContentInput != null;
     }
 
-    @Override
-    public String getMIMEType() {
-        return mContentType;
+    /**
+     * 获取资源大小
+     */
+    public long getSize() {
+        return mContentSize;
     }
 
     @Override
     public int read(byte[] buffer, int offset, int size) throws IOException {
+        if (mContentInput == null) {
+            throw new IllegalStateException("not connected");
+        }
+
         return mContentInput.read(buffer, offset, size);
     }
 
     @Override
-    public long skip(long size) throws IOException {
-        return mContentInput.skip(size);
+    public void release() {
+        if (mContentInput != null) {
+            disconnect();
+        }
     }
 
-    @Override
-    public void disconnect() {
+    /**
+     * 断开
+     */
+    protected void disconnect() {
         try {
             mContentInput.close();
         }
         catch (IOException e) {
-            //ignore
+            /**
+             * ignore
+             */
         }
     }
 }
