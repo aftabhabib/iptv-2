@@ -1,21 +1,41 @@
 package com.iptv.core.hls.playlist;
 
 public final class Media {
-    public static final String TYPE_VIDEO = "VIDEO";
-    public static final String TYPE_AUDIO = "AUDIO";
-    public static final String TYPE_SUBTITLES = "SUBTITLES";
+    private static final String TYPE_VIDEO = "VIDEO";
+    private static final String TYPE_AUDIO = "AUDIO";
+    private static final String TYPE_SUBTITLES = "SUBTITLES";
 
     private AttributeList mAttributeList;
 
-    private Media(AttributeList attributeList) {
-        mAttributeList = attributeList;
+    /**
+     * 构造函数
+     */
+    public Media(String attributeList) {
+        mAttributeList = AttributeList.parse(attributeList);
     }
 
     /**
-     * 获取类型
+     * 是不是音频
      */
-    public String getType() {
-        return mAttributeList.getAttributeValue(Attribute.ATTR_TYPE);
+    public boolean isAudio() {
+        String type = mAttributeList.getAttributeValue(Attribute.ATTR_TYPE);
+        return type.equals(TYPE_AUDIO);
+    }
+
+    /**
+     * 是不是视频
+     */
+    public boolean isVideo() {
+        String type = mAttributeList.getAttributeValue(Attribute.ATTR_TYPE);
+        return type.equals(TYPE_VIDEO);
+    }
+
+    /**
+     * 是不是字幕
+     */
+    public boolean isSubtitle() {
+        String type = mAttributeList.getAttributeValue(Attribute.ATTR_TYPE);
+        return type.equals(TYPE_SUBTITLES);
     }
 
     /**
@@ -56,7 +76,7 @@ public final class Media {
                 return false;
             }
             else {
-                throw new IllegalArgumentException("the value of DEFAULT attribute are YES or NO");
+                throw new IllegalStateException("the value shall be YES or NO");
             }
         }
     }
@@ -78,7 +98,7 @@ public final class Media {
                 return false;
             }
             else {
-                throw new IllegalArgumentException("the value of AUTOSELECT attribute are YES or NO");
+                throw new IllegalStateException("the value shall be YES or NO");
             }
         }
     }
@@ -95,23 +115,5 @@ public final class Media {
      */
     public String getLanguage() {
         return mAttributeList.getAttributeValue(Attribute.ATTR_LANGUAGE);
-    }
-
-    public static class Builder {
-        private AttributeList mAttributeList;
-
-        public Builder() {
-            /**
-             * nothing
-             */
-        }
-
-        public void setAttributeList(String attributeList) {
-            mAttributeList = AttributeList.parse(attributeList);
-        }
-
-        public Media build() {
-            return new Media(mAttributeList);
-        }
     }
 }
