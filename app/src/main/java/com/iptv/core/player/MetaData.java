@@ -140,4 +140,11 @@ public class MetaData {
     public void putByteArray(String key, byte[] value) {
         mTable.put(key, value);
     }
+
+    /**
+     * 清除
+     */
+    public void clear() {
+        mTable.clear();
+    }
 }
