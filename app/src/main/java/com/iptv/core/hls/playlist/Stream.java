@@ -2,14 +2,14 @@ package com.iptv.core.hls.playlist;
 
 import java.util.List;
 
-public final class VariantStream {
+public final class Stream {
     private AttributeList mAttributeList;
     private String mUri;
 
     /**
      * 构造函数
      */
-    public VariantStream(String attributeList, String uri) {
+    public Stream(String attributeList, String uri) {
         mAttributeList = AttributeList.parse(attributeList);
         mUri = uri;
     }
