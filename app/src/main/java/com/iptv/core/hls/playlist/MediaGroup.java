@@ -3,10 +3,10 @@ package com.iptv.core.hls.playlist;
 import java.util.ArrayList;
 import java.util.List;
 
-final class RenditionGroup {
+final class MediaGroup {
     private List<Media> mMediaList;
 
-    public RenditionGroup() {
+    public MediaGroup() {
         mMediaList = new ArrayList<Media>();
     }
 
@@ -18,9 +18,9 @@ final class RenditionGroup {
     }
 
     /**
-     * 获取默认的表现
+     * 获取默认的媒体
      */
-    public Media getDefaultRendition() {
+    public Media getDefaultMedia() {
         Media media = null;
 
         for (int i = 0; i < mMediaList.size(); i++) {
@@ -34,9 +34,9 @@ final class RenditionGroup {
     }
 
     /**
-     * 获取对应语言的表现
+     * 获取对应语言的媒体
      */
-    public Media getRenditionByLanguage(String language) {
+    public Media getMediaByLanguage(String language) {
         Media media = null;
 
         for (int i = 0; i < mMediaList.size(); i++) {
