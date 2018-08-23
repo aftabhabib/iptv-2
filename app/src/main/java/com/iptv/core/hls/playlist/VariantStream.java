@@ -6,8 +6,11 @@ public final class VariantStream {
     private AttributeList mAttributeList;
     private String mUri;
 
-    private VariantStream(AttributeList attributeList, String uri) {
-        mAttributeList = attributeList;
+    /**
+     * 构造函数
+     */
+    public VariantStream(String attributeList, String uri) {
+        mAttributeList = AttributeList.parse(attributeList);
         mUri = uri;
     }
 
@@ -97,28 +100,5 @@ public final class VariantStream {
      */
     public String getSubtitleGroupId() {
         return mAttributeList.getAttributeValue(Attribute.ATTR_SUBTITLES);
-    }
-
-    public static class Builder {
-        private AttributeList mAttributeList;
-        private String mUri;
-
-        public Builder() {
-            /**
-             * nothing
-             */
-        }
-
-        public void setAttributeList(String attributeList) {
-            mAttributeList = AttributeList.parse(attributeList);
-        }
-
-        public void setUri(String uri) {
-            mUri = uri;
-        }
-
-        public VariantStream build() {
-            return new VariantStream(mAttributeList, mUri);
-        }
     }
 }
