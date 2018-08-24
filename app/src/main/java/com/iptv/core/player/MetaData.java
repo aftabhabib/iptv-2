@@ -55,21 +55,18 @@ public class MetaData {
 
     public static final String KEY_CIPHER_METHOD = "cipher_method";
     public static final String KEY_CIPHER_IV = "cipher_iv";
-    public static final String KEY_CIPHER_URI = "cipher_uri";
 
     public static final String KEY_DISCONTINUITY = "discontinuity";
 
     public static final String KEY_MEDIA_TYPE = "media_type";
     public static final String KEY_GROUP_ID = "group_id";
     public static final String KEY_LANGUAGE = "language";
-    public static final String KEY_DEFAULT = "default";
-    public static final String KEY_AUTO_SELECT = "auto_select";
-    public static final String KEY_MEDIA_URI = "media_uri";
+    public static final String KEY_DEFAULT_SELECT = "default_select";
 
     public static final String KEY_BANDWIDTH = "bandwidth";
-    public static final String KEY_AUDIO_GROUP = "audio_group";
-    public static final String KEY_VIDEO_GROUP = "video_group";
-    public static final String KEY_SUBTITLE_GROUP = "subtitle_group";
+    public static final String KEY_AUDIO_GROUP_ID = "audio_group_id";
+    public static final String KEY_VIDEO_GROUP_ID = "video_group_id";
+    public static final String KEY_SUBTITLE_GROUP_ID = "subtitle_group_id";
 
     private Map<String, Object> mTable;
 
