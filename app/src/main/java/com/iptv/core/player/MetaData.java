@@ -8,11 +8,9 @@ import java.util.Map;
  */
 public class MetaData {
     /**
-     * Stream
+     * Media
      */
     public static final String KEY_MIME = "mime";
-    public static final String KEY_BANDWIDTH = "bandwidth";
-    public static final String KEY_LANGUAGE = "language";
     public static final String KEY_DECODING_TIMESTAMP = "decoding_timestamp";
     public static final String KEY_PRESENTATION_TIMESTAMP = "presentation_timestamp";
 
@@ -41,6 +39,38 @@ public class MetaData {
     public static final String KEY_ES_DESCRIPTORS = "es_descriptors";
     public static final String KEY_AVC_CONFIGURATION = "avc_configuration";
 
+    /**
+     * M3U8
+     */
+    public static final String KEY_VERSION = "version";
+    public static final String KEY_TARGET_DURATION = "target_duration";
+    public static final String KEY_MEDIA_SEQUENCE = "media_sequence";
+    public static final String KEY_END_LIST = "end_list";
+
+    public static final String KEY_SEGMENT_DURATION = "segment_duration";
+    public static final String KEY_SEGMENT_TITLE = "segment_title";
+
+    public static final String KEY_RANGE_OFFSET = "range_offset";
+    public static final String KEY_RANGE_LENGTH = "range_length";
+
+    public static final String KEY_CIPHER_METHOD = "cipher_method";
+    public static final String KEY_CIPHER_IV = "cipher_iv";
+    public static final String KEY_CIPHER_URI = "cipher_uri";
+
+    public static final String KEY_DISCONTINUITY = "discontinuity";
+
+    public static final String KEY_MEDIA_TYPE = "media_type";
+    public static final String KEY_GROUP_ID = "group_id";
+    public static final String KEY_LANGUAGE = "language";
+    public static final String KEY_DEFAULT = "default";
+    public static final String KEY_AUTO_SELECT = "auto_select";
+    public static final String KEY_MEDIA_URI = "media_uri";
+
+    public static final String KEY_BANDWIDTH = "bandwidth";
+    public static final String KEY_AUDIO_GROUP = "audio_group";
+    public static final String KEY_VIDEO_GROUP = "video_group";
+    public static final String KEY_SUBTITLE_GROUP = "subtitle_group";
+
     private Map<String, Object> mTable;
 
     /**
@@ -48,6 +78,13 @@ public class MetaData {
      */
     public MetaData() {
         mTable = new HashMap<String, Object>();
+    }
+
+    /**
+     * 是否有数据
+     */
+    public boolean isEmpty() {
+        return mTable.isEmpty();
     }
 
     /**
