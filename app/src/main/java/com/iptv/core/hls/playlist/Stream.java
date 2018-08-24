@@ -1,104 +1,84 @@
 package com.iptv.core.hls.playlist;
 
-import java.util.List;
+import com.iptv.core.player.MetaData;
 
 public final class Stream {
-    private AttributeList mAttributeList;
-    private String mUri;
+    private MetaData mMetaData;
+    private String mUrl;
 
     /**
      * 构造函数
      */
-    public Stream(String attributeList, String uri) {
-        mAttributeList = AttributeList.parse(attributeList);
-        mUri = uri;
+    public Stream() {
+        mMetaData = new MetaData();
+        mUrl = "";
+    }
+
+    /**
+     * 获取元信息
+     */
+    public MetaData getMetaData() {
+        return mMetaData;
+    }
+
+    /**
+     * 设置url
+     */
+    public void setUrl(String url) {
+        mUrl = url;
+    }
+
+    /**
+     * 获取url
+     */
+    public String getUrl() {
+        return mUrl;
     }
 
     /**
      * 获取带宽
      */
     public int getBandwidth() {
-        String bandwidth = mAttributeList.getAttributeValue(Attribute.ATTR_BANDWIDTH);
-
-        return Integer.parseInt(bandwidth);
-    }
-
-    /**
-     * 获取URI
-     */
-    public String getUri() {
-        return mUri;
-    }
-
-    /**
-     * 是否定义了VideoCodec
-     */
-    public boolean containsVideoCodec() {
-        List<Codec> codecList = Codec.parseList(mAttributeList.getAttributeValue(Attribute.ATTR_CODECS));
-
-        for (Codec codec : codecList) {
-            if (codec.isVideoType()) {
-                return true;
-            }
+        if (!mMetaData.containsKey(MetaData.KEY_BANDWIDTH)) {
+            throw new IllegalStateException("bandwidth is required");
         }
 
-        return false;
+        return mMetaData.getInteger(MetaData.KEY_BANDWIDTH);
     }
 
     /**
-     * 是否定义了AudioCodec
-     */
-    public boolean containsAudioCodec() {
-        List<Codec> codecList = Codec.parseList(mAttributeList.getAttributeValue(Attribute.ATTR_CODECS));
-
-        for (Codec codec : codecList) {
-            if (codec.isAudioType()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * 是否定义了VideoRendition
-     */
-    public boolean containsVideoRendition() {
-        return mAttributeList.containsAttribute(Attribute.ATTR_VIDEO);
-    }
-
-    /**
-     * 获取VideoRendition的GroupId
-     */
-    public String getVideoGroupId() {
-        return mAttributeList.getAttributeValue(Attribute.ATTR_VIDEO);
-    }
-
-    /**
-     * 是否定义了AudioRendition
-     */
-    public boolean containsAudioRendition() {
-        return mAttributeList.containsAttribute(Attribute.ATTR_AUDIO);
-    }
-
-    /**
-     * 获取AudioRendition的GroupId
+     * 获取AudioGroup的id
      */
     public String getAudioGroupId() {
-        return mAttributeList.getAttributeValue(Attribute.ATTR_AUDIO);
+        if (!mMetaData.containsKey(MetaData.KEY_AUDIO_GROUP_ID)) {
+            return "";
+        }
+        else {
+            return mMetaData.getString(MetaData.KEY_AUDIO_GROUP_ID);
+        }
     }
 
     /**
-     * 是否定义了SubtitleRendition
+     * 获取VideoGroup的id
      */
-    public boolean containsSubtitleRendition() {
-        return mAttributeList.containsAttribute(Attribute.ATTR_SUBTITLES);
+    public String getVideoGroupId() {
+        if (!mMetaData.containsKey(MetaData.KEY_VIDEO_GROUP_ID)) {
+            return "";
+        }
+        else {
+            return mMetaData.getString(MetaData.KEY_VIDEO_GROUP_ID);
+        }
     }
 
     /**
-     * 获取SubtitleRendition的GroupId
+     * 获取SubtitleGroup的id
      */
     public String getSubtitleGroupId() {
-        return mAttributeList.getAttributeValue(Attribute.ATTR_SUBTITLES);
+        if (!mMetaData.containsKey(MetaData.KEY_SUBTITLE_GROUP_ID)) {
+            return "";
+        }
+        else {
+            return mMetaData.getString(MetaData.KEY_SUBTITLE_GROUP_ID);
+        }
     }
 }
