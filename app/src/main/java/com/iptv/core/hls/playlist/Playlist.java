@@ -1,4 +1,4 @@
-package com.iptv.core.hls;
+package com.iptv.core.hls.playlist;
 
 import com.iptv.core.hls.playlist.Key;
 import com.iptv.core.hls.playlist.Media;
