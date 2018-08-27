@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public final class M3U8Parser {
@@ -89,6 +91,18 @@ public final class M3U8Parser {
             if (!line.isEmpty()) {
                 parseLine(line);
             }
+        }
+
+        /**
+         * 如果有定义流的话，按照带宽大小排序
+         */
+        if (!mStreamList.isEmpty()) {
+            Collections.sort(mStreamList, new Comparator<Stream>() {
+                @Override
+                public int compare(Stream stream1, Stream stream2) {
+                    return stream1.getBandwidth() - stream2.getBandwidth();
+                }
+            });
         }
 
         reader.close();
@@ -454,9 +468,16 @@ public final class M3U8Parser {
     }
 
     /**
+     * 是否包含流
+     */
+    public boolean containsStream() {
+        return !mStreamList.isEmpty();
+    }
+
+    /**
      * 根据带宽选择合适的Stream
      */
-    public Stream findStreamByBandwidth(int bandwidth) {
+    public Stream getStream(int bandwidth) {
         int index;
 
         if (bandwidth > 0) {
@@ -481,5 +502,34 @@ public final class M3U8Parser {
         }
 
         return mStreamList.get(index);
+    }
+
+    /**
+     * 是否包含片段
+     */
+    public boolean containsSegment() {
+        return !mSegmentList.isEmpty();
+    }
+
+    /**
+     * 获取片段的起始序号
+     */
+    public int getMediaSequence() {
+        if (!mMetaData.containsKey(MetaData.KEY_MEDIA_SEQUENCE)) {
+            return 0;
+        }
+
+        return mMetaData.getInteger(MetaData.KEY_MEDIA_SEQUENCE);
+    }
+
+    /**
+     * 获取所有的媒体片段
+     */
+    public Segment[] getSegments() {
+        if (!containsSegment()) {
+            throw new IllegalStateException("not media playlist");
+        }
+
+        return mSegmentList.toArray(new Segment[mSegmentList.size()]);
     }
 }
