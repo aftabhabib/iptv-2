@@ -1,9 +1,5 @@
 package com.iptv.core.hls.playlist;
 
-import com.iptv.core.hls.playlist.Key;
-import com.iptv.core.hls.playlist.Media;
-import com.iptv.core.hls.playlist.Segment;
-import com.iptv.core.hls.playlist.Stream;
 import com.iptv.core.player.MetaData;
 import com.iptv.core.utils.MalformedFormatException;
 
