@@ -5,6 +5,7 @@ import com.iptv.core.hls.playlist.Media;
 import com.iptv.core.hls.playlist.Segment;
 import com.iptv.core.hls.playlist.Stream;
 import com.iptv.core.player.MetaData;
+import com.iptv.core.utils.MalformedFormatException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -67,47 +68,89 @@ public final class M3U8Parser {
     /**
      * 构造函数
      */
-    public M3U8Parser(String url) {
+    public M3U8Parser(String url, String content) {
         mUrl = url;
+
+        parse(content);
     }
 
     /**
      * 解析内容
      */
-    public boolean parse(String content) throws IOException {
+    private void parse(String content) {
         BufferedReader reader = new BufferedReader(new StringReader(content));
 
-        String line = reader.readLine();
-        if ((line == null) || !line.equals(TAG_M3U)) {
-            return false;
-        }
-
-        while (true) {
-            line = reader.readLine();
-            if (line == null) {
-                break;
+        try {
+            String line = reader.readLine();
+            if ((line == null) || !line.equals(TAG_M3U)) {
+                throw new MalformedFormatException("not m3u8 format");
             }
 
-            if (!line.isEmpty()) {
-                parseLine(line);
-            }
-        }
-
-        /**
-         * 如果有定义流的话，按照带宽大小排序
-         */
-        if (!mStreamList.isEmpty()) {
-            Collections.sort(mStreamList, new Comparator<Stream>() {
-                @Override
-                public int compare(Stream stream1, Stream stream2) {
-                    return stream1.getBandwidth() - stream2.getBandwidth();
+            while (true) {
+                line = reader.readLine();
+                if (line == null) {
+                    break;
                 }
-            });
+
+                if (!line.isEmpty()) {
+                    parseLine(line);
+                }
+            }
+
+            /**
+             * 如果有定义流的话，按照带宽大小排序
+             */
+            if (!mStreamList.isEmpty()) {
+                Collections.sort(mStreamList, new Comparator<Stream>() {
+                    @Override
+                    public int compare(Stream stream1, Stream stream2) {
+                        return stream1.getBandwidth() - stream2.getBandwidth();
+                    }
+                });
+            }
         }
+        catch (IOException e) {
+            /**
+             * 清除
+             */
+            if (!mMetaData.isEmpty()) {
+                mMetaData.clear();
+            }
 
-        reader.close();
+            if (!mMediaList.isEmpty()) {
+                mMediaList.clear();
+            }
 
-        return true;
+            if (!mStreamList.isEmpty()) {
+                mStreamList.clear();
+            }
+
+            if (!mSegmentList.isEmpty()) {
+                mSegmentList.clear();
+            }
+
+            if (mPendingStream != null) {
+                mPendingStream = null;
+            }
+
+            if (mPendingSegment != null) {
+                mPendingSegment = null;
+            }
+
+            if (mKey != null) {
+                mKey = null;
+            }
+        }
+        finally {
+            try {
+                reader.close();
+            }
+            catch (IOException e) {
+                /**
+                 * ignore
+                 */
+            }
+        }
     }
 
     private void parseLine(String line) {
@@ -375,29 +418,6 @@ public final class M3U8Parser {
     }
 
     /**
-     * 获取指定的媒体组
-     */
-    private Media[] getMediaGroupById(String groupId) {
-        List<Media> mediaGroup = new ArrayList<Media>();
-
-        if (mMediaList.isEmpty()) {
-            throw new IllegalStateException("no media in playlist");
-        }
-
-        for (Media media : mMediaList) {
-            if (media.getGroupId().equals(groupId)) {
-                mediaGroup.add(media);
-            }
-        }
-
-        if (mediaGroup.isEmpty()) {
-            throw new IllegalStateException("no media with the group_id " + groupId);
-        }
-
-        return mediaGroup.toArray(new Media[mediaGroup.size()]);
-    }
-
-    /**
      * 基于uri生成url
      */
     private String toUrl(String uri) {
@@ -468,6 +488,13 @@ public final class M3U8Parser {
     }
 
     /**
+     * 是否有效
+     */
+    public boolean isValid() {
+        return !mStreamList.isEmpty() || !mSegmentList.isEmpty();
+    }
+
+    /**
      * 是否包含流
      */
     public boolean containsStream() {
@@ -475,33 +502,50 @@ public final class M3U8Parser {
     }
 
     /**
-     * 根据带宽选择合适的Stream
+     * 获取所有的媒体流
      */
-    public Stream getStream(int bandwidth) {
-        int index;
+    public Stream[] getStreams() {
+        return mStreamList.toArray(new Stream[mStreamList.size()]);
+    }
 
-        if (bandwidth > 0) {
-            /**
-             * 带宽已知，选择最接近的流
-             */
-            for (index = 0; index < mStreamList.size(); index++) {
-                if (mStreamList.get(index).getBandwidth() > bandwidth) {
-                    break;
-                }
-            }
+    /**
+     * 获取指定的媒体组
+     */
+    public Media[] getMediaGroupById(String groupId) {
+        List<Media> mediaGroup = new ArrayList<Media>();
 
-            if (index > 0) {
-                index -= 1;
-            }
-        }
-        else {
-            /**
-             * 带宽未知，选择最大的流
-             */
-            index = mStreamList.size() - 1;
+        if (mMediaList.isEmpty()) {
+            throw new IllegalStateException("no media in playlist");
         }
 
-        return mStreamList.get(index);
+        for (Media media : mMediaList) {
+            if (media.getGroupId().equals(groupId)) {
+                mediaGroup.add(media);
+            }
+        }
+
+        if (mediaGroup.isEmpty()) {
+            throw new IllegalStateException("no media with the group_id " + groupId);
+        }
+
+        return mediaGroup.toArray(new Media[mediaGroup.size()]);
+    }
+
+    /**
+     * 获取指定媒体组内的默认选择
+     */
+    public Media getDefaultMediaInGroup(String groupId) {
+        if (mMediaList.isEmpty()) {
+            throw new IllegalStateException("no media groups");
+        }
+
+        for (Media media : mMediaList) {
+            if (media.getGroupId().equals(groupId) && media.defaultSelect()) {
+                return media;
+            }
+        }
+
+        return null;
     }
 
     /**
