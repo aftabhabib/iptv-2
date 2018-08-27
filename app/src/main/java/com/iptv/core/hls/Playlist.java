@@ -16,7 +16,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public final class M3U8Parser {
+/**
+ * 播放列表
+ */
+public final class Playlist {
     /**
      * 标签
      */
@@ -68,7 +71,7 @@ public final class M3U8Parser {
     /**
      * 构造函数
      */
-    public M3U8Parser(String url, String content) {
+    public Playlist(String url, String content) {
         mUrl = url;
 
         parse(content);
