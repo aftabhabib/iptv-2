@@ -2,9 +2,12 @@ package com.iptv.core.hls.playlist;
 
 import com.iptv.core.player.MetaData;
 
+/**
+ * 片段
+ */
 public final class Segment {
-    private MetaData mMetaData;
-    private String mUrl;
+    private MetaData mMetaData = new MetaData();
+    private String mUri;
 
     private Key mKey = null;
 
@@ -12,8 +15,9 @@ public final class Segment {
      * 构造函数
      */
     public Segment() {
-        mMetaData = new MetaData();
-        mUrl = "";
+        /**
+         * nothing
+         */
     }
 
     /**
@@ -24,17 +28,10 @@ public final class Segment {
     }
 
     /**
-     * 设置url
+     * 设置uri
      */
-    public void setUrl(String url) {
-        mUrl = url;
-    }
-
-    /**
-     * 获取url
-     */
-    public String getUrl() {
-        return mUrl;
+    public void setUri(String uri) {
+        mUri = uri;
     }
 
     /**
@@ -112,12 +109,12 @@ public final class Segment {
     /**
      * 获取密钥的uri
      */
-    public String getKeyUrl() {
+    public String getKeyUri() {
         if (!isEncrypted()) {
             throw new IllegalStateException("not encrypt");
         }
 
-        return mKey.getUrl();
+        return mKey.getUri();
     }
 
     /**
@@ -129,5 +126,12 @@ public final class Segment {
         }
 
         return mKey.getInitVector();
+    }
+
+    /**
+     * 获取uri
+     */
+    public String getUri() {
+        return mUri;
     }
 }
