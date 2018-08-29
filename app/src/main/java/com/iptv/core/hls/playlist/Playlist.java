@@ -269,7 +269,7 @@ public final class Playlist {
      * 解析播放列表中流的定义
      */
     private void parseStreamInf(String content) throws MalformedFormatException {
-        mPendingStream = new Stream(content);
+        mPendingStream = new Stream(content, mMediaList);
     }
 
     /**
@@ -280,50 +280,33 @@ public final class Playlist {
     }
 
     /**
-     * 获取所有的媒体流
+     * 获取适应指定带宽的流
      */
-    public Stream[] getStreams() {
-        return mStreamList.toArray(new Stream[mStreamList.size()]);
-    }
+    public Stream getStreamByBandwidth(int bandwidth) {
+        int index;
 
-    /**
-     * 获取指定的媒体组
-     */
-    public Media[] getMediaGroupById(String groupId) {
-        List<Media> mediaGroup = new ArrayList<Media>();
+        if (bandwidth > 0) {
+            /**
+             * 带宽已知
+             */
+            for (index = 0; index < mStreamList.size(); index++) {
+                if (mStreamList.get(index).getBandwidth() > bandwidth) {
+                    break;
+                }
+            }
 
-        if (mMediaList.isEmpty()) {
-            throw new IllegalStateException("no media in playlist");
-        }
-
-        for (Media media : mMediaList) {
-            if (media.getGroupId().equals(groupId)) {
-                mediaGroup.add(media);
+            if (index > 0) {
+                index -= 1;
             }
         }
-
-        if (mediaGroup.isEmpty()) {
-            throw new IllegalStateException("no media with the group_id " + groupId);
+        else {
+            /**
+             * 带宽未知
+             */
+            index = mStreamList.size() - 1;
         }
 
-        return mediaGroup.toArray(new Media[mediaGroup.size()]);
-    }
-
-    /**
-     * 获取指定媒体组内的默认选择
-     */
-    public Media getDefaultMediaInGroup(String groupId) {
-        if (mMediaList.isEmpty()) {
-            throw new IllegalStateException("no media groups");
-        }
-
-        for (Media media : mMediaList) {
-            if (media.getGroupId().equals(groupId) && media.defaultSelect()) {
-                return media;
-            }
-        }
-
-        return null;
+        return mStreamList.get(index);
     }
 
     /**

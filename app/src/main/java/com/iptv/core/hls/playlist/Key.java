@@ -24,7 +24,7 @@ public final class Key {
     public static final String METHOD_SAMPLE_AES = "SAMPLE-AES";
 
     private MetaData mMetaData = new MetaData();
-    private String mUri;
+    private String mUri = null;
 
     /**
      * 构造函数
@@ -70,8 +70,7 @@ public final class Key {
             throw new MalformedFormatException("method is required");
         }
         else {
-            if (!mMetaData.getString(MetaData.KEY_CIPHER_METHOD).equals(METHOD_NONE)
-                    && (mUri == null || mUri.isEmpty())) {
+            if (!getMethod().equals(METHOD_NONE) && (mUri == null)) {
                 throw new MalformedFormatException("uri is required when method is not NONE");
             }
         }

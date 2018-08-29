@@ -24,7 +24,7 @@ public final class Media {
     public static final String TYPE_SUBTITLE = "SUBTITLES";
 
     private MetaData mMetaData = new MetaData();
-    private String mUri = "";
+    private String mUri = null;
 
     /**
      * 构造函数
@@ -52,13 +52,18 @@ public final class Media {
                     defaultSelect = false;
                 }
                 else {
-                    throw new IllegalStateException("the value shall be YES or NO");
+                    throw new MalformedFormatException("value shall be YES or NO");
                 }
 
                 mMetaData.putBoolean(MetaData.KEY_DEFAULT_SELECT, defaultSelect);
             }
             else if (result[0].equals(ATTR_URI)) {
                 mUri = result[1];
+            }
+            else {
+                /**
+                 * not support yet
+                 */
             }
         }
 
@@ -68,6 +73,12 @@ public final class Media {
         if (!mMetaData.containsKey(MetaData.KEY_MEDIA_TYPE)) {
             throw new MalformedFormatException("type is required");
         }
+        else {
+            if (getType().equals(TYPE_SUBTITLE) && (mUri == null)) {
+                throw new MalformedFormatException("uri is required when type is SUBTITLES");
+            }
+        }
+
         if (!mMetaData.containsKey(MetaData.KEY_GROUP_ID)) {
             throw new MalformedFormatException("group-id is required");
         }
