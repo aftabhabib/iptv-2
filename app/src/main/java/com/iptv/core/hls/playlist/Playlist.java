@@ -23,6 +23,7 @@ public final class Playlist {
     private static final String TAG_END_LIST = "#EXT-X-ENDLIST";
     private static final String TAG_MEDIA_SEQUENCE = "#EXT-X-MEDIA-SEQUENCE";
     private static final String TAG_DISCONTINUITY = "#EXT-X-DISCONTINUITY";
+    private static final String TAG_DISCONTINUITY_SEQUENCE = "#EXT-X-DISCONTINUITY-SEQUENCE";
     private static final String TAG_KEY = "#EXT-X-KEY";
     private static final String TAG_BYTE_RANGE = "#EXT-X-BYTERANGE";
     private static final String TAG_MEDIA = "#EXT-X-MEDIA";
@@ -42,6 +43,7 @@ public final class Playlist {
 
     private Key mKey = null;
     private long mRangeOffset = 0;
+    private int mDiscontinuityCount = 0;
 
     /**
      * 构造函数
@@ -113,6 +115,12 @@ public final class Playlist {
             }
             else if (line.equals(TAG_DISCONTINUITY)) {
                 getPendingSegment().setDiscontinuity();
+
+                mDiscontinuityCount++;
+            }
+            else if (line.startsWith(TAG_DISCONTINUITY_SEQUENCE)) {
+                String value = line.substring(TAG_DISCONTINUITY_SEQUENCE.length() + 1);
+                parseDiscontinuitySequence(value);
             }
             else if (line.startsWith(TAG_KEY)) {
                 String value = line.substring(TAG_KEY.length() + 1);
@@ -145,6 +153,7 @@ public final class Playlist {
             if (mPendingSegment != null) {
                 mPendingSegment.setUri(uri);
                 mPendingSegment.setSequenceNumber(getSequenceNumber());
+                mPendingSegment.setDiscontinuitySequenceNumber(getDiscontinuitySequenceNumber());
 
                 if (mKey != null) {
                     mPendingSegment.setKey(mKey);
@@ -245,6 +254,13 @@ public final class Playlist {
     }
 
     /**
+     * 解析播放列表中片段的Discontinuity序号
+     */
+    private void parseDiscontinuitySequence(String content) {
+        mMetaData.putInteger("discontinuity-sequence", Integer.parseInt(content));
+    }
+
+    /**
      * 解析播放列表中密钥的定义
      */
     private void parseKey(String content) throws MalformedFormatException {
@@ -333,6 +349,21 @@ public final class Playlist {
         }
 
         return mediaSequence + mSegmentList.size();
+    }
+
+    /**
+     * 获取当前片段的discontinuity序号
+     */
+    private int getDiscontinuitySequenceNumber() {
+        int discontinuitySequence;
+        if (mMetaData.containsKey("discontinuity-sequence")) {
+            discontinuitySequence = mMetaData.getInteger("discontinuity-sequence");
+        }
+        else {
+            discontinuitySequence = 0;
+        }
+
+        return discontinuitySequence + mDiscontinuityCount;
     }
 
     /**

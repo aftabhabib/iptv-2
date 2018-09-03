@@ -10,6 +10,7 @@ import java.util.Arrays;
 public final class Segment {
     private float mDuration = 0.0f;
     private int mSequenceNumber = -1;
+    private int mDiscontinuitySequenceNumber = -1;
     private String mUri = null;
     private MetaData mMetaData = new MetaData();
     private Key mKey = null;
@@ -42,6 +43,13 @@ public final class Segment {
      */
     public void setSequenceNumber(int sequenceNumber) {
         mSequenceNumber = sequenceNumber;
+    }
+
+    /**
+     * 设置Discontinuity序号
+     */
+    public void setDiscontinuitySequenceNumber(int discontinuitySequenceNumber) {
+        mDiscontinuitySequenceNumber = discontinuitySequenceNumber;
     }
 
     /**
@@ -84,6 +92,13 @@ public final class Segment {
      */
     public int getSequenceNumber() {
         return mSequenceNumber;
+    }
+
+    /**
+     * 获取Discontinuity序号
+     */
+    public int getDiscontinuitySequenceNumber() {
+        return mDiscontinuitySequenceNumber;
     }
 
     /**
