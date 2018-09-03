@@ -2,13 +2,16 @@ package com.iptv.core.hls.playlist;
 
 import com.iptv.core.player.MetaData;
 
+import java.util.Arrays;
+
 /**
  * 片段
  */
 public final class Segment {
+    private float mDuration = 0.0f;
+    private int mSequenceNumber = -1;
+    private String mUri = null;
     private MetaData mMetaData = new MetaData();
-    private String mUri;
-
     private Key mKey = null;
 
     /**
@@ -21,10 +24,10 @@ public final class Segment {
     }
 
     /**
-     * 获取元信息
+     * 设置时长
      */
-    public MetaData getMetaData() {
-        return mMetaData;
+    public void setDuration(float duration) {
+        mDuration = duration;
     }
 
     /**
@@ -32,6 +35,27 @@ public final class Segment {
      */
     public void setUri(String uri) {
         mUri = uri;
+    }
+
+    /**
+     * 设置序号
+     */
+    public void setSequenceNumber(int sequenceNumber) {
+        mSequenceNumber = sequenceNumber;
+    }
+
+    /**
+     * 设置字节范围
+     */
+    public void setByteRange(long offset, long length) {
+        mMetaData.putString("range", "bytes=" + offset + "-" + (offset + length - 1));
+    }
+
+    /**
+     * 设置不连续标记
+     */
+    public void setDiscontinuity() {
+        mMetaData.putBoolean("discontinuity", true);
     }
 
     /**
@@ -45,46 +69,50 @@ public final class Segment {
      * 获取时长
      */
     public float getDuration() {
-        if (!mMetaData.containsKey(MetaData.KEY_SEGMENT_DURATION)) {
-            throw new IllegalStateException("duration is required");
-        }
-
-        return mMetaData.getFloat(MetaData.KEY_SEGMENT_DURATION);
+        return mDuration;
     }
 
     /**
-     * 获取范围的偏移
+     * 获取uri
      */
-    public long getRangeOffset() {
-        if (!mMetaData.containsKey(MetaData.KEY_RANGE_OFFSET)) {
-            return 0;
-        }
-        else {
-            return mMetaData.getLong(MetaData.KEY_RANGE_OFFSET);
-        }
+    public String getUri() {
+        return mUri;
+    }
+
+    /**
+     * 获取序号
+     */
+    public int getSequenceNumber() {
+        return mSequenceNumber;
+    }
+
+    /**
+     * 是否定义了数据范围
+     */
+    public boolean containsRange() {
+        return mMetaData.containsKey("range");
     }
 
     /**
      * 获取范围的长度
      */
-    public long getRangeLength() {
-        if (!mMetaData.containsKey(MetaData.KEY_RANGE_LENGTH)) {
-            return -1;
+    public String getRange() {
+        if (!containsRange()) {
+            throw new IllegalStateException("no BYTERANGE");
         }
-        else {
-            return mMetaData.getLong(MetaData.KEY_RANGE_LENGTH);
-        }
+
+        return mMetaData.getString("range");
     }
 
     /**
      * 是否不连续
      */
     public boolean discontinuity() {
-        if (!mMetaData.containsKey(MetaData.KEY_DISCONTINUITY)) {
+        if (!mMetaData.containsKey("discontinuity")) {
             return false;
         }
         else {
-            return mMetaData.getBoolean(MetaData.KEY_DISCONTINUITY);
+            return mMetaData.getBoolean("discontinuity");
         }
     }
 
@@ -100,7 +128,7 @@ public final class Segment {
      */
     public String getEncryptMethod() {
         if (!isEncrypted()) {
-            throw new IllegalStateException("not encrypt");
+            throw new IllegalStateException("no KEY or METHOD is NONE");
         }
 
         return mKey.getMethod();
@@ -111,7 +139,7 @@ public final class Segment {
      */
     public String getKeyUri() {
         if (!isEncrypted()) {
-            throw new IllegalStateException("not encrypt");
+            throw new IllegalStateException("no KEY or METHOD is NONE");
         }
 
         return mKey.getUri();
@@ -122,16 +150,32 @@ public final class Segment {
      */
     public byte[] getKeyInitVector() {
         if (!isEncrypted()) {
-            throw new IllegalStateException("not encrypt");
+            throw new IllegalStateException("no KEY or METHOD is NONE");
         }
 
-        return mKey.getInitVector();
+        byte[] iv;
+        if (mKey.containsInitVector()) {
+            iv = mKey.getInitVector();
+        }
+        else {
+            iv = makeInitVector();
+        }
+
+        return iv;
     }
 
     /**
-     * 获取uri
+     * 根据片段序号生成密钥的初始化向量
      */
-    public String getUri() {
-        return mUri;
+    private byte[] makeInitVector() {
+        byte[] iv = new byte[16];
+
+        Arrays.fill(iv, 0, 12, (byte)0x00);
+        iv[15] = (byte)(mSequenceNumber & 0xff);
+        iv[14] = (byte)((mSequenceNumber >> 8) & 0xff);
+        iv[13] = (byte)((mSequenceNumber >> 16) & 0xff);
+        iv[12] = (byte)((mSequenceNumber >> 24) & 0xff);
+
+        return iv;
     }
 }

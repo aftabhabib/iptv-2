@@ -3,9 +3,6 @@ package com.iptv.core.hls.playlist;
 import com.iptv.core.player.MetaData;
 import com.iptv.core.utils.MalformedFormatException;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * 流
  */
@@ -19,80 +16,75 @@ public final class Stream {
     private static final String ATTR_VIDEO = "VIDEO";
     private static final String ATTR_SUBTITLES = "SUBTITLES";
 
+    private int mBandwidth = -1;
+    private String mUri = null;
     private MetaData mMetaData = new MetaData();
-    private String[] mFormats;
-    private String mUri;
 
-    private List<Media> mAudioRenditionList = new ArrayList<Media>();
-    private List<Media> mVideoRenditionList = new ArrayList<Media>();
-    private List<Media> mSubtitleRenditionList = new ArrayList<Media>();
+    private Media[] mAudioRenditions = null;
+    private Media[] mVideoRenditions = null;
+    private Media[] mSubtitleRenditions = null;
 
     /**
      * 构造函数
      */
-    public Stream(String attributeList, List<Media> renditionList) throws MalformedFormatException {
-        String[] attributes = attributeList.split(",");
-        for (int i = 0; i < attributes.length; i++) {
-            String[] result = attributes[i].split("=");
+    public Stream(String[] attributes) throws MalformedFormatException {
+        for (String attribute : attributes) {
+            String[] result = attribute.split("=");
+            parseAttribute(result[0], result[1]);
+        }
 
-            if (result[0].equals(ATTR_BANDWIDTH)) {
-                int bandwidth = Integer.parseInt(result[1]);
-                mMetaData.putInteger(MetaData.KEY_BANDWIDTH, bandwidth);
-            }
-            else if (result[0].equals(ATTR_CODECS)) {
-                if (result[1].contains(",")) {
-                    mFormats = result[1].split(",");
-                }
-                else {
-                    mFormats = new String[] { result[1] };
-                }
-            }
-            else if (result[0].equals(ATTR_AUDIO)) {
-                if (!renditionList.isEmpty()) {
-                    for (Media rendition : renditionList) {
-                        if (rendition.getType().equals(Media.TYPE_AUDIO)
-                                && rendition.getGroupId().equals(result[1])) {
-                            mAudioRenditionList.add(rendition);
-                        }
-                    }
-                }
-            }
-            else if (result[0].equals(ATTR_VIDEO)) {
-                if (!renditionList.isEmpty()) {
-                    for (Media rendition : renditionList) {
-                        if (rendition.getType().equals(Media.TYPE_VIDEO)
-                                && rendition.getGroupId().equals(result[1])) {
-                            mVideoRenditionList.add(rendition);
-                        }
-                    }
-                }
-            }
-            else if (result[0].equals(ATTR_SUBTITLES)) {
-                if (!renditionList.isEmpty()) {
-                    for (Media rendition : renditionList) {
-                        if (rendition.getType().equals(Media.TYPE_SUBTITLE)
-                                && rendition.getGroupId().equals(result[1])) {
-                            mSubtitleRenditionList.add(rendition);
-                        }
-                    }
-                }
+        if (mBandwidth == -1) {
+            throw new MalformedFormatException("BANDWIDTH is required");
+        }
+
+        if (!mMetaData.containsKey("audio-format") && !mMetaData.containsKey("video-format")) {
+            throw new MalformedFormatException("CODECS is required");
+        }
+    }
+
+    /**
+     * 解析属性
+     */
+    private void parseAttribute(String name, String value) {
+        if (name.equals(ATTR_BANDWIDTH)) {
+            mBandwidth = Integer.parseInt(value);
+        }
+        else if (name.equals(ATTR_CODECS)) {
+            String[] formats;
+            if (value.contains(",")) {
+                formats = value.split(",");
             }
             else {
-                /**
-                 * not support yet
-                 */
+                formats = new String[] { value };
+            }
+
+            for (String format : formats) {
+                if (Codec.isAudioFormat(format)) {
+                    mMetaData.putString("audio-format", format);
+                }
+                else if (Codec.isVideoFormat(format)) {
+                    mMetaData.putString("video-format", format);
+                }
+                else {
+                    /**
+                     * ignore
+                     */
+                }
             }
         }
-
-        /**
-         * 检查必要参数
-         */
-        if (!mMetaData.containsKey(MetaData.KEY_BANDWIDTH)) {
-            throw new MalformedFormatException("bandwidth is required");
+        else if (name.equals(ATTR_AUDIO)) {
+            mMetaData.putString(ATTR_AUDIO, value);
         }
-
-        if (mFormats == null) {
-            throw new MalformedFormatException("codecs is required");
+        else if (name.equals(ATTR_VIDEO)) {
+            mMetaData.putString(ATTR_VIDEO, value);
+        }
+        else if (name.equals(ATTR_SUBTITLES)) {
+            mMetaData.putString(ATTR_SUBTITLES, value);
+        }
+        else {
+            /**
+             * ignore
+             */
         }
     }
 
@@ -104,103 +96,31 @@ public final class Stream {
     }
 
     /**
+     * 设置音频表现
+     */
+    public void setAudioRenditions(Media[] renditions) {
+        mAudioRenditions = renditions;
+    }
+
+    /**
+     * 设置视频表现
+     */
+    public void setVideoRenditions(Media[] renditions) {
+        mVideoRenditions = renditions;
+    }
+
+    /**
+     * 设置字幕表现
+     */
+    public void setSubtitleRenditions(Media[] renditions) {
+        mSubtitleRenditions = renditions;
+    }
+
+    /**
      * 获取带宽
      */
     public int getBandwidth() {
-        return mMetaData.getInteger(MetaData.KEY_BANDWIDTH);
-    }
-
-    /**
-     * 获取音频格式
-     */
-    public String getAudioFormat() {
-        for (String format : mFormats) {
-            if (Codec.isAudioFormat(format)) {
-                return format;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * 获取视频格式
-     */
-    public String getVideoFormat() {
-        for (String format : mFormats) {
-            if (Codec.isVideoFormat(format)) {
-                return format;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * 音频是否有多个表现
-     */
-    public boolean containsAudioRenditions() {
-        return !mAudioRenditionList.isEmpty();
-    }
-
-    /**
-     * 获取默认的音频表现
-     */
-    public Media getDefaultAudioRendition() {
-        if (!containsAudioRenditions()) {
-            throw new IllegalStateException("no audio renditions");
-        }
-
-        return getDefaultRendition(mAudioRenditionList);
-    }
-
-    /**
-     * 视频是否有多个表现
-     */
-    public boolean containsVideoRenditions() {
-        return !mVideoRenditionList.isEmpty();
-    }
-
-    /**
-     * 获取默认的视频表现
-     */
-    public Media getDefaultVideoRendition() {
-        if (!containsVideoRenditions()) {
-            throw new IllegalStateException("no video renditions");
-        }
-
-        return getDefaultRendition(mVideoRenditionList);
-    }
-
-    /**
-     * 字幕是否有多个表现
-     */
-    public boolean containsSubtitleRenditions() {
-        return !mSubtitleRenditionList.isEmpty();
-    }
-
-    /**
-     * 获取默认的字幕表现
-     */
-    public Media getDefaultSubtitleRendition() {
-        if (!containsSubtitleRenditions()) {
-            throw new IllegalStateException("no subtitle renditions");
-        }
-
-        return getDefaultRendition(mSubtitleRenditionList);
-    }
-
-    /**
-     * 从表现组中获取默认的表现
-     */
-    private static Media getDefaultRendition(List<Media> renditionList) {
-        for (Media rendition : renditionList) {
-            if (rendition.defaultSelect()) {
-                return rendition;
-            }
-        }
-
-        throw new IllegalStateException("no default rendition");
+        return mBandwidth;
     }
 
     /**
@@ -208,5 +128,177 @@ public final class Stream {
      */
     public String getUri() {
         return mUri;
+    }
+
+    /**
+     * 是否定义了音频格式
+     */
+    public boolean containsAudioFormat() {
+        return mMetaData.containsKey("audio-format");
+    }
+
+    /**
+     * 获取音频格式
+     */
+    public String getAudioFormat() {
+        if (!containsAudioFormat()) {
+            throw new IllegalStateException("no AUDIO-CODEC");
+        }
+
+        return mMetaData.getString("audio-format");
+    }
+
+    /**
+     * 是否定义了视频格式
+     */
+    public boolean containsVideoFormat() {
+        return mMetaData.containsKey("video-format");
+    }
+
+    /**
+     * 获取视频格式
+     */
+    public String getVideoFormat() {
+        if (!containsVideoFormat()) {
+            throw new IllegalStateException("no VIDEO-CODEC");
+        }
+
+        return mMetaData.getString("video-format");
+    }
+
+    /**
+     * 是否有多个音频表现
+     */
+    public boolean containsAudioRenditions() {
+        return mMetaData.containsKey(ATTR_AUDIO);
+    }
+
+    /**
+     * 获取音频组的id
+     */
+    public String getAudioGroupId() {
+        if (!containsAudioRenditions()) {
+            throw new IllegalStateException("no AUDIO");
+        }
+
+        return mMetaData.getString(ATTR_AUDIO);
+    }
+
+    /**
+     * 是否有多个视频表现
+     */
+    public boolean containsVideoRenditions() {
+        return mMetaData.containsKey(ATTR_VIDEO);
+    }
+
+    /**
+     * 获取视频组的id
+     */
+    public String getVideoGroupId() {
+        if (!containsSubtitleRenditions()) {
+            throw new IllegalStateException("no VIDEO");
+        }
+
+        return mMetaData.getString(ATTR_VIDEO);
+    }
+
+    /**
+     * 是否有多个字幕表现
+     */
+    public boolean containsSubtitleRenditions() {
+        return mMetaData.containsKey(ATTR_SUBTITLES);
+    }
+
+    /**
+     * 获取字幕组的id
+     */
+    public String getSubtitleGroupId() {
+        if (!containsSubtitleRenditions()) {
+            throw new IllegalStateException("no SUBTITLES");
+        }
+
+        return mMetaData.getString(ATTR_SUBTITLES);
+    }
+
+    /**
+     * 获取默认的音频表现
+     */
+    public Media getDefaultAudioRendition() {
+        if (!containsAudioRenditions()) {
+            throw new IllegalStateException("no AUDIO");
+        }
+
+        return getDefaultRendition(mAudioRenditions);
+    }
+
+    /**
+     * 获取默认的视频表现
+     */
+    public Media getDefaultVideoRendition() {
+        if (!containsVideoRenditions()) {
+            throw new IllegalStateException("no VIDEO");
+        }
+
+        return getDefaultRendition(mVideoRenditions);
+    }
+
+    /**
+     * 获取默认的字幕表现
+     */
+    public Media getDefaultSubtitleRendition() {
+        if (!containsSubtitleRenditions()) {
+            throw new IllegalStateException("no SUBTITLES");
+        }
+
+        return getDefaultRendition(mSubtitleRenditions);
+    }
+
+    /**
+     * 从表现组中获取默认的表现（一定有）
+     */
+    private static Media getDefaultRendition(Media[] renditions) {
+        for (Media rendition : renditions) {
+            if (rendition.defaultSelect()) {
+                return rendition;
+            }
+        }
+
+        throw new IllegalStateException("no DEFAULT rendition");
+    }
+
+    /**
+     * 获取指定语言的音频表现
+     */
+    public Media getAudioRenditionByLanguage(String language) {
+        if (!containsAudioRenditions()) {
+            throw new IllegalStateException("no AUDIO");
+        }
+
+        return getRenditionByLanguage(mAudioRenditions, language);
+    }
+
+    /**
+     * 获取指定语言的字幕表现
+     */
+    public Media getSubtitleRenditionByLanguage(String language) {
+        if (!containsSubtitleRenditions()) {
+            throw new IllegalStateException("no SUBTITLES");
+        }
+
+        return getRenditionByLanguage(mSubtitleRenditions, language);
+    }
+
+    /**
+     * 从表现组中获取指定语言的表现（可能没有）
+     */
+    private static Media getRenditionByLanguage(Media[] renditions, String language) {
+        for (Media rendition : renditions) {
+            if (rendition.containsLanguage()
+                    && rendition.getLanguage().equals(language)) {
+                return rendition;
+            }
+        }
+
+        return null;
     }
 }

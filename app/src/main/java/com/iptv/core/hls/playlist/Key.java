@@ -2,6 +2,7 @@ package com.iptv.core.hls.playlist;
 
 import com.iptv.core.player.MetaData;
 import com.iptv.core.utils.MalformedFormatException;
+import com.iptv.core.utils.StringUtils;
 
 import java.math.BigInteger;
 
@@ -23,56 +24,52 @@ public final class Key {
     public static final String METHOD_AES_128 = "AES-128";
     public static final String METHOD_SAMPLE_AES = "SAMPLE-AES";
 
+    private String mMethod = null;
     private MetaData mMetaData = new MetaData();
-    private String mUri = null;
 
     /**
      * 构造函数
      */
-    public Key(String attributeList) throws MalformedFormatException {
-        String[] attributes = attributeList.split(",");
-        for (int i = 0; i < attributes.length; i++) {
-            String[] result = attributes[i].split("=");
+    public Key(String[] attributes) throws MalformedFormatException {
+        for (String attribute : attributes) {
+            String[] result = attribute.split("=");
+            parseAttribute(result[0], result[1]);
+        }
 
-            if (result[0].equals(ATTR_METHOD)) {
-                mMetaData.putString(MetaData.KEY_CIPHER_METHOD, result[1]);
-            }
-            else if (result[0].equals(ATTR_IV)) {
-                String value;
-                if (result[1].startsWith("0x") || result[1].startsWith("0X")) {
-                    value = result[1].substring(2);
-                }
-                else {
-                    value = result[1];
-                }
+        if (!StringUtils.isValid(mMethod)) {
+            throw new MalformedFormatException("METHOD is required");
+        }
 
-                if (value.length() != 32) {
-                    throw new IllegalArgumentException("iv must be 128-bit");
-                }
+        if (!mMethod.equals(METHOD_NONE) && !mMetaData.containsKey(ATTR_URI)) {
+            throw new MalformedFormatException("URI is required when METHOD is not NONE");
+        }
+    }
 
-                byte[] iv = new BigInteger(value, 16).toByteArray();
-                mMetaData.putByteArray(MetaData.KEY_CIPHER_IV, iv);
-            }
-            else if (result[0].equals(ATTR_URI)) {
-                mUri = result[1];
+    /**
+     * 解析属性
+     */
+    private void parseAttribute(String name, String value) {
+        if (name.equals(ATTR_METHOD)) {
+            mMethod = value;
+        }
+        else if (name.equals(ATTR_IV)) {
+            String iv;
+            if (value.startsWith("0x") || value.startsWith("0X")) {
+                iv = value.substring(2);
             }
             else {
-                /**
-                 * not support yet
-                 */
+                iv = value;
             }
-        }
 
-        /**
-         * 检查必要参数
-         */
-        if (!mMetaData.containsKey(MetaData.KEY_CIPHER_METHOD)) {
-            throw new MalformedFormatException("method is required");
+            mMetaData.putByteArray(ATTR_IV, new BigInteger(iv, 16).toByteArray());
+        }
+        else if (name.equals(ATTR_URI)) {
+            mMetaData.putString(ATTR_URI, value);
         }
         else {
-            if (!getMethod().equals(METHOD_NONE) && (mUri == null)) {
-                throw new MalformedFormatException("uri is required when method is not NONE");
-            }
+            /**
+             * ignore
+             */
         }
     }
 
@@ -80,25 +77,42 @@ public final class Key {
      * 获取加密方式
      */
     public String getMethod() {
-        return mMetaData.getString(MetaData.KEY_CIPHER_METHOD);
+        return mMethod;
     }
 
     /**
-     * 获取密钥的初始向量
+     * 是否定义了uri
      */
-    public byte[] getInitVector() {
-        if (!mMetaData.containsKey(MetaData.KEY_CIPHER_IV)) {
-            return null;
-        }
-        else {
-            return mMetaData.getByteArray(MetaData.KEY_CIPHER_IV);
-        }
+    public boolean containsUri() {
+        return mMetaData.containsKey(ATTR_URI);
     }
 
     /**
      * 获取url
      */
     public String getUri() {
-        return mUri;
+        if (!containsUri()) {
+            throw new IllegalStateException("no URI");
+        }
+
+        return mMetaData.getString(ATTR_URI);
+    }
+
+    /**
+     * 是否定义了初始向量
+     */
+    public boolean containsInitVector() {
+        return mMetaData.containsKey(ATTR_IV);
+    }
+
+    /**
+     * 获取初始向量
+     */
+    public byte[] getInitVector() {
+        if (!containsInitVector()) {
+            throw new IllegalStateException("no IV");
+        }
+
+        return mMetaData.getByteArray(ATTR_IV);
     }
 }

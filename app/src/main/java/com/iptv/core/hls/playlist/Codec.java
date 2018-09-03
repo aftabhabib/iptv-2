@@ -8,7 +8,8 @@ final class Codec {
      * 是不是音频格式
      */
     public static boolean isAudioFormat(String format) {
-        if (format.startsWith("mp4a")) {
+        if (format.startsWith("mp4a")
+                || format.startsWith("ac-3")) {
             return true;
         }
         else {
@@ -21,7 +22,9 @@ final class Codec {
      */
     public static boolean isVideoFormat(String format) {
         if (format.startsWith("avc1")
-                || format.startsWith("mp4v")) {
+                || format.startsWith("mp4v")
+                || format.startsWith("vp09")
+                || format.startsWith("vp08")) {
             return true;
         }
         else {

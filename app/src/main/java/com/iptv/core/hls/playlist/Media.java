@@ -2,6 +2,7 @@ package com.iptv.core.hls.playlist;
 
 import com.iptv.core.player.MetaData;
 import com.iptv.core.utils.MalformedFormatException;
+import com.iptv.core.utils.StringUtils;
 
 /**
  * 媒体
@@ -23,64 +24,66 @@ public final class Media {
     public static final String TYPE_AUDIO = "AUDIO";
     public static final String TYPE_SUBTITLE = "SUBTITLES";
 
+    private String mType = null;
+    private String mGroupId = null;
     private MetaData mMetaData = new MetaData();
-    private String mUri = null;
 
     /**
      * 构造函数
      */
-    public Media(String attributeList) throws MalformedFormatException {
-        String[] attributes = attributeList.split(",");
-        for (int i = 0; i < attributes.length; i++) {
-            String[] result = attributes[i].split("=");
-
-            if (result[0].equals(ATTR_TYPE)) {
-                mMetaData.putString(MetaData.KEY_MEDIA_TYPE, result[1]);
-            }
-            else if (result[0].equals(ATTR_GROUP_ID)) {
-                mMetaData.putString(MetaData.KEY_GROUP_ID, result[1]);
-            }
-            else if (result[0].equals(ATTR_LANGUAGE)) {
-                mMetaData.putString(MetaData.KEY_LANGUAGE, result[1]);
-            }
-            else if (result[0].equals(ATTR_DEFAULT)) {
-                boolean defaultSelect;
-                if (result[1].equals("YES")) {
-                    defaultSelect = true;
-                }
-                else if (result[1].equals("NO")) {
-                    defaultSelect = false;
-                }
-                else {
-                    throw new MalformedFormatException("value shall be YES or NO");
-                }
-
-                mMetaData.putBoolean(MetaData.KEY_DEFAULT_SELECT, defaultSelect);
-            }
-            else if (result[0].equals(ATTR_URI)) {
-                mUri = result[1];
-            }
-            else {
-                /**
-                 * not support yet
-                 */
-            }
+    public Media(String[] attributes) throws MalformedFormatException {
+        for (String attribute : attributes) {
+            String[] result = attribute.split("=");
+            parseAttribute(result[0], result[1]);
         }
 
-        /**
-         * 检查必要参数
-         */
-        if (!mMetaData.containsKey(MetaData.KEY_MEDIA_TYPE)) {
-            throw new MalformedFormatException("type is required");
+        if (!StringUtils.isValid(mType) || !StringUtils.isValid(mGroupId)) {
+            throw new MalformedFormatException("TYPE and GROUP-ID is required");
+        }
+
+        if (mType.equals(TYPE_SUBTITLE) && !mMetaData.containsKey(ATTR_URI)) {
+            throw new MalformedFormatException("URI is required when TYPE is SUBTITLES");
+        }
+    }
+
+    /**
+     * 解析属性
+     */
+    private void parseAttribute(String name, String value) {
+        if (name.equals(ATTR_TYPE)) {
+            mType = value;
+        }
+        else if (name.equals(ATTR_GROUP_ID)) {
+            mGroupId = value;
+        }
+        else if (name.equals(ATTR_LANGUAGE)) {
+            mMetaData.putString(ATTR_LANGUAGE, value);
+        }
+        else if (name.equals(ATTR_DEFAULT)) {
+            mMetaData.putBoolean(ATTR_DEFAULT, getBooleanValue(value));
+        }
+        else if (name.equals(ATTR_URI)) {
+            mMetaData.putString(ATTR_URI, value);
         }
         else {
-            if (getType().equals(TYPE_SUBTITLE) && (mUri == null)) {
-                throw new MalformedFormatException("uri is required when type is SUBTITLES");
-            }
+            /**
+             * ignore
+             */
         }
+    }
 
-        if (!mMetaData.containsKey(MetaData.KEY_GROUP_ID)) {
-            throw new MalformedFormatException("group-id is required");
+    /**
+     * 获取（二值）字符串对应的布尔值
+     */
+    private static boolean getBooleanValue(String value) {
+        if (value.equals("YES")) {
+            return true;
+        }
+        else if (value.equals("NO")) {
+            return false;
+        }
+        else {
+            throw new IllegalArgumentException("only YES or NO");
         }
     }
 
@@ -88,44 +91,61 @@ public final class Media {
      * 获取类型
      */
     public String getType() {
-        return mMetaData.getString(MetaData.KEY_MEDIA_TYPE);
+        return mType;
     }
 
     /**
      * 获取所属组的ID
      */
     public String getGroupId() {
-        return mMetaData.getString(MetaData.KEY_GROUP_ID);
+        return mGroupId;
     }
 
     /**
-     * 是不是默认的选择
+     * 是否定义了uri
      */
-    public boolean defaultSelect() {
-        if (!mMetaData.containsKey(MetaData.KEY_DEFAULT_SELECT)) {
-            return false;
-        }
-        else {
-            return mMetaData.getBoolean(MetaData.KEY_DEFAULT_SELECT);
-        }
-    }
-
-    /**
-     * 获取语言
-     */
-    public String getLanguage() {
-        if (!mMetaData.containsKey(MetaData.KEY_LANGUAGE)) {
-            return "";
-        }
-        else {
-            return mMetaData.getString(MetaData.KEY_LANGUAGE);
-        }
+    public boolean containsUri() {
+        return mMetaData.containsKey(ATTR_URI);
     }
 
     /**
      * 获取url
      */
     public String getUri() {
-        return mUri;
+        if (!containsUri()) {
+            throw new IllegalStateException("no URI");
+        }
+
+        return mMetaData.getString(ATTR_URI);
+    }
+
+    /**
+     * 是不是默认的选择
+     */
+    public boolean defaultSelect() {
+        if (!mMetaData.containsKey(ATTR_DEFAULT)) {
+            return false;
+        }
+        else {
+            return mMetaData.getBoolean(ATTR_DEFAULT);
+        }
+    }
+
+    /**
+     * 是否定义了语言
+     */
+    public boolean containsLanguage() {
+        return mMetaData.containsKey(ATTR_LANGUAGE);
+    }
+
+    /**
+     * 获取语言
+     */
+    public String getLanguage() {
+        if (!containsLanguage()) {
+            throw new IllegalStateException("no LANGUAGE");
+        }
+
+        return mMetaData.getString(ATTR_LANGUAGE);
     }
 }

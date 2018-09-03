@@ -28,18 +28,20 @@ public final class Playlist {
     private static final String TAG_MEDIA = "#EXT-X-MEDIA";
     private static final String TAG_STREAM_INF = "#EXT-X-STREAM-INF";
 
+    private int mVersion = 1;
+    private int mTargetDuration = 0;
     private MetaData mMetaData = new MetaData();
 
-    private List<Media> mMediaList = new ArrayList<Media>();
+    private List<Media> mRenditionList = new ArrayList<Media>();
 
     private List<Stream> mStreamList = new ArrayList<Stream>();
     private Stream mPendingStream = null;
 
-    private Key mKey = null;
-    private long mRangeOffset = 0;
-
     private List<Segment> mSegmentList = new ArrayList<Segment>();
     private Segment mPendingSegment = null;
+
+    private Key mKey = null;
+    private long mRangeOffset = 0;
 
     /**
      * 构造函数
@@ -78,6 +80,11 @@ public final class Playlist {
                 }
             });
         }
+        else {
+            if (mTargetDuration == 0) {
+                throw new MalformedFormatException("EXT-X-TARGETDURATION is required");
+            }
+        }
     }
 
     private void parseLine(String line) throws MalformedFormatException {
@@ -98,18 +105,14 @@ public final class Playlist {
                 parseMediaSequence(value);
             }
             else if (line.equals(TAG_END_LIST)) {
-                mMetaData.putBoolean(MetaData.KEY_END_LIST, true);
+                mMetaData.putBoolean("end-of-list", true);
             }
             else if (line.startsWith(TAG_INF)) {
                 String value = line.substring(TAG_INF.length() + 1);
                 parseInf(value);
             }
             else if (line.equals(TAG_DISCONTINUITY)) {
-                if (mPendingSegment == null) {
-                    mPendingSegment = new Segment();
-                }
-
-                mPendingSegment.getMetaData().putBoolean(MetaData.KEY_DISCONTINUITY, true);
+                getPendingSegment().setDiscontinuity();
             }
             else if (line.startsWith(TAG_KEY)) {
                 String value = line.substring(TAG_KEY.length() + 1);
@@ -129,7 +132,7 @@ public final class Playlist {
             }
             else {
                 /**
-                 * not support yet
+                 * ignore
                  */
             }
         }
@@ -141,6 +144,7 @@ public final class Playlist {
 
             if (mPendingSegment != null) {
                 mPendingSegment.setUri(uri);
+                mPendingSegment.setSequenceNumber(getSequenceNumber());
 
                 if (mKey != null) {
                     mPendingSegment.setKey(mKey);
@@ -151,6 +155,23 @@ public final class Playlist {
             }
             else if (mPendingStream != null) {
                 mPendingStream.setUri(uri);
+
+                if (!mRenditionList.isEmpty()) {
+                    if (mPendingStream.containsAudioRenditions()) {
+                        mPendingStream.setAudioRenditions(getRenditionGroup(
+                                Media.TYPE_AUDIO, mPendingStream.getAudioGroupId()));
+                    }
+
+                    if (mPendingStream.containsVideoRenditions()) {
+                        mPendingStream.setVideoRenditions(getRenditionGroup(
+                                Media.TYPE_VIDEO, mPendingStream.getVideoGroupId()));
+                    }
+
+                    if (mPendingStream.containsSubtitleRenditions()) {
+                        mPendingStream.setSubtitleRenditions(getRenditionGroup(
+                                Media.TYPE_SUBTITLE, mPendingStream.getSubtitleGroupId()));
+                    }
+                }
 
                 mStreamList.add(mPendingStream);
                 mPendingStream = null;
@@ -167,65 +188,46 @@ public final class Playlist {
      * 解析播放列表的版本
      */
     private void parseVersion(String content) {
-        int version = Integer.parseInt(content);
-
-        mMetaData.putInteger(MetaData.KEY_VERSION, version);
+        mVersion = Integer.parseInt(content);
     }
 
     /**
-     * 解析播放列表中媒体片段的最大时长
+     * 解析播放列表中片段的最大时长
      */
     private void parseTargetDuration(String content) {
-        int targetDuration = Integer.parseInt(content);
-
-        mMetaData.putInteger(MetaData.KEY_TARGET_DURATION, targetDuration);
+        mTargetDuration = Integer.parseInt(content);
     }
 
     /**
-     * 解析播放列表中第一个媒体片段的序号
+     * 解析播放列表中片段的起始序号
      */
     private void parseMediaSequence(String content) {
-        int sequenceNum = Integer.parseInt(content);
-
-        mMetaData.putInteger(MetaData.KEY_MEDIA_SEQUENCE, sequenceNum);
+        mMetaData.putInteger("media-sequence", Integer.parseInt(content));
     }
 
     /**
-     * 解析播放列表中媒体片段的定义
+     * 解析播放列表中片段的定义
      */
     private void parseInf(String content) {
         float duration;
-        String title;
-
         if (content.contains(",")) {
             String[] result = content.split(",");
 
             duration = Float.parseFloat(result[0]);
-            title = result[1];
         }
         else {
             duration = Float.parseFloat(content);
-            title = null;
         }
 
-        if (mPendingSegment == null) {
-            mPendingSegment = new Segment();
-        }
-
-        mPendingSegment.getMetaData().putFloat(MetaData.KEY_SEGMENT_DURATION, duration);
-
-        if (title != null && !title.isEmpty()) {
-            mPendingSegment.getMetaData().putString(MetaData.KEY_SEGMENT_TITLE, title);
-        }
+        getPendingSegment().setDuration(duration);
     }
 
     /**
-     * 解析片段范围
+     * 解析媒体片段的数据范围
      */
     private void parseByteRange(String content) {
         long length;
         long offset;
-
         if (content.contains("@")) {
             String[] result = content.split("@");
 
@@ -237,15 +239,7 @@ public final class Playlist {
             offset = mRangeOffset;
         }
 
-        if (mPendingSegment == null) {
-            mPendingSegment = new Segment();
-        }
-
-        mPendingSegment.getMetaData().putLong(MetaData.KEY_RANGE_LENGTH, length);
-
-        if (offset >= 0) {
-            mPendingSegment.getMetaData().putLong(MetaData.KEY_RANGE_OFFSET, offset);
-        }
+        getPendingSegment().setByteRange(offset, length);
 
         mRangeOffset = offset + length;
     }
@@ -254,87 +248,146 @@ public final class Playlist {
      * 解析播放列表中密钥的定义
      */
     private void parseKey(String content) throws MalformedFormatException {
-        mKey = new Key(content);
+        String[] attributes;
+        if (content.contains(",")) {
+            attributes = content.split(",");
+        }
+        else {
+            attributes = new String[] { content };
+        }
+
+        mKey = new Key(attributes);
     }
 
     /**
      * 解析播放列表中媒体的定义
      */
     private void parseMedia(String content) throws MalformedFormatException {
-        Media media = new Media(content);
-        mMediaList.add(media);
+        String[] attributes;
+        if (content.contains(",")) {
+            attributes = content.split(",");
+        }
+        else {
+            attributes = new String[] { content };
+        }
+
+        mRenditionList.add(new Media(attributes));
     }
 
     /**
      * 解析播放列表中流的定义
      */
     private void parseStreamInf(String content) throws MalformedFormatException {
-        mPendingStream = new Stream(content, mMediaList);
+        String[] attributes;
+        if (content.contains(",")) {
+            attributes = content.split(",");
+        }
+        else {
+            attributes = new String[] { content };
+        }
+
+        mPendingStream = new Stream(attributes);
     }
 
     /**
-     * 是否包含流
+     * 获取指定的表现组
      */
-    public boolean containsStream() {
+    private Media[] getRenditionGroup(String groupId, String type) throws MalformedFormatException {
+        List<Media> group = new ArrayList<Media>();
+
+        for (Media rendition : mRenditionList) {
+            if (rendition.getType().equals(type)
+                    && rendition.getGroupId().equals(groupId)) {
+                group.add(rendition);
+            }
+        }
+
+        if (group.isEmpty()) {
+            throw new MalformedFormatException("no " + type + "renditions in group " + groupId);
+        }
+
+        return group.toArray(new Media[group.size()]);
+    }
+
+    /**
+     * 获取当前片段
+     */
+    private Segment getPendingSegment() {
+        if (mPendingSegment == null) {
+            mPendingSegment = new Segment();
+        }
+
+        return mPendingSegment;
+    }
+
+    /**
+     * 获取当前片段的序号
+     */
+    private int getSequenceNumber() {
+        int mediaSequence;
+        if (mMetaData.containsKey("media-sequence")) {
+            mediaSequence = mMetaData.getInteger("media-sequence");
+        }
+        else {
+            mediaSequence = 0;
+        }
+
+        return mediaSequence + mSegmentList.size();
+    }
+
+    /**
+     * 是不是主播放列表
+     */
+    public boolean isMasterPlaylist() {
         return !mStreamList.isEmpty();
     }
 
     /**
-     * 获取适应指定带宽的流
+     * 获取所有的流
      */
-    public Stream getStreamByBandwidth(int bandwidth) {
-        int index;
-
-        if (bandwidth > 0) {
-            /**
-             * 带宽已知
-             */
-            for (index = 0; index < mStreamList.size(); index++) {
-                if (mStreamList.get(index).getBandwidth() > bandwidth) {
-                    break;
-                }
-            }
-
-            if (index > 0) {
-                index -= 1;
-            }
-        }
-        else {
-            /**
-             * 带宽未知
-             */
-            index = mStreamList.size() - 1;
+    public Stream[] getStreams() {
+        if (!isMasterPlaylist()) {
+            throw new IllegalStateException("only in MasterPlaylist");
         }
 
-        return mStreamList.get(index);
+        return mStreamList.toArray(new Stream[mStreamList.size()]);
     }
 
     /**
-     * 是否包含片段
+     * 获取播放列表中片段的最大时长
      */
-    public boolean containsSegment() {
-        return !mSegmentList.isEmpty();
+    public int getTargetDuration() {
+        if (isMasterPlaylist()) {
+            throw new IllegalStateException("only in MediaPlaylist");
+        }
+
+        return mTargetDuration;
     }
 
     /**
-     * 获取所有的媒体片段
+     * 获取所有的片段
      */
     public Segment[] getSegments() {
-        if (!containsSegment()) {
-            throw new IllegalStateException("not media playlist");
+        if (isMasterPlaylist()) {
+            throw new IllegalStateException("only in MediaPlaylist");
         }
 
         return mSegmentList.toArray(new Segment[mSegmentList.size()]);
     }
 
     /**
-     * 获取片段的起始序号
+     * 是否还有更多的片段
      */
-    public int getMediaSequence() {
-        if (!mMetaData.containsKey(MetaData.KEY_MEDIA_SEQUENCE)) {
-            return 0;
+    public boolean endOfList() {
+        if (isMasterPlaylist()) {
+            throw new IllegalStateException("only in MediaPlaylist");
         }
 
-        return mMetaData.getInteger(MetaData.KEY_MEDIA_SEQUENCE);
+        if (!mMetaData.containsKey("end-of-list")) {
+            return false;
+        }
+        else {
+            return mMetaData.getBoolean("end-of-list");
+        }
     }
 }
