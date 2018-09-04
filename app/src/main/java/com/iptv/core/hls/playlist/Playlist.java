@@ -29,6 +29,8 @@ public final class Playlist {
     private static final String TAG_MEDIA = "#EXT-X-MEDIA";
     private static final String TAG_STREAM_INF = "#EXT-X-STREAM-INF";
 
+    private int mHashCode;
+
     private int mVersion = 1;
     private int mTargetDuration = 0;
     private MetaData mMetaData = new MetaData();
@@ -49,6 +51,8 @@ public final class Playlist {
      * 构造函数
      */
     public Playlist(String content) throws MalformedFormatException {
+        mHashCode = content.hashCode();
+
         String[] lines = IOUtils.lines(content);
         if (lines == null) {
             throw new MalformedFormatException("");
@@ -420,5 +424,10 @@ public final class Playlist {
         else {
             return mMetaData.getBoolean("end-of-list");
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return mHashCode;
     }
 }
