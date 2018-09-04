@@ -39,20 +39,24 @@ final class AESCipher {
     }
 
     /**
-     * 更新密钥
+     * 更新
      */
-    public void updateKey(String url) {
-        if (!isKeyChanged(url)) {
-            return;
+    public void update(String url, byte[] iv) {
+        if (isKeyChanged(url) || isInitVectorChanged(iv)) {
+            mCipher = null;
+
+            if (isKeyChanged(url)) {
+                mUrl = url;
+                mKey = null;
+            }
+
+            if (isInitVectorChanged(iv)) {
+                mInitVector = iv;
+            }
         }
-
-        mUrl = url;
-
-        /**
-         * 重新获取key
-         */
-        mKey = null;
-        mCipher = null;
+        else {
+            Log.d(TAG, "url and iv are not changed");
+        }
     }
 
     /**
@@ -60,22 +64,6 @@ final class AESCipher {
      */
     private boolean isKeyChanged(String url) {
         return !mUrl.equals(url);
-    }
-
-    /**
-     * 更新初始向量
-     */
-    public void updateInitVector(byte[] iv) {
-        if (!isInitVectorChanged(iv)) {
-            return;
-        }
-
-        mInitVector = iv;
-
-        /**
-         * 复用之前的key
-         */
-        mCipher = null;
     }
 
     /**
