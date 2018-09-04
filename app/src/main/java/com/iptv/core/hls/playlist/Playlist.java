@@ -389,14 +389,14 @@ public final class Playlist {
     }
 
     /**
-     * 获取播放列表中片段的最大时长
+     * 获取播放列表中片段的最大时长（毫秒）
      */
     public int getTargetDuration() {
         if (isMasterPlaylist()) {
             throw new IllegalStateException("only in MediaPlaylist");
         }
 
-        return mTargetDuration;
+        return mTargetDuration * 1000;
     }
 
     /**
@@ -424,6 +424,22 @@ public final class Playlist {
         else {
             return mMetaData.getBoolean("end-of-list");
         }
+    }
+
+    /**
+     * 播放列表的总时长
+     */
+    public float getTotalDuration() {
+        if (isMasterPlaylist()) {
+            throw new IllegalStateException("only in MediaPlaylist");
+        }
+
+        int totalDuration = 0;
+        for (Segment segment : mSegmentList) {
+            totalDuration += segment.getDuration();
+        }
+
+        return totalDuration;
     }
 
     @Override

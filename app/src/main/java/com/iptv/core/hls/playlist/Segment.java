@@ -74,10 +74,10 @@ public final class Segment {
     }
 
     /**
-     * 获取时长
+     * 获取时长（毫秒）
      */
-    public float getDuration() {
-        return mDuration;
+    public int getDuration() {
+        return (int)(mDuration * 1000);
     }
 
     /**
