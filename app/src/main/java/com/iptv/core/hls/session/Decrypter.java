@@ -9,12 +9,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
-import java.security.Key;
-import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
+import java.util.Map;
 
 import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -27,8 +25,10 @@ final class Decrypter {
     private static final String TAG = "Decrypter";
 
     private String mUrl;
-    private byte[] mKey;
     private byte[] mInitVector;
+
+    private byte[] mKey = null;
+    private Cipher mCipher = null;
 
     /**
      * 构造函数
@@ -36,36 +36,114 @@ final class Decrypter {
     public Decrypter(String url, byte[] iv) throws IOException {
         mUrl = url;
         mInitVector = iv;
-
-        mKey = loadKey();
-        if (mKey == null) {
-            throw new IOException("load key fail");
-        }
     }
 
     /**
-     * 加载密钥数据
+     * 更新密钥
      */
-    private byte[] loadKey() {
-        byte[] key = null;
+    public void updateKey(String url) {
+        if (!isKeyChanged(url)) {
+            return;
+        }
+
+        mUrl = url;
+
+        /**
+         * 重新获取key
+         */
+        mKey = null;
+        mCipher = null;
+    }
+
+    /**
+     * 密钥是否一致
+     */
+    private boolean isKeyChanged(String url) {
+        return !mUrl.equals(url);
+    }
+
+    /**
+     * 更新初始向量
+     */
+    public void updateInitVector(byte[] iv) {
+        if (!isInitVectorChanged(iv)) {
+            return;
+        }
+
+        mInitVector = iv;
+
+        /**
+         * 复用之前的key
+         */
+        mCipher = null;
+    }
+
+    /**
+     * 初始向量是否一致
+     */
+    private boolean isInitVectorChanged(byte[] iv) {
+        return !Arrays.equals(mInitVector, iv);
+    }
+
+    /**
+     * 获取cipher
+     */
+    public Cipher getCipher() {
+        if (mCipher == null) {
+            if (mKey == null) {
+                mKey = fetch(mUrl, null);
+                if (mKey == null) {
+                    Log.e(TAG,"fetch AES key fail");
+                    return null;
+                }
+            }
+
+            try {
+                mCipher = createCipher();
+            }
+            catch (GeneralSecurityException e) {
+                Log.e(TAG, "create cipher fail, " + e.getMessage());
+            }
+        }
+
+        return mCipher;
+    }
+
+    /**
+     * 创建cipher
+     */
+    private Cipher createCipher() throws GeneralSecurityException {
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+        cipher.init(Cipher.DECRYPT_MODE,
+                new SecretKeySpec(mKey, "AES"),
+                new IvParameterSpec(mInitVector));
+
+        return cipher;
+    }
+
+    /**
+     * 获取数据
+     */
+    private static byte[] fetch(String url, Map<String, String> properties) {
+        byte[] data = null;
 
         Response response = null;
         try {
-            response = OkHttp.get(mUrl, null);
+            response = OkHttp.get(url, properties);
 
             if (response.isSuccessful()) {
                 InputStream input = response.body().byteStream();
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
                 IOUtils.save(input, output);
 
-                key = output.toByteArray();
+                data = output.toByteArray();
             }
             else {
-                Log.e(TAG, "GET " + mUrl + " fail, " + response.message());
+                Log.e(TAG, "GET " + url + " fail, " + response.message());
             }
         }
         catch (IOException e) {
-            Log.e(TAG, "read " + mUrl + " error");
+            Log.e(TAG, "read " + url + " error");
         }
         finally {
             /**
@@ -76,53 +154,6 @@ final class Decrypter {
             }
         }
 
-        return key;
-    }
-
-    /**
-     * 更新密钥
-     */
-    public void updateKey(String url, byte[] iv) throws IOException {
-        if (mUrl.equals(url) && isInitVectorChanged(iv)) {
-            return;
-        }
-
-        if (!mUrl.equals(url)) {
-            mKey = loadKey();
-            if (mKey == null) {
-                throw new IOException("load key fail");
-            }
-        }
-
-        if (!isInitVectorChanged(iv)) {
-            mInitVector = iv;
-        }
-    }
-
-    /**
-     * 密钥的初始向量是否一致
-     */
-    private boolean isInitVectorChanged(byte[] iv) {
-        return Arrays.hashCode(iv) == Arrays.hashCode(mKey);
-    }
-
-    /**
-     * 解密
-     */
-    public InputStream decrypt(InputStream input) throws GeneralSecurityException {
-        return new CipherInputStream(input, createCipher());
-    }
-
-    /**
-     * 创建解密密钥
-     */
-    private Cipher createCipher() throws GeneralSecurityException {
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
-
-        Key cipherKey = new SecretKeySpec(mKey, "AES");
-        AlgorithmParameterSpec cipherIV = new IvParameterSpec(mInitVector);
-        cipher.init(Cipher.DECRYPT_MODE, cipherKey, cipherIV);
-
-        return cipher;
+        return data;
     }
 }
