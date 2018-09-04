@@ -21,8 +21,8 @@ import okhttp3.Response;
 /**
  * 解密
  */
-final class Decrypter {
-    private static final String TAG = "Decrypter";
+final class AESCipher {
+    private static final String TAG = "AESCipher";
 
     private String mUrl;
     private byte[] mInitVector;
@@ -33,7 +33,7 @@ final class Decrypter {
     /**
      * 构造函数
      */
-    public Decrypter(String url, byte[] iv) throws IOException {
+    public AESCipher(String url, byte[] iv) {
         mUrl = url;
         mInitVector = iv;
     }
