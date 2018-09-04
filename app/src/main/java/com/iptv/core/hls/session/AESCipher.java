@@ -19,7 +19,7 @@ import javax.crypto.spec.SecretKeySpec;
 import okhttp3.Response;
 
 /**
- * 解密
+ * AES解密密钥
  */
 final class AESCipher {
     private static final String TAG = "AESCipher";
