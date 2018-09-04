@@ -1,261 +1,214 @@
 package com.iptv.core.hls.session;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
 
-import com.iptv.core.hls.playlist.MediaSegment;
 import com.iptv.core.hls.playlist.Playlist;
-import com.iptv.core.utils.OkHttp;
+import com.iptv.core.hls.playlist.Segment;
+import com.iptv.core.player.extractor.MPEG2TSExtractor;
+import com.iptv.core.player.source.HttpSource;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
+import javax.crypto.Cipher;
 
-import okhttp3.Request;
-import okhttp3.Response;
-
-final class PlaylistSource extends Handler {
+/**
+ * 播放列表描述的媒体源
+ */
+final class PlaylistSource {
     private static final String TAG = "PlaylistSource";
 
+    /**
+     * 掩码
+     */
+    public static final int STREAM_AUDIO = 1;
+    public static final int STREAM_VIDEO = 1 << 1;
+    public static final int STREAM_SUBTITLE = 1 << 2;
+
+    /**
+     * 消息类型
+     */
     private static final int MSG_LOAD_PLAYLIST = 0;
-    private static final int MSG_LOAD_MEDIA_SEGMENT = 1;
+    private static final int MSG_LOAD_SEGMENT = 1;
+    private static final int MSG_RELOAD_PLAYLIST = 2;
 
-    private Listener mListener;
+    private int mStreamMask;
 
-    private String mUrl;
-    private Map<String, String> mProperties;
+    private String mUrl = null;
+    private Playlist mPlaylist = null;
 
-    private Playlist mPlaylist;
-    private Map<String, byte[]> mAESKeyCache;
+    private Segment[] mSegments = null;
+    private int mPlayIndex = -1;
 
-    public PlaylistSource(Looper looper, Listener listener,
-                          String url, Map<String, String> properties) {
-        super(looper);
+    private AESCipher mAESCipher = null;
+    private MPEG2TSExtractor mExtractor = null;
 
-        mListener = listener;
+    /**
+     * 构造函数
+     */
+    public PlaylistSource(int streamMask) {
+        mStreamMask = streamMask;
+    }
 
+    /**
+     * 开始
+     */
+    public void start(String url, Playlist playlist) {
         mUrl = url;
-        mProperties = properties;
+        sendMessage(MSG_LOAD_PLAYLIST, playlist);
     }
 
-    public void loadPlaylist() {
-        Message msg = obtainMessage();
-        msg.what = MSG_LOAD_PLAYLIST;
+    /**
+     * 停止
+     */
+    public void stop() {
 
-        msg.sendToTarget();
     }
 
-    public void loadMediaSegment() {
-        Message msg = obtainMessage();
-        msg.what = MSG_LOAD_MEDIA_SEGMENT;
-
-        msg.sendToTarget();
+    /**
+     * 发送消息
+     */
+    private void sendMessage(int what) {
+        sendMessage(what, null);
     }
 
-    @Override
-    public void handleMessage(Message msg) {
-        switch (msg.what) {
-            case MSG_LOAD_PLAYLIST: {
-                onLoadPlaylist();
-
-                break;
-            }
-            case MSG_LOAD_MEDIA_SEGMENT: {
-                onLoadMediaSegment();
-
-                break;
-            }
-            default: {
-                break;
-            }
-        }
+    /**
+     * 发送消息
+     */
+    private void sendMessage(int what, Object obj) {
+        sendMessage(what, obj, 0);
     }
 
-    private void onLoadPlaylist() {
-        Request request = OkHttp.createGetRequest(mUrl, mProperties);
-        Response response = null;
-        try {
-            response = OkHttp.getClient().newCall(request).execute();
-            if (response.isSuccessful()) {
-                Playlist playlist = Playlist.parse(response.body().string());
-                if (playlist.containsVariantStream()) {
-                    /**
-                     * MasterPlaylist
-                     */
-                    mListener.onLoadMasterPlaylist(playlist);
-                }
-                else if (playlist.containsMediaSegment()) {
-                    /**
-                     * MediaPlaylist
-                     */
-                    mPlaylist = playlist;
-                    mListener.onLoadMediaPlaylist(this);
-                }
-                else {
-                    Log.e(TAG, "playlist is not supported");
-                }
-            }
-            else {
-                Log.e(TAG, "access " + mUrl + " fail, " + response.message());
-
-                response.close();
-            }
-        }
-        catch (IOException e) {
-            Log.e(TAG, "network problems, " + e.getMessage());
-
-            if (response != null) {
-                response.close();
-            }
-        }
-    }
-
-    private void onLoadMediaSegment() {
-        MediaSegment segment = mPlaylist.removeMediaSegment();
-
-        Map<String, String> properties;
-        if (segment.containsRange()) {
-            properties = new HashMap<String, String>(mProperties);
-            properties.put("Range", segment.getRangeValue());
-        }
-        else {
-            properties = mProperties;
-        }
-
-        byte[] data = download(Utils.makeUrl(mUrl, segment.getUri()), properties);
-        if (data == null) {
-            /**
-             * FIXME：下载失败
-             */
-        }
-        else {
-            if (segment.isEncrypted()) {
-                /**
-                 * MediaSegment是加密的
-                 */
-                if (!segment.isMediaSampleEncrypted()) {
-                    /**
-                     * 全加密
-                     */
-                }
-                else {
-                    /**
-                     * TODO：MediaSample加密，暂不支持
-                     */
-                }
-            }
-
-            /**
-             * Extractor
-             */
-        }
-    }
-
-    private byte[] decryptSegment(byte[] encryptedData, MediaSegment segment) {
-        if (mAESKeyCache == null) {
-            mAESKeyCache = new HashMap<String, byte[]>();
-        }
-
-        byte[] key;
-        if (!mAESKeyCache.containsKey(segment.getKeyUri())) {
-            /**
-             * download key and cache
-             */
-            key = download(Utils.makeUrl(mUrl, segment.getKeyUri()), mProperties);
-            if (key == null) {
-                /**
-                 * FIXME：下载失败
-                 */
-            }
-            else {
-                mAESKeyCache.put(segment.getKeyUri(), key);
-            }
-        }
-        else {
-            key = mAESKeyCache.get(segment.getKeyUri());
-        }
-
-        if (!segment.isMediaSampleEncrypted()) {
-            /**
-             * MediaSegment是AES-128加密
-             */
-            ByteArrayInputStream input = new ByteArrayInputStream(encryptedData);
-
-            InputStream decryptInput = new AESDecryptInputStream(input, key, segment.getKeyInitVector());
-        }
-        else {
-            /**
-             * TODO：MediaSample是AES-128加密
-             */
-        }
-    }
-
-    private static byte[] download(String url, Map<String, String> properties) {
-        byte[] data = null;
-
-        Request request = OkHttp.createGetRequest(url, properties);
-        Response response = null;
-        try {
-            response = OkHttp.getClient().newCall(request).execute();
-            if (response.isSuccessful()) {
-                ByteArrayOutputStream output = new ByteArrayOutputStream();
-
-                InputStream input = response.body().byteStream();
-                save(input, output);
-                input.close();
-
-                data = output.toByteArray();
-            }
-            else {
-                Log.e(TAG, "access " + url + " fail, " + response.message());
-
-                response.close();
-            }
-        }
-        catch (IOException e) {
-            Log.e(TAG, "network problems, " + e.getMessage());
-
-            if (response != null) {
-                response.close();
-            }
-        }
-
-        return data;
-    }
-
-    private static void save(InputStream input, OutputStream output) throws IOException {
-        byte[] buf = new byte[1024];
-
-        while (true) {
-            int bytesRead = input.read(buf);
-            if (bytesRead == -1) {
-                break;
-            }
-
-            output.write(buf, 0, bytesRead);
-        }
-    }
-
-    public interface Listener {
+    /**
+     * 发送消息
+     */
+    private void sendMessage(int what, Object obj, long delay) {
         /**
-         * 加载了MasterPlaylist
+         *
          */
-        void onLoadMasterPlaylist(Playlist playlist);
+    }
+
+    /**
+     * 加载播放列表
+     */
+    private void onLoadPlaylist(Playlist playlist) {
+        if (playlist == null) {
+            mPlaylist = Utils.loadPlaylist(mUrl, null);
+            if (mPlaylist == null) {
+                Log.e(TAG, "load playlist fail");
+                return;
+            }
+        }
+        else {
+            /**
+             * 外部传入了播放列表，避免二次加载
+             */
+            mPlaylist = playlist;
+        }
+
+        mSegments = mPlaylist.getSegments();
+
+        if (!mPlaylist.endOfList()) {
+            /**
+             * starts less than three target durations from the end of the Playlist file
+             */
+            int duration = 0;
+            for (int i = mSegments.length - 1; i >= 0; i--) {
+                duration += mSegments[i].getDuration();
+
+                if (duration >= 3 * mPlaylist.getTargetDuration()) {
+                    mPlayIndex = i + 1;
+                    break;
+                }
+            }
+
+            sendMessage(MSG_RELOAD_PLAYLIST, mPlaylist.getTargetDuration());
+        }
+        else {
+            mPlayIndex = 0;
+        }
+
+        sendMessage(MSG_LOAD_SEGMENT);
+    }
+
+    /**
+     * 响应加载片段
+     */
+    private void onLoadSegment() {
+        if (mPlayIndex == mSegments.length) {
+            Log.w(TAG, "no more segments, retry later");
+            sendMessage(MSG_LOAD_SEGMENT, 1000);
+            return;
+        }
+
+        Segment segment = mSegments[mPlayIndex++];
+        extractSegment(segment);
 
         /**
-         * 加载了MediaPlaylist
+         *
          */
-        void onLoadMediaPlaylist(PlaylistSource source);
+    }
 
-        /**
-         * 加载了MediaSegment
-         */
-        void onLoadMediaSegment(int size, int elapsedTime);
+    /**
+     * 解析片段
+     */
+    private void extractSegment(Segment segment) {
+        HttpSource source = new HttpSource(Utils.makeUrl(mUrl, segment.getUri()), null);
+
+        if (segment.isEncrypted()) {
+            String url = Utils.makeUrl(mUrl, segment.getKeyUri());
+            byte[] iv = segment.getKeyInitVector();
+
+            if (mAESCipher == null) {
+                mAESCipher = new AESCipher(url, iv);
+            }
+            else {
+                mAESCipher.update(url, iv);
+            }
+
+            Cipher cipher = mAESCipher.getCipher();
+            if (cipher == null) {
+                Log.w(TAG, "get segment decrypt cipher fail");
+                return;
+            }
+
+            source.setDecryptCipher(cipher);
+        }
+
+        if (!source.connect()) {
+            /**
+             * skip, try next
+             */
+            return;
+        }
+
+        if (mExtractor == null) {
+            mExtractor = new MPEG2TSExtractor();
+        }
+        mExtractor.setDataSource(source);
+    }
+
+    /**
+     * 响应重新加载播放列表
+     */
+    private void onReloadPlaylist() {
+        Playlist playlist = Utils.loadPlaylist(mUrl, null);
+        if (playlist == null) {
+            Log.e(TAG, "reload playlist fail");
+            return;
+        }
+
+        if (playlist.hashCode() == mPlaylist.hashCode()) {
+            /**
+             * playlist not update yet, retry
+             */
+            sendMessage(MSG_RELOAD_PLAYLIST, mPlaylist.getTargetDuration() / 2);
+        }
+        else {
+            /**
+             *
+             */
+
+            if (!mPlaylist.endOfList()) {
+                sendMessage(MSG_RELOAD_PLAYLIST, mPlaylist.getTargetDuration());
+            }
+        }
     }
 }
