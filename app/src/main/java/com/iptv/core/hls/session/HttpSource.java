@@ -1,4 +1,4 @@
-package com.iptv.core.player.source;
+package com.iptv.core.hls.session;
 
 import android.util.Log;
 
