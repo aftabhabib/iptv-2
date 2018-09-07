@@ -82,11 +82,17 @@ public final class Key {
             mMetaData.putString(ATTR_KEY_FORMAT, value);
         }
         else if (name.equals(ATTR_KEY_FORMAT_VERSION)) {
-            String[] strVersions = value.split("/");
+            int[] versions;
+            if (value.contains("/")) {
+                String[] results = value.split("/");
 
-            int[] versions = new int[strVersions.length];
-            for (int i = 0; i < strVersions.length; i++) {
-                versions[i] = Integer.parseInt(strVersions[i]);
+                versions = new int[results.length];
+                for (int i = 0; i < results.length; i++) {
+                    versions[i] = Integer.parseInt(results[i]);
+                }
+            }
+            else {
+                versions = new int[] { Integer.parseInt(value) };
             }
 
             mMetaData.putIntegerArray(ATTR_KEY_FORMAT_VERSION, versions);
