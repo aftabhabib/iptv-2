@@ -9,7 +9,8 @@ final class Codec {
      */
     public static boolean isAudioFormat(String format) {
         if (format.startsWith("mp4a")
-                || format.startsWith("ac-3")) {
+                || format.startsWith("ac-3")
+                || format.startsWith("ec-3")) {
             return true;
         }
         else {
