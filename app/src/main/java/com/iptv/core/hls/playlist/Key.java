@@ -60,20 +60,25 @@ public final class Key {
     /**
      * 解析属性
      */
-    private void parseAttribute(String name, String value) {
+    private void parseAttribute(String name, String value) throws MalformedFormatException {
         if (name.equals(ATTR_METHOD)) {
             mMetaData.putString(ATTR_METHOD, value);
         }
         else if (name.equals(ATTR_IV)) {
-            String iv;
+            String hexValue;
             if (value.startsWith("0x") || value.startsWith("0X")) {
-                iv = value.substring(2);
+                hexValue = value.substring(2);
             }
             else {
-                iv = value;
+                hexValue = value;
             }
 
-            mMetaData.putByteArray(ATTR_IV, new BigInteger(iv, 16).toByteArray());
+            byte[] iv = new BigInteger(hexValue, 16).toByteArray();
+            if (iv.length != 16) {
+                throw new MalformedFormatException("iv should be 128-bit");
+            }
+
+            mMetaData.putByteArray(ATTR_IV, iv);
         }
         else if (name.equals(ATTR_URI)) {
             mMetaData.putString(ATTR_URI, value);
@@ -112,11 +117,18 @@ public final class Key {
     }
 
     /**
-     * 获取url
+     * 是否定义了uri
+     */
+    public boolean containsUri() {
+        return mMetaData.containsKey(ATTR_URI);
+    }
+
+    /**
+     * 获取uri
      */
     public String getUri() {
-        if (getMethod().equals(METHOD_NONE)) {
-            throw new IllegalStateException("");
+        if (!containsUri()) {
+            throw new IllegalStateException("no URI attribute");
         }
 
         return mMetaData.getString(ATTR_URI);
