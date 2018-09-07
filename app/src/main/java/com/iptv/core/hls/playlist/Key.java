@@ -2,7 +2,6 @@ package com.iptv.core.hls.playlist;
 
 import com.iptv.core.player.MetaData;
 import com.iptv.core.utils.MalformedFormatException;
-import com.iptv.core.utils.StringUtils;
 
 import java.math.BigInteger;
 
@@ -16,6 +15,8 @@ public final class Key {
     private static final String ATTR_METHOD = "METHOD";
     private static final String ATTR_IV = "IV";
     private static final String ATTR_URI = "URI";
+    private static final String ATTR_KEY_FORMAT = "KEYFORMAT";
+    private static final String ATTR_KEY_FORMAT_VERSION = "KEYFORMATVERSIONS";
 
     /**
      * 加密方式
@@ -24,7 +25,11 @@ public final class Key {
     public static final String METHOD_AES_128 = "AES-128";
     public static final String METHOD_SAMPLE_AES = "SAMPLE-AES";
 
-    private String mMethod = null;
+    /**
+     * 密钥格式
+     */
+    public static final String FORMAT_IDENTITY = "identity";
+
     private MetaData mMetaData = new MetaData();
 
     /**
@@ -36,12 +41,19 @@ public final class Key {
             parseAttribute(result[0], result[1]);
         }
 
-        if (!StringUtils.isValid(mMethod)) {
+        if (!mMetaData.containsKey(ATTR_METHOD)) {
             throw new MalformedFormatException("METHOD is required");
         }
 
-        if (!mMethod.equals(METHOD_NONE) && !mMetaData.containsKey(ATTR_URI)) {
-            throw new MalformedFormatException("URI is required when METHOD is not NONE");
+        if (getMethod().equals(METHOD_NONE)) {
+            if (mMetaData.size() > 1) {
+                throw new MalformedFormatException("If METHOD is NONE, no other attributes");
+            }
+        }
+        else {
+            if (!mMetaData.containsKey(ATTR_URI)) {
+                throw new MalformedFormatException("if METHOD is not NONE, URI is required");
+            }
         }
     }
 
@@ -50,7 +62,7 @@ public final class Key {
      */
     private void parseAttribute(String name, String value) {
         if (name.equals(ATTR_METHOD)) {
-            mMethod = value;
+            mMetaData.putString(ATTR_METHOD, value);
         }
         else if (name.equals(ATTR_IV)) {
             String iv;
@@ -66,6 +78,19 @@ public final class Key {
         else if (name.equals(ATTR_URI)) {
             mMetaData.putString(ATTR_URI, value);
         }
+        else if (name.equals(ATTR_KEY_FORMAT)) {
+            mMetaData.putString(ATTR_KEY_FORMAT, value);
+        }
+        else if (name.equals(ATTR_KEY_FORMAT_VERSION)) {
+            String[] strVersions = value.split("/");
+
+            int[] versions = new int[strVersions.length];
+            for (int i = 0; i < strVersions.length; i++) {
+                versions[i] = Integer.parseInt(strVersions[i]);
+            }
+
+            mMetaData.putIntegerArray(ATTR_KEY_FORMAT_VERSION, versions);
+        }
         else {
             /**
              * ignore
@@ -77,22 +102,15 @@ public final class Key {
      * 获取加密方式
      */
     public String getMethod() {
-        return mMethod;
-    }
-
-    /**
-     * 是否定义了uri
-     */
-    public boolean containsUri() {
-        return mMetaData.containsKey(ATTR_URI);
+        return mMetaData.getString(ATTR_METHOD);
     }
 
     /**
      * 获取url
      */
     public String getUri() {
-        if (!containsUri()) {
-            throw new IllegalStateException("no URI");
+        if (getMethod().equals(METHOD_NONE)) {
+            throw new IllegalStateException("");
         }
 
         return mMetaData.getString(ATTR_URI);
@@ -114,5 +132,35 @@ public final class Key {
         }
 
         return mMetaData.getByteArray(ATTR_IV);
+    }
+
+    /**
+     * 获取密钥格式
+     */
+    public String getKeyFormat() {
+        if (!mMetaData.containsKey(ATTR_KEY_FORMAT)) {
+            /**
+             * implicit value
+             */
+            return FORMAT_IDENTITY;
+        }
+        else {
+            return mMetaData.getString(ATTR_KEY_FORMAT);
+        }
+    }
+
+    /**
+     * 获取密钥格式的版本
+     */
+    public int[] getKeyFormatVersions() {
+        if (!mMetaData.containsKey(ATTR_KEY_FORMAT_VERSION)) {
+            /**
+             * if it is not present, its value is considered to be "1"
+             */
+            return new int[] { 1 };
+        }
+        else {
+            return mMetaData.getIntegerArray(ATTR_KEY_FORMAT_VERSION);
+        }
     }
 }
