@@ -134,7 +134,7 @@ public final class Key {
      */
     public byte[] getInitVector() {
         if (!containsInitVector()) {
-            throw new IllegalStateException("no IV");
+            throw new IllegalStateException("no IV attribute");
         }
 
         return mMetaData.getByteArray(ATTR_IV);
