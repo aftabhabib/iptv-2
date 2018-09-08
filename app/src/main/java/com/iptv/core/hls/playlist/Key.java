@@ -263,6 +263,11 @@ public final class Key {
                 /**
                  * ignore
                  */
+                continue;
+            }
+
+            if (builder.length() > 0) {
+                builder.append(",");
             }
         }
 

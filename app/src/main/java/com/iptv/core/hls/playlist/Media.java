@@ -524,6 +524,11 @@ public final class Media {
                 /**
                  * ignore
                  */
+                continue;
+            }
+
+            if (builder.length() > 0) {
+                builder.append(",");
             }
         }
 
