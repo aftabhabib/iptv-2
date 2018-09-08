@@ -1,7 +1,6 @@
 package com.iptv.core.hls.playlist;
 
 import com.iptv.core.player.MetaData;
-import com.iptv.core.utils.MalformedFormatException;
 
 /**
  * 密钥
@@ -40,19 +39,9 @@ public final class Key {
     }
 
     /**
-     * 构造函数
-     */
-    public Key(String[] attributes) throws MalformedFormatException {
-        for (String attribute : attributes) {
-            String[] result = attribute.split("=");
-            setAttribute(result[0], result[1]);
-        }
-    }
-
-    /**
      * 设置属性
      */
-    private void setAttribute(String name, String value) throws MalformedFormatException {
+    public void setAttribute(String name, String value) {
         if (name.equals(ATTR_METHOD)) {
             setMethod(AttributeValue.readEnumeratedString(value));
         }
@@ -220,9 +209,9 @@ public final class Key {
     }
 
     /**
-     * 获取属性列表
+     * 生成属性列表
      */
-    public String getAttributeList() {
+    public String makeAttributeList() {
         StringBuilder builder = new StringBuilder();
 
         for (String key : mMetaData.keySet()) {
