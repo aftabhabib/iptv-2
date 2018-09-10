@@ -215,6 +215,13 @@ public final class Key {
         StringBuilder builder = new StringBuilder();
 
         for (String key : mMetaData.keySet()) {
+            /**
+             * attribute之间通过“,”分隔
+             */
+            if (builder.length() > 0) {
+                builder.append(",");
+            }
+
             if (key.equals(ATTR_METHOD)) {
                 String method = getMethod();
 
@@ -263,11 +270,6 @@ public final class Key {
                 /**
                  * ignore
                  */
-                continue;
-            }
-
-            if (builder.length() > 0) {
-                builder.append(",");
             }
         }
 
