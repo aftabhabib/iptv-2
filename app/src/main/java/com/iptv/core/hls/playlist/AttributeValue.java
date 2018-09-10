@@ -9,31 +9,31 @@ class AttributeValue {
     /**
      * “是/否”
      */
-    public static final String ENUM_STRING_YES = "YES";
-    public static final String ENUM_STRING_NO = "NO";
+    static final String ENUM_STRING_YES = "YES";
+    static final String ENUM_STRING_NO = "NO";
     /**
      * ”没有“
      */
-    public static final String ENUM_STRING_NONE = "NONE";
+    static final String ENUM_STRING_NONE = "NONE";
 
     /**
      * 读十进制的整数
      */
-    public static int readDecimalInteger(String attributeValue) {
+    static int readDecimalInteger(String attributeValue) {
         return Integer.parseInt(attributeValue);
     }
 
     /**
      * 写十进制的整数
      */
-    public static String writeDecimalInteger(int content) {
+    static String writeDecimalInteger(int content) {
         return String.valueOf(content);
     }
 
     /**
      * 读十六进制的序列
      */
-    public static byte[] readHexadecimalSequence(String attributeValue) {
+    static byte[] readHexadecimalSequence(String attributeValue) {
         if (!attributeValue.startsWith("0x")
                 && !attributeValue.startsWith("0X")) {
             throw new IllegalArgumentException("bad value");
@@ -45,7 +45,7 @@ class AttributeValue {
     /**
      * 写十六进制的序列
      */
-    public static String writeHexadecimalSequence(byte[] content) {
+    static String writeHexadecimalSequence(byte[] content) {
         StringBuffer buffer = new StringBuffer("0x");
 
         for (int i = 0; i < content.length; i++) {
@@ -64,21 +64,21 @@ class AttributeValue {
     /**
      * 读十进制的浮点数
      */
-    public static float readDecimalFloatingPoint(String attributeValue) {
+    static float readDecimalFloatingPoint(String attributeValue) {
         return Float.parseFloat(attributeValue);
     }
 
     /**
      * 写十进制的浮点数
      */
-    public static String writeDecimalFloatingPoint(float content) {
+    static String writeDecimalFloatingPoint(float content) {
         return String.valueOf(content);
     }
 
     /**
      * 读使用双引号括起来的字符串（字符串里不能有双引号和换行符）
      */
-    public static String readQuotedString(String attributeValue) {
+    static String readQuotedString(String attributeValue) {
         if (!attributeValue.startsWith("\"")
                 && !attributeValue.endsWith("\"")) {
             throw new IllegalArgumentException("bad value");
@@ -90,7 +90,7 @@ class AttributeValue {
     /**
      * 写使用双引号括起来的字符串（字符串里不能有双引号和换行符）
      */
-    public static String writeQuotedString(String content) {
+    static String writeQuotedString(String content) {
         if (content.contains("\"")
                 || content.contains("\r")
                 || content.contains("\n")) {
@@ -103,21 +103,21 @@ class AttributeValue {
     /**
      * 读枚举字符串（字符串里不能有双引号、逗号和空格）
      */
-    public static String readEnumeratedString(String attributeValue) {
+    static String readEnumeratedString(String attributeValue) {
         return attributeValue;
     }
 
     /**
      * 写枚举字符串（字符串里不能有双引号、逗号和空格）
      */
-    public static String writeEnumeratedString(String content) {
+    static String writeEnumeratedString(String content) {
         return content;
     }
 
     /**
      * 读分辨率（使用“x”分隔的两个整数）
      */
-    public static VideoResolution readDecimalResolution(String attributeValue) {
+    static VideoResolution readDecimalResolution(String attributeValue) {
         if (!attributeValue.contains("x")) {
             throw new IllegalArgumentException("bad value");
         }
@@ -133,7 +133,7 @@ class AttributeValue {
     /**
      * 写分辨率（使用“x”分隔的两个整数）
      */
-    public static String writeDecimalResolution(VideoResolution res) {
+    static String writeDecimalResolution(VideoResolution res) {
         StringBuffer buffer = new StringBuffer();
 
         buffer.append(res.getWidth());
