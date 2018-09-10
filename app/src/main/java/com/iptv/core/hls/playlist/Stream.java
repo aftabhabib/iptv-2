@@ -1,7 +1,7 @@
 package com.iptv.core.hls.playlist;
 
-import com.iptv.core.player.MetaData;
-import com.iptv.core.utils.MalformedFormatException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 流
@@ -11,81 +11,349 @@ public final class Stream {
      * 属性
      */
     private static final String ATTR_BANDWIDTH = "BANDWIDTH";
+    private static final String ATTR_AVG_BANDWIDTH = "AVERAGE-BANDWIDTH";
     private static final String ATTR_CODECS = "CODECS";
+    private static final String ATTR_RESOLUTION = "RESOLUTION";
+    private static final String ATTR_FRAME_RATE = "FRAME-RATE";
+    private static final String ATTR_HDCP_LEVEL = "HDCP-LEVEL";
     private static final String ATTR_AUDIO = "AUDIO";
     private static final String ATTR_VIDEO = "VIDEO";
     private static final String ATTR_SUBTITLES = "SUBTITLES";
+    private static final String ATTR_CLOSED_CAPTIONS = "CLOSED-CAPTIONS";
 
-    private int mBandwidth = -1;
+    /**
+     * HDCP类型
+     */
+    public static final String HDCP_TYPE0 = "TYPE-0";
+
+    private Map<String, String> mAttributes = new HashMap<String, String>();
     private String mUri = null;
-    private MetaData mMetaData = new MetaData();
-
-    private Media[] mAudioRenditions = null;
-    private Media[] mVideoRenditions = null;
-    private Media[] mSubtitleRenditions = null;
 
     /**
      * 构造函数
      */
-    public Stream(String[] attributes) throws MalformedFormatException {
-        for (String attribute : attributes) {
-            String[] result = attribute.split("=");
-            parseAttribute(result[0], result[1]);
-        }
-
-        if (mBandwidth == -1) {
-            throw new MalformedFormatException("BANDWIDTH is required");
-        }
-
-        if (!mMetaData.containsKey("audio-format") && !mMetaData.containsKey("video-format")) {
-            throw new MalformedFormatException("CODECS is required");
-        }
+    public Stream() {
+        /**
+         * nothing
+         */
     }
 
     /**
-     * 解析属性
+     * 设置属性
      */
-    private void parseAttribute(String name, String value) {
-        if (name.equals(ATTR_BANDWIDTH)) {
-            mBandwidth = Integer.parseInt(value);
-        }
-        else if (name.equals(ATTR_CODECS)) {
-            String[] formats;
-            if (value.contains(",")) {
-                formats = value.split(",");
-            }
-            else {
-                formats = new String[] { value };
+    void setAttribute(String name, String value) {
+        mAttributes.put(name, value);
+    }
+
+    /**
+     * 设置带宽
+     */
+    public void setBandwidth(int bandwidth) {
+        mAttributes.put(ATTR_BANDWIDTH, AttributeValue.writeDecimalInteger(bandwidth));
+    }
+
+    /**
+     * 设置平均带宽
+     */
+    public void setAvgBandwidth(int avgBandwidth) {
+        mAttributes.put(ATTR_AVG_BANDWIDTH, AttributeValue.writeDecimalInteger(avgBandwidth));
+    }
+
+    /**
+     * 设置媒体编码格式
+     */
+    public void setMediaFormats(String[] formats) {
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < formats.length; i++) {
+            if (i > 0) {
+                buffer.append(",");
             }
 
-            for (String format : formats) {
-                if (Codec.isAudioFormat(format)) {
-                    mMetaData.putString("audio-format", format);
-                }
-                else if (Codec.isVideoFormat(format)) {
-                    mMetaData.putString("video-format", format);
-                }
-                else {
-                    /**
-                     * ignore
-                     */
-                }
-            }
+            buffer.append(formats[i]);
         }
-        else if (name.equals(ATTR_AUDIO)) {
-            mMetaData.putString(ATTR_AUDIO, value);
+
+        mAttributes.put(ATTR_CODECS, AttributeValue.writeQuotedString(buffer.toString()));
+    }
+
+    /**
+     * 设置视频分辨率
+     */
+    public void setVideoResolution(int width, int height) {
+        VideoResolution res = new VideoResolution(width, height);
+        mAttributes.put(ATTR_RESOLUTION, AttributeValue.writeDecimalResolution(res));
+    }
+
+    /**
+     * 设置视频帧率
+     */
+    public void setVideoFrameRate(float frameRate) {
+        mAttributes.put(ATTR_FRAME_RATE, AttributeValue.writeDecimalFloatingPoint(frameRate));
+    }
+
+    /**
+     * 设置HDCP类型
+     */
+    public void setHDCPType(String type) {
+        if (!type.equals(AttributeValue.ENUM_STRING_NONE)
+                && !type.equals(HDCP_TYPE0)) {
+            throw new IllegalArgumentException("invalid HDCP type");
         }
-        else if (name.equals(ATTR_VIDEO)) {
-            mMetaData.putString(ATTR_VIDEO, value);
+
+        mAttributes.put(ATTR_HDCP_LEVEL, AttributeValue.writeEnumeratedString(type));
+    }
+
+    /**
+     * 设置音频（展示）组的id
+     */
+    public void setAudioGroupId(String groupId) {
+        mAttributes.put(ATTR_AUDIO, AttributeValue.writeQuotedString(groupId));
+    }
+
+    /**
+     * 设置视频（展示）组的id
+     */
+    public void setVideoGroupId(String groupId) {
+        mAttributes.put(ATTR_VIDEO, AttributeValue.writeQuotedString(groupId));
+    }
+
+    /**
+     * 设置字幕（展示）组的id
+     */
+    public void setSubtitleGroupId(String groupId) {
+        mAttributes.put(ATTR_SUBTITLES, AttributeValue.writeQuotedString(groupId));
+    }
+
+    /**
+     * 设置CC字幕（展示）组的id
+     */
+    public void setClosedCaptionGroupId(String groupId) {
+        mAttributes.put(ATTR_CLOSED_CAPTIONS, AttributeValue.writeQuotedString(groupId));
+    }
+
+    /**
+     * 是否定义了带宽
+     */
+    public boolean containsBandwidth() {
+        return mAttributes.containsKey(ATTR_BANDWIDTH);
+    }
+
+    /**
+     * 是否定义了平均带宽
+     */
+    public boolean containsAvgBandwidth() {
+        return mAttributes.containsKey(ATTR_AVG_BANDWIDTH);
+    }
+
+    /**
+     * 是否定义了媒体编码格式
+     */
+    public boolean containsMediaFormat() {
+        return mAttributes.containsKey(ATTR_CODECS);
+    }
+
+    /**
+     * 是否定义了视频分辨率
+     */
+    public boolean containsVideoResolution() {
+        return mAttributes.containsKey(ATTR_RESOLUTION);
+    }
+
+    /**
+     * 是否定义了视频帧率
+     */
+    public boolean containsVideoFrameRate() {
+        return mAttributes.containsKey(ATTR_FRAME_RATE);
+    }
+
+    /**
+     * 是否定义了音频（展示）组
+     */
+    public boolean containsAudioGroupId() {
+        return mAttributes.containsKey(ATTR_AUDIO);
+    }
+
+    /**
+     * 是否定义了视频（展示）组
+     */
+    public boolean containsVideoGroupId() {
+        return mAttributes.containsKey(ATTR_VIDEO);
+    }
+
+    /**
+     * 是否定义了字幕（展示）组
+     */
+    public boolean containsSubtitleGroupId() {
+        return mAttributes.containsKey(ATTR_SUBTITLES);
+    }
+
+    /**
+     * 是否定义了CC字幕（展示）组
+     */
+    public boolean containsClosedCaptionGroupId() {
+        return mAttributes.containsKey(ATTR_CLOSED_CAPTIONS);
+    }
+
+    /**
+     * 获取带宽
+     */
+    public int getBandwidth() {
+        if (!containsBandwidth()) {
+            throw new IllegalStateException("no BANDWIDTH attribute");
         }
-        else if (name.equals(ATTR_SUBTITLES)) {
-            mMetaData.putString(ATTR_SUBTITLES, value);
+
+        return AttributeValue.readDecimalInteger(mAttributes.get(ATTR_BANDWIDTH));
+    }
+
+    /**
+     * 获取平均带宽
+     */
+    public int getAvgBandwidth() {
+        if (!containsAvgBandwidth()) {
+            throw new IllegalStateException("no AVERAGE-BANDWIDTH attribute");
+        }
+
+        return AttributeValue.readDecimalInteger(mAttributes.get(ATTR_AVG_BANDWIDTH));
+    }
+
+    /**
+     * 获取媒体编码格式
+     */
+    public String[] getMediaFormats() {
+        if (!containsMediaFormat()) {
+            throw new IllegalStateException("no CODECS attribute");
+        }
+
+        String content = AttributeValue.readQuotedString(mAttributes.get(ATTR_CODECS));
+
+        /**
+         * comma-separated list of formats
+         */
+        String[] formats;
+        if (content.contains(",")) {
+            formats = content.split(",");
         }
         else {
-            /**
-             * ignore
-             */
+            formats = new String[] { content };
         }
+
+        return formats;
+    }
+
+    /**
+     * 获取视频图像宽
+     */
+    public int getVideoWidth() {
+        if (!containsVideoResolution()) {
+            throw new IllegalStateException("no RESOLUTION attribute");
+        }
+
+        VideoResolution res = AttributeValue.readDecimalResolution(mAttributes.get(ATTR_RESOLUTION));
+        return res.getWidth();
+    }
+
+    /**
+     * 获取视频图像高
+     */
+    public int getVideoHeight() {
+        if (!containsVideoResolution()) {
+            throw new IllegalStateException("no RESOLUTION attribute");
+        }
+
+        VideoResolution res = AttributeValue.readDecimalResolution(mAttributes.get(ATTR_RESOLUTION));
+        return res.getHeight();
+    }
+
+    /**
+     * 获取视频帧率
+     */
+    public float getVideoFrameRate() {
+        if (!containsVideoFrameRate()) {
+            throw new IllegalStateException("no FRAME-RATE attribute");
+        }
+
+        return AttributeValue.readDecimalFloatingPoint(mAttributes.get(ATTR_FRAME_RATE));
+    }
+
+    /**
+     * 获取HDCP的类型
+     */
+    public String getHDCPType() {
+        String type;
+        if (!mAttributes.containsKey(ATTR_HDCP_LEVEL)) {
+            type = AttributeValue.ENUM_STRING_NONE;
+        }
+        else {
+            type = AttributeValue.readEnumeratedString(mAttributes.get(ATTR_HDCP_LEVEL));
+        }
+
+        return type;
+    }
+
+    /**
+     * 获取音频（展示）组的id
+     */
+    public String getAudioGroupId() {
+        if (!containsAudioGroupId()) {
+            throw new IllegalStateException("no AUDIO attribute");
+        }
+
+        return AttributeValue.readQuotedString(mAttributes.get(ATTR_AUDIO));
+    }
+
+    /**
+     * 获取视频（展示）组的id
+     */
+    public String getVideoGroupId() {
+        if (!containsVideoGroupId()) {
+            throw new IllegalStateException("no VIDEO attribute");
+        }
+
+        return AttributeValue.readQuotedString(mAttributes.get(ATTR_VIDEO));
+    }
+
+    /**
+     * 获取字幕（展示）组的id
+     */
+    public String getSubtitleGroupId() {
+        if (!containsSubtitleGroupId()) {
+            throw new IllegalStateException("no SUBTITLES attribute");
+        }
+
+        return AttributeValue.readQuotedString(mAttributes.get(ATTR_SUBTITLES));
+    }
+
+    /**
+     * 获取CC字幕（展示）组的id
+     */
+    public String getClosedCaptionGroupId() {
+        if (!containsClosedCaptionGroupId()) {
+            throw new IllegalStateException("no CLOSED-CAPTIONS attribute");
+        }
+
+        return AttributeValue.readQuotedString(mAttributes.get(ATTR_CLOSED_CAPTIONS));
+    }
+
+    /**
+     * 生成属性列表
+     */
+    public String makeAttributeList() {
+        StringBuilder builder = new StringBuilder();
+
+        int attributeCnt = 0;
+        for (String name : mAttributes.keySet()) {
+            /**
+             * 多个attribute之间通过“,”分隔
+             */
+            if (attributeCnt > 0) {
+                builder.append(",");
+            }
+
+            builder.append(name);
+            builder.append("=");
+            builder.append(mAttributes.get(name));
+        }
+
+        return builder.toString();
     }
 
     /**
@@ -96,209 +364,9 @@ public final class Stream {
     }
 
     /**
-     * 设置音频表现
-     */
-    public void setAudioRenditions(Media[] renditions) {
-        mAudioRenditions = renditions;
-    }
-
-    /**
-     * 设置视频表现
-     */
-    public void setVideoRenditions(Media[] renditions) {
-        mVideoRenditions = renditions;
-    }
-
-    /**
-     * 设置字幕表现
-     */
-    public void setSubtitleRenditions(Media[] renditions) {
-        mSubtitleRenditions = renditions;
-    }
-
-    /**
-     * 获取带宽
-     */
-    public int getBandwidth() {
-        return mBandwidth;
-    }
-
-    /**
      * 获取uri
      */
     public String getUri() {
         return mUri;
-    }
-
-    /**
-     * 是否定义了音频格式
-     */
-    public boolean containsAudioFormat() {
-        return mMetaData.containsKey("audio-format");
-    }
-
-    /**
-     * 获取音频格式
-     */
-    public String getAudioFormat() {
-        if (!containsAudioFormat()) {
-            throw new IllegalStateException("no AUDIO-CODEC");
-        }
-
-        return mMetaData.getString("audio-format");
-    }
-
-    /**
-     * 是否定义了视频格式
-     */
-    public boolean containsVideoFormat() {
-        return mMetaData.containsKey("video-format");
-    }
-
-    /**
-     * 获取视频格式
-     */
-    public String getVideoFormat() {
-        if (!containsVideoFormat()) {
-            throw new IllegalStateException("no VIDEO-CODEC");
-        }
-
-        return mMetaData.getString("video-format");
-    }
-
-    /**
-     * 是否有多个音频表现
-     */
-    public boolean containsAudioRenditions() {
-        return mMetaData.containsKey(ATTR_AUDIO);
-    }
-
-    /**
-     * 获取音频组的id
-     */
-    public String getAudioGroupId() {
-        if (!containsAudioRenditions()) {
-            throw new IllegalStateException("no AUDIO");
-        }
-
-        return mMetaData.getString(ATTR_AUDIO);
-    }
-
-    /**
-     * 是否有多个视频表现
-     */
-    public boolean containsVideoRenditions() {
-        return mMetaData.containsKey(ATTR_VIDEO);
-    }
-
-    /**
-     * 获取视频组的id
-     */
-    public String getVideoGroupId() {
-        if (!containsSubtitleRenditions()) {
-            throw new IllegalStateException("no VIDEO");
-        }
-
-        return mMetaData.getString(ATTR_VIDEO);
-    }
-
-    /**
-     * 是否有多个字幕表现
-     */
-    public boolean containsSubtitleRenditions() {
-        return mMetaData.containsKey(ATTR_SUBTITLES);
-    }
-
-    /**
-     * 获取字幕组的id
-     */
-    public String getSubtitleGroupId() {
-        if (!containsSubtitleRenditions()) {
-            throw new IllegalStateException("no SUBTITLES");
-        }
-
-        return mMetaData.getString(ATTR_SUBTITLES);
-    }
-
-    /**
-     * 获取默认的音频表现
-     */
-    public Media getDefaultAudioRendition() {
-        if (!containsAudioRenditions()) {
-            throw new IllegalStateException("no AUDIO");
-        }
-
-        return getDefaultRendition(mAudioRenditions);
-    }
-
-    /**
-     * 获取默认的视频表现
-     */
-    public Media getDefaultVideoRendition() {
-        if (!containsVideoRenditions()) {
-            throw new IllegalStateException("no VIDEO");
-        }
-
-        return getDefaultRendition(mVideoRenditions);
-    }
-
-    /**
-     * 获取默认的字幕表现
-     */
-    public Media getDefaultSubtitleRendition() {
-        if (!containsSubtitleRenditions()) {
-            throw new IllegalStateException("no SUBTITLES");
-        }
-
-        return getDefaultRendition(mSubtitleRenditions);
-    }
-
-    /**
-     * 从表现组中获取默认的表现（一定有）
-     */
-    private static Media getDefaultRendition(Media[] renditions) {
-        for (Media rendition : renditions) {
-            if (rendition.defaultSelect()) {
-                return rendition;
-            }
-        }
-
-        throw new IllegalStateException("no DEFAULT rendition");
-    }
-
-    /**
-     * 获取指定语言的音频表现
-     */
-    public Media getAudioRenditionByLanguage(String language) {
-        if (!containsAudioRenditions()) {
-            throw new IllegalStateException("no AUDIO");
-        }
-
-        return getRenditionByLanguage(mAudioRenditions, language);
-    }
-
-    /**
-     * 获取指定语言的字幕表现
-     */
-    public Media getSubtitleRenditionByLanguage(String language) {
-        if (!containsSubtitleRenditions()) {
-            throw new IllegalStateException("no SUBTITLES");
-        }
-
-        return getRenditionByLanguage(mSubtitleRenditions, language);
-    }
-
-    /**
-     * 从表现组中获取指定语言的表现（可能没有）
-     */
-    private static Media getRenditionByLanguage(Media[] renditions, String language) {
-        for (Media rendition : renditions) {
-            if (rendition.containsLanguage()
-                    && rendition.getLanguage().equals(language)) {
-                return rendition;
-            }
-        }
-
-        return null;
     }
 }

@@ -5,7 +5,17 @@ import java.math.BigInteger;
 /**
  * 属性值
  */
-public class AttributeValue {
+class AttributeValue {
+    /**
+     * “是/否”
+     */
+    public static final String ENUM_STRING_YES = "YES";
+    public static final String ENUM_STRING_NO = "NO";
+    /**
+     * ”没有“
+     */
+    public static final String ENUM_STRING_NONE = "NONE";
+
     /**
      * 读十进制的整数
      */
@@ -94,12 +104,6 @@ public class AttributeValue {
      * 读枚举字符串（字符串里不能有双引号、逗号和空格）
      */
     public static String readEnumeratedString(String attributeValue) {
-        if (attributeValue.contains("\"")
-                || attributeValue.contains(",")
-                || attributeValue.contains(" ")) {
-            throw new IllegalArgumentException("bad value");
-        }
-
         return attributeValue;
     }
 
@@ -107,19 +111,13 @@ public class AttributeValue {
      * 写枚举字符串（字符串里不能有双引号、逗号和空格）
      */
     public static String writeEnumeratedString(String content) {
-        if (content.contains("\"")
-                || content.contains(",")
-                || content.contains(" ")) {
-            throw new IllegalArgumentException("bad value");
-        }
-
         return content;
     }
 
     /**
      * 读分辨率（使用“x”分隔的两个整数）
      */
-    public static Resolution readDecimalResolution(String attributeValue) {
+    public static VideoResolution readDecimalResolution(String attributeValue) {
         if (!attributeValue.contains("x")) {
             throw new IllegalArgumentException("bad value");
         }
@@ -129,16 +127,20 @@ public class AttributeValue {
             throw new IllegalArgumentException("bad value");
         }
 
-        return new Resolution(Integer.parseInt(result[0]), Integer.parseInt(result[1]));
+        return new VideoResolution(Integer.parseInt(result[0]), Integer.parseInt(result[1]));
     }
 
     /**
      * 写分辨率（使用“x”分隔的两个整数）
      */
-    public static String writeDecimalResolution(Resolution resolution) {
-        return String.valueOf(resolution.getWidth())
-                + "x"
-                + String.valueOf(resolution.getHeight());
+    public static String writeDecimalResolution(VideoResolution res) {
+        StringBuffer buffer = new StringBuffer();
+
+        buffer.append(res.getWidth());
+        buffer.append("x");
+        buffer.append(res.getHeight());
+
+        return buffer.toString();
     }
 
     /**
@@ -148,35 +150,5 @@ public class AttributeValue {
         /**
          * nothing
          */
-    }
-
-    /**
-     * 视频图像分辨率
-     */
-    public static class Resolution {
-        private int mWidth;
-        private int mHeight;
-
-        /**
-         * 构造函数
-         */
-        public Resolution(int width, int height) {
-            mWidth = width;
-            mHeight = height;
-        }
-
-        /**
-         * 获取视频图像宽
-         */
-        public int getWidth() {
-            return mWidth;
-        }
-
-        /**
-         * 获取视频图像高
-         */
-        public int getHeight() {
-            return mHeight;
-        }
     }
 }

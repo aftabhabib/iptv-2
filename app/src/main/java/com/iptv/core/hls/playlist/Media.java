@@ -1,6 +1,7 @@
 package com.iptv.core.hls.playlist;
 
-import com.iptv.core.player.MetaData;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 媒体
@@ -23,12 +24,6 @@ public final class Media {
     private static final String ATTR_CHANNELS = "CHANNELS";
 
     /**
-     * “是/否”的值
-     */
-    private static final String VALUE_YES = "YES";
-    private static final String VALUE_NO = "NO";
-
-    /**
      * 媒体类型
      */
     public static final String TYPE_VIDEO = "VIDEO";
@@ -36,7 +31,7 @@ public final class Media {
     public static final String TYPE_SUBTITLE = "SUBTITLES";
     public static final String TYPE_CLOSED_CAPTIONS = "CLOSED-CAPTIONS";
 
-    private MetaData mMetaData = new MetaData();
+    private Map<String, String> mAttributes = new HashMap<String, String>();
 
     /**
      * 构造函数
@@ -50,76 +45,8 @@ public final class Media {
     /**
      * 设置属性
      */
-    public void setAttribute(String name, String value) {
-        if (name.equals(ATTR_TYPE)) {
-            setType(AttributeValue.readEnumeratedString(value));
-        }
-        else if (name.equals(ATTR_URI)) {
-            setUri(AttributeValue.readQuotedString(value));
-        }
-        else if (name.equals(ATTR_GROUP_ID)) {
-            setGroupId(AttributeValue.readQuotedString(value));
-        }
-        else if (name.equals(ATTR_LANGUAGE)) {
-            setLanguage(AttributeValue.readQuotedString(value));
-        }
-        else if (name.equals(ATTR_ASSOCIATED_LANGUAGE)) {
-            setAssociatedLanguage(AttributeValue.readQuotedString(value));
-        }
-        else if (name.equals(ATTR_NAME)) {
-            setName(AttributeValue.readQuotedString(value));
-        }
-        else if (name.equals(ATTR_DEFAULT)) {
-            String content = AttributeValue.readEnumeratedString(value);
-            setDefaultSelect(enumStringToBoolean(content));
-        }
-        else if (name.equals(ATTR_AUTO_SELECT)) {
-            String content = AttributeValue.readEnumeratedString(value);
-            setAutoSelect(enumStringToBoolean(content));
-        }
-        else if (name.equals(ATTR_FORCED)) {
-            String content = AttributeValue.readEnumeratedString(value);
-            setForcedSelect(enumStringToBoolean(content));
-        }
-        else if (name.equals(ATTR_IN_STREAM_ID)) {
-            setInStreamId(AttributeValue.readQuotedString(value));
-        }
-        else if (name.equals(ATTR_CHARACTERISTICS)) {
-            String content = AttributeValue.readQuotedString(value);
-
-            String[] characteristics;
-            if (value.contains(",")) {
-                characteristics = content.split(",");
-            }
-            else {
-                characteristics = new String[] { content };
-            }
-
-            setCharacteristics(characteristics);
-        }
-        else if (name.equals(ATTR_CHANNELS)) {
-            String content = AttributeValue.readQuotedString(value);
-
-            String[] parameters;
-            if (value.contains("/")) {
-                parameters = content.split("/");
-            }
-            else {
-                parameters = new String[] { content };
-            }
-
-            /**
-             * If TYPE is AUDIO, then the first parameter is a count of audio channels
-             * No other CHANNELS parameters are currently defined
-             */
-            int channels = Integer.parseInt(parameters[0]);
-            setChannels(channels);
-        }
-        else {
-            /**
-             * ignore
-             */
-        }
+    void setAttribute(String name, String value) {
+        mAttributes.put(name, value);
     }
 
     /**
@@ -130,150 +57,172 @@ public final class Media {
                 && !type.equals(TYPE_VIDEO)
                 && !type.equals(TYPE_SUBTITLE)
                 && !type.equals(TYPE_CLOSED_CAPTIONS)) {
-            throw new IllegalArgumentException("bad value");
+            throw new IllegalArgumentException("invalid type");
         }
 
-        mMetaData.putString(ATTR_TYPE, type);
+        mAttributes.put(ATTR_TYPE, AttributeValue.writeEnumeratedString(type));
     }
 
     /**
      * 设置uri
      */
     public void setUri(String uri) {
-        mMetaData.putString(ATTR_URI, uri);
+        mAttributes.put(ATTR_URI, AttributeValue.writeQuotedString(uri));
     }
 
     /**
-     * 设置媒体所属表现组的id
+     * 设置媒体所属（展示）组的id
      */
     public void setGroupId(String groupId) {
-        mMetaData.putString(ATTR_GROUP_ID, groupId);
+        mAttributes.put(ATTR_GROUP_ID, AttributeValue.writeQuotedString(groupId));
     }
 
     /**
      * 设置语言
      */
     public void setLanguage(String language) {
-        mMetaData.putString(ATTR_LANGUAGE, language);
+        mAttributes.put(ATTR_LANGUAGE, AttributeValue.writeQuotedString(language));
     }
 
     /**
      * 设置连带的语言
      */
     public void setAssociatedLanguage(String language) {
-        mMetaData.putString(ATTR_ASSOCIATED_LANGUAGE, language);
+        mAttributes.put(ATTR_ASSOCIATED_LANGUAGE, AttributeValue.writeQuotedString(language));
     }
 
     /**
      * 设置名称
      */
     public void setName(String name) {
-        mMetaData.putString(ATTR_NAME, name);
+        mAttributes.put(ATTR_NAME, AttributeValue.writeQuotedString(name));
     }
 
     /**
      * 设置是否默认选择
      */
     public void setDefaultSelect(boolean defaultSelect) {
-        mMetaData.putBoolean(ATTR_DEFAULT, defaultSelect);
+        mAttributes.put(ATTR_DEFAULT, AttributeValue.writeEnumeratedString(
+                defaultSelect ? AttributeValue.ENUM_STRING_YES : AttributeValue.ENUM_STRING_NO));
     }
 
     /**
      * 设置是否自动选择
      */
     public void setAutoSelect(boolean autoSelect) {
-        mMetaData.putBoolean(ATTR_AUTO_SELECT, autoSelect);
+        mAttributes.put(ATTR_AUTO_SELECT, AttributeValue.writeEnumeratedString(
+                autoSelect ? AttributeValue.ENUM_STRING_YES : AttributeValue.ENUM_STRING_NO));
     }
 
     /**
      * 设置是否强制选择
      */
     public void setForcedSelect(boolean forcedSelect) {
-        mMetaData.putBoolean(ATTR_FORCED, forcedSelect);
+        mAttributes.put(ATTR_FORCED, AttributeValue.writeEnumeratedString(
+                forcedSelect ? AttributeValue.ENUM_STRING_YES : AttributeValue.ENUM_STRING_NO));
     }
 
     /**
-     * 设置流内部的id
+     * 设置流内（CC字幕轨道）的id
      */
     public void setInStreamId(String streamId) {
-        mMetaData.putString(ATTR_IN_STREAM_ID, streamId);
+        /**
+         * "CCn" where n MUST be an integer between 1 and 4
+         * or "SERVICEn" where n MUST be an integer between 1 and 63
+         */
+        if (!streamId.startsWith("CC")
+                && !streamId.startsWith("SERVICE")) {
+            throw new IllegalArgumentException("invalid stream id");
+        }
+
+        mAttributes.put(ATTR_IN_STREAM_ID, AttributeValue.writeQuotedString(streamId));
     }
 
     /**
      * 设置特性
      */
     public void setCharacteristics(String[] characteristics) {
-        mMetaData.putStringArray(ATTR_CHARACTERISTICS, characteristics);
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < characteristics.length; i++) {
+            if (i > 0) {
+                buffer.append(",");
+            }
+
+            buffer.append(characteristics[i]);
+        }
+
+        mAttributes.put(ATTR_CHARACTERISTICS, AttributeValue.writeQuotedString(buffer.toString()));
     }
 
     /**
-     * 设置声道
+     * 设置声道数
      */
     public void setChannels(int channels) {
-        mMetaData.putInteger("audio-channels", channels);
+        String parameter = String.valueOf(channels);
+        mAttributes.put(ATTR_CHANNELS, AttributeValue.writeQuotedString(parameter));
     }
 
     /**
      * 是否定义了类型
      */
     public boolean containsType() {
-        return mMetaData.containsKey(ATTR_TYPE);
+        return mAttributes.containsKey(ATTR_TYPE);
     }
 
     /**
      * 是否定义了uri
      */
     public boolean containsUri() {
-        return mMetaData.containsKey(ATTR_URI);
+        return mAttributes.containsKey(ATTR_URI);
     }
 
     /**
      * 是否定义了表现组的id
      */
     public boolean containsGroupId() {
-        return mMetaData.containsKey(ATTR_GROUP_ID);
+        return mAttributes.containsKey(ATTR_GROUP_ID);
     }
 
     /**
      * 是否定义了语言
      */
     public boolean containsLanguage() {
-        return mMetaData.containsKey(ATTR_LANGUAGE);
+        return mAttributes.containsKey(ATTR_LANGUAGE);
     }
 
     /**
      * 是否定义了连带的语言
      */
     public boolean containsAssociatedLanguage() {
-        return mMetaData.containsKey(ATTR_ASSOCIATED_LANGUAGE);
+        return mAttributes.containsKey(ATTR_ASSOCIATED_LANGUAGE);
     }
 
     /**
      * 是否定义了名称
      */
     public boolean containsName() {
-        return mMetaData.containsKey(ATTR_NAME);
+        return mAttributes.containsKey(ATTR_NAME);
     }
 
     /**
-     * 是否定义了流内部的id
+     * 是否定义了流内（CC字幕轨道）的id
      */
     public boolean containsInStreamId() {
-        return mMetaData.containsKey(ATTR_IN_STREAM_ID);
+        return mAttributes.containsKey(ATTR_IN_STREAM_ID);
     }
 
     /**
      * 是否定义了特性
      */
     public boolean containsCharacteristics() {
-        return mMetaData.containsKey(ATTR_CHARACTERISTICS);
+        return mAttributes.containsKey(ATTR_CHARACTERISTICS);
     }
 
     /**
-     * 是否定义了声道
+     * 是否定义了声道数
      */
     public boolean containsChannels() {
-        return mMetaData.containsKey("audio-channels");
+        return mAttributes.containsKey(ATTR_CHANNELS);
     }
 
     /**
@@ -284,7 +233,7 @@ public final class Media {
             throw new IllegalStateException("no TYPE attribute");
         }
 
-        return mMetaData.getString(ATTR_TYPE);
+        return AttributeValue.readEnumeratedString(mAttributes.get(ATTR_TYPE));
     }
 
     /**
@@ -295,7 +244,7 @@ public final class Media {
             throw new IllegalStateException("no URI attribute");
         }
 
-        return mMetaData.getString(ATTR_URI);
+        return AttributeValue.readQuotedString(mAttributes.get(ATTR_URI));
     }
 
     /**
@@ -306,7 +255,7 @@ public final class Media {
             throw new IllegalStateException("no GROUP-ID attribute");
         }
 
-        return mMetaData.getString(ATTR_GROUP_ID);
+        return AttributeValue.readQuotedString(mAttributes.get(ATTR_GROUP_ID));
     }
 
     /**
@@ -317,7 +266,7 @@ public final class Media {
             throw new IllegalStateException("no LANGUAGE attribute");
         }
 
-        return mMetaData.getString(ATTR_LANGUAGE);
+        return AttributeValue.readQuotedString(mAttributes.get(ATTR_LANGUAGE));
     }
 
     /**
@@ -328,7 +277,7 @@ public final class Media {
             throw new IllegalStateException("no ASSOC-LANGUAGE attribute");
         }
 
-        return mMetaData.getString(ATTR_ASSOCIATED_LANGUAGE);
+        return AttributeValue.readQuotedString(mAttributes.get(ATTR_ASSOCIATED_LANGUAGE));
     }
 
     /**
@@ -339,63 +288,99 @@ public final class Media {
             throw new IllegalStateException("no NAME attribute");
         }
 
-        return mMetaData.getString(ATTR_NAME);
+        return AttributeValue.readQuotedString(mAttributes.get(ATTR_NAME));
     }
 
     /**
      * 是不是默认选择
      */
     public boolean defaultSelect() {
-        if (!mMetaData.containsKey(ATTR_DEFAULT)) {
+        boolean isDefault;
+        if (!mAttributes.containsKey(ATTR_DEFAULT)) {
             /**
-             * implicit value
+             * 默认值：否
              */
-            return false;
+            isDefault = false;
         }
         else {
-            return mMetaData.getBoolean(ATTR_DEFAULT);
+            String value = AttributeValue.readEnumeratedString(mAttributes.get(ATTR_DEFAULT));
+            if (value.equals(AttributeValue.ENUM_STRING_YES)) {
+                isDefault = true;
+            }
+            else if (value.equals(AttributeValue.ENUM_STRING_NO)) {
+                isDefault = false;
+            }
+            else {
+                throw new IllegalArgumentException("only YES or NO");
+            }
         }
+
+        return isDefault;
     }
 
     /**
      * 是不是自动选择
      */
     public boolean autoSelect() {
-        if (!mMetaData.containsKey(ATTR_AUTO_SELECT)) {
+        boolean isAuto;
+        if (!mAttributes.containsKey(ATTR_AUTO_SELECT)) {
             /**
-             * implicit value
+             * 默认值：否
              */
-            return false;
+            isAuto = false;
         }
         else {
-            return mMetaData.getBoolean(ATTR_AUTO_SELECT);
+            String value = AttributeValue.readEnumeratedString(mAttributes.get(ATTR_AUTO_SELECT));
+            if (value.equals(AttributeValue.ENUM_STRING_YES)) {
+                isAuto = true;
+            }
+            else if (value.equals(AttributeValue.ENUM_STRING_NO)) {
+                isAuto = false;
+            }
+            else {
+                throw new IllegalArgumentException("only YES or NO");
+            }
         }
+
+        return isAuto;
     }
 
     /**
      * 是不是强制选择
      */
     public boolean forcedSelect() {
-        if (!mMetaData.containsKey(ATTR_FORCED)) {
+        boolean isForced;
+        if (!mAttributes.containsKey(ATTR_FORCED)) {
             /**
-             * implicit value
+             * 默认值：否
              */
-            return false;
+            isForced = false;
         }
         else {
-            return mMetaData.getBoolean(ATTR_FORCED);
+            String value = AttributeValue.readEnumeratedString(mAttributes.get(ATTR_FORCED));
+            if (value.equals(AttributeValue.ENUM_STRING_YES)) {
+                isForced = true;
+            }
+            else if (value.equals(AttributeValue.ENUM_STRING_NO)) {
+                isForced = false;
+            }
+            else {
+                throw new IllegalArgumentException("only YES or NO");
+            }
         }
+
+        return isForced;
     }
 
     /**
-     * 获取流内部的id
+     * 获取流内（CC字幕轨道）的id
      */
     public String getInStreamId() {
         if (!containsInStreamId()) {
             throw new IllegalStateException("no INSTREAM-ID attribute");
         }
 
-        return mMetaData.getString(ATTR_IN_STREAM_ID);
+        return AttributeValue.readQuotedString(mAttributes.get(ATTR_IN_STREAM_ID));
     }
 
     /**
@@ -406,7 +391,20 @@ public final class Media {
             throw new IllegalStateException("no CHARACTERISTICS attribute");
         }
 
-        return mMetaData.getStringArray(ATTR_CHARACTERISTICS);
+        String content = AttributeValue.readQuotedString(mAttributes.get(ATTR_CHARACTERISTICS));
+
+        /**
+         * one or more Uniform Type Identifiers separated by comma (,) characters
+         */
+        String[] characteristics;
+        if (content.contains(",")) {
+            characteristics = content.split(",");
+        }
+        else {
+            characteristics = new String[] { content };
+        }
+
+        return characteristics;
     }
 
     /**
@@ -417,7 +415,23 @@ public final class Media {
             throw new IllegalStateException("no CHANNELS attribute");
         }
 
-        return mMetaData.getInteger("audio-channels");
+        String content = AttributeValue.readQuotedString(mAttributes.get(ATTR_CHANNELS));
+
+        /**
+         * parameters are separated by the "/" character.
+         */
+        String[] parameters;
+        if (content.contains("/")) {
+            parameters = content.split("/");
+        }
+        else {
+            parameters = new String[] { content };
+        }
+
+        /**
+         * the first parameter is a count of audio channels.
+         */
+        return Integer.parseInt(parameters[0]);
     }
 
     /**
@@ -426,136 +440,22 @@ public final class Media {
     public String makeAttributeList() {
         StringBuilder builder = new StringBuilder();
 
-        for (String key : mMetaData.keySet()) {
+        int attributeCnt = 0;
+        for (String name : mAttributes.keySet()) {
             /**
-             * attribute之间通过“,”分隔
+             * 多个attribute之间通过“,”分隔
              */
-            if (builder.length() > 0) {
+            if (attributeCnt > 0) {
                 builder.append(",");
             }
 
-            if (key.equals(ATTR_TYPE)) {
-                String type = getType();
+            builder.append(name);
+            builder.append("=");
+            builder.append(mAttributes.get(name));
 
-                builder.append(ATTR_TYPE
-                        + "="
-                        + AttributeValue.writeEnumeratedString(type));
-            }
-            else if (key.equals(ATTR_URI)) {
-                String uri = getUri();
-
-                builder.append(ATTR_URI
-                        + "="
-                        + AttributeValue.writeQuotedString(uri));
-            }
-            else if (key.equals(ATTR_GROUP_ID)) {
-                String groupId = getGroupId();
-
-                builder.append(ATTR_GROUP_ID
-                        + "="
-                        + AttributeValue.writeQuotedString(groupId));
-            }
-            else if (key.equals(ATTR_LANGUAGE)) {
-                String language = getLanguage();
-
-                builder.append(ATTR_LANGUAGE
-                        + "="
-                        + AttributeValue.writeQuotedString(language));
-            }
-            else if (key.equals(ATTR_ASSOCIATED_LANGUAGE)) {
-                String language = getAssociatedLanguage();
-
-                builder.append(ATTR_ASSOCIATED_LANGUAGE
-                        + "="
-                        + AttributeValue.writeQuotedString(language));
-            }
-            else if (key.equals(ATTR_NAME)) {
-                String name = getName();
-
-                builder.append(ATTR_NAME
-                        + "="
-                        + AttributeValue.writeQuotedString(name));
-            }
-            else if (key.equals(ATTR_DEFAULT)) {
-                boolean defaultSelect = defaultSelect();
-
-                builder.append(ATTR_DEFAULT
-                        + "="
-                        + AttributeValue.writeQuotedString(booleanToEnumString(defaultSelect)));
-            }
-            else if (key.equals(ATTR_AUTO_SELECT)) {
-                boolean autoSelect = autoSelect();
-
-                builder.append(ATTR_AUTO_SELECT
-                        + "="
-                        + AttributeValue.writeQuotedString(booleanToEnumString(autoSelect)));
-            }
-            else if (key.equals(ATTR_FORCED)) {
-                boolean forcedSelect = forcedSelect();
-
-                builder.append(ATTR_FORCED
-                        + "="
-                        + AttributeValue.writeQuotedString(booleanToEnumString(forcedSelect)));
-            }
-            else if (key.equals(ATTR_IN_STREAM_ID)) {
-                String streamId = getInStreamId();
-
-                builder.append(ATTR_IN_STREAM_ID
-                        + "="
-                        + AttributeValue.writeQuotedString(streamId));
-            }
-            else if (key.equals(ATTR_CHARACTERISTICS)) {
-                String[] characteristics = getCharacteristics();
-
-                StringBuffer contentBuffer = new StringBuffer();
-                for (int i = 0; i < characteristics.length; i++) {
-                    if (i > 0) {
-                        contentBuffer.append(",");
-                    }
-
-                    contentBuffer.append(String.valueOf(characteristics[i]));
-                }
-
-                builder.append(ATTR_CHARACTERISTICS
-                        + "="
-                        + AttributeValue.writeQuotedString(contentBuffer.toString()));
-            }
-            else if (key.equals("audio-channels")) {
-                int channels = getChannels();
-
-                builder.append(ATTR_CHANNELS
-                        + "="
-                        + AttributeValue.writeQuotedString(String.valueOf(channels)));
-            }
-            else {
-                /**
-                 * ignore
-                 */
-            }
+            attributeCnt++;
         }
 
         return builder.toString();
-    }
-
-    /**
-     * “是/否”字符串转换为布尔值
-     */
-    private static boolean enumStringToBoolean(String value) {
-        if (value.equals(VALUE_YES)) {
-            return true;
-        }
-        else if (value.equals(VALUE_NO)) {
-            return false;
-        }
-        else {
-            throw new IllegalArgumentException("bad value");
-        }
-    }
-
-    /**
-     * 布尔值转换为“是/否”字符串
-     */
-    private static String booleanToEnumString(boolean value) {
-        return value ? VALUE_YES : VALUE_NO;
     }
 }
