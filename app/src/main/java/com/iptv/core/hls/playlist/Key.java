@@ -1,5 +1,9 @@
 package com.iptv.core.hls.playlist;
 
+import com.iptv.core.hls.datatype.EnumeratedString;
+import com.iptv.core.hls.datatype.HexadecimalSequence;
+import com.iptv.core.hls.datatype.QuotedString;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +31,7 @@ public final class Key {
      */
     public static final String FORMAT_IDENTITY = "identity";
 
-    private Map<String, String> mAttributes = new HashMap<String, String>();
+    private Map<String, Object> mAttributes = new HashMap<String, Object>();
 
     /**
      * 构造函数
@@ -55,15 +59,14 @@ public final class Key {
             throw new IllegalArgumentException("invalid method");
         }
 
-        mAttributes.put(ATTR_METHOD, AttributeValue.writeEnumeratedString(method));
+        mAttributes.put(ATTR_METHOD, new EnumeratedString(method));
     }
 
     /**
      * 设置uri
      */
     public void setUri(String uri) {
-        mAttributes.put(ATTR_URI, AttributeValue.writeQuotedString(uri));
-
+        mAttributes.put(ATTR_URI, new QuotedString(uri));
     }
 
     /**
@@ -74,7 +77,7 @@ public final class Key {
             throw new IllegalArgumentException("IV should be 128-bit");
         }
 
-        mAttributes.put(ATTR_IV, AttributeValue.writeHexadecimalSequence(iv));
+        mAttributes.put(ATTR_IV, new HexadecimalSequence(iv));
     }
 
     /**
@@ -85,7 +88,7 @@ public final class Key {
             throw new IllegalArgumentException("invalid format");
         }
 
-        mAttributes.put(ATTR_KEY_FORMAT, AttributeValue.writeQuotedString(format));
+        mAttributes.put(ATTR_KEY_FORMAT, new QuotedString(format));
     }
 
     /**
@@ -101,7 +104,7 @@ public final class Key {
             buffer.append(String.valueOf(versions[i]));
         }
 
-        mAttributes.put(ATTR_KEY_FORMAT_VERSIONS, AttributeValue.writeQuotedString(buffer.toString()));
+        mAttributes.put(ATTR_KEY_FORMAT_VERSIONS, new QuotedString(buffer.toString()));
     }
 
     /**
@@ -127,7 +130,8 @@ public final class Key {
             method = AttributeValue.ENUM_STRING_NONE;
         }
         else {
-            method = AttributeValue.readEnumeratedString(mAttributes.get(ATTR_METHOD));
+            EnumeratedString attributeValue = (EnumeratedString)mAttributes.get(ATTR_METHOD);
+            method = attributeValue.value();
         }
 
         return method;
@@ -141,7 +145,8 @@ public final class Key {
             throw new IllegalStateException("no URI attribute");
         }
 
-        return AttributeValue.readQuotedString(mAttributes.get(ATTR_URI));
+        QuotedString attributeValue = (QuotedString)mAttributes.get(ATTR_URI);
+        return attributeValue.value();
     }
 
     /**
@@ -152,7 +157,8 @@ public final class Key {
             throw new IllegalStateException("no IV attribute");
         }
 
-        return AttributeValue.readHexadecimalSequence(mAttributes.get(ATTR_IV));
+        HexadecimalSequence attributeValue = (HexadecimalSequence)mAttributes.get(ATTR_IV);
+        return attributeValue.toByteArray();
     }
 
     /**
@@ -167,7 +173,8 @@ public final class Key {
             keyFormat = FORMAT_IDENTITY;
         }
         else {
-            keyFormat = AttributeValue.readQuotedString(mAttributes.get(ATTR_KEY_FORMAT));
+            QuotedString attributeValue = (QuotedString)mAttributes.get(ATTR_KEY_FORMAT);
+            keyFormat = attributeValue.value();
         }
 
         return keyFormat;
@@ -185,13 +192,14 @@ public final class Key {
             versions = new int[] { 1 };
         }
         else {
-            String content = AttributeValue.readQuotedString(mAttributes.get(ATTR_KEY_FORMAT_VERSIONS));
+            QuotedString attributeValue = (QuotedString)mAttributes.get(ATTR_KEY_FORMAT_VERSIONS);
+            String strVersions = attributeValue.value();
 
             /**
              * one or more values separated by the "/" character
              */
-            if (content.contains("/")) {
-                String[] results = content.split("/");
+            if (strVersions.contains("/")) {
+                String[] results = strVersions.split("/");
 
                 versions = new int[results.length];
                 for (int i = 0; i < results.length; i++) {
@@ -199,7 +207,7 @@ public final class Key {
                 }
             }
             else {
-                versions = new int[] { Integer.parseInt(content) };
+                versions = new int[] { Integer.parseInt(strVersions) };
             }
         }
 
@@ -223,7 +231,7 @@ public final class Key {
 
             builder.append(name);
             builder.append("=");
-            builder.append(mAttributes.get(name));
+            builder.append(mAttributes.get(name).toString());
 
             attributeCnt++;
         }
