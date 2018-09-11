@@ -17,6 +17,13 @@ public final class QuotedString {
         return mValue;
     }
 
+    /**
+     * 根据指定的分隔符分割为字符串数组
+     */
+    public String[] splitValue(String regex) {
+        return mValue.split(regex);
+    }
+
     @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer();
