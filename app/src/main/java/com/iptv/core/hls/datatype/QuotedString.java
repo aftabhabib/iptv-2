@@ -11,6 +11,38 @@ public final class QuotedString {
     }
 
     /**
+     * 构造函数
+     */
+    public QuotedString(int[] value, String separator) {
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < value.length; i++) {
+            if (i > 0) {
+                buffer.append(separator);
+            }
+
+            buffer.append(String.valueOf(value[i]));
+        }
+
+        mValue = buffer.toString();
+    }
+
+    /**
+     * 构造函数
+     */
+    public QuotedString(String[] value, String separator) {
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < value.length; i++) {
+            if (i > 0) {
+                buffer.append(separator);
+            }
+
+            buffer.append(value[i]);
+        }
+
+        mValue = buffer.toString();
+    }
+
+    /**
      * 值
      */
     public String value() {
@@ -18,10 +50,24 @@ public final class QuotedString {
     }
 
     /**
-     * 根据指定的分隔符分割为字符串数组
+     * 根据指定的分隔符分割
      */
     public String[] splitValue(String regex) {
         return mValue.split(regex);
+    }
+
+    /**
+     * 根据指定的分隔符分割，再转为int型
+     */
+    public int[] splitValueToIntArray(String regex) {
+        String[] src = splitValue(regex);
+        int[] dst = new int[src.length];
+
+        for (int i = 0; i < src.length; i++) {
+            dst[i] = Integer.parseInt(src[i]);
+        }
+
+        return dst;
     }
 
     @Override
