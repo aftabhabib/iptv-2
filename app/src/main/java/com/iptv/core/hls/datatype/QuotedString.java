@@ -52,15 +52,15 @@ public final class QuotedString {
     /**
      * 根据指定的分隔符分割
      */
-    public String[] splitValue(String regex) {
+    public String[] split(String regex) {
         return mValue.split(regex);
     }
 
     /**
      * 根据指定的分隔符分割，再转为int型
      */
-    public int[] splitValueToIntArray(String regex) {
-        String[] src = splitValue(regex);
+    public int[] splitToIntArray(String regex) {
+        String[] src = split(regex);
         int[] dst = new int[src.length];
 
         for (int i = 0; i < src.length; i++) {
