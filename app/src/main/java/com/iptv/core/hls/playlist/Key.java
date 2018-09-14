@@ -1,14 +1,14 @@
 package com.iptv.core.hls.playlist;
 
-import com.iptv.core.hls.datatype.EnumeratedString;
-import com.iptv.core.hls.datatype.HexadecimalSequence;
-import com.iptv.core.hls.datatype.QuotedString;
+import com.iptv.core.hls.playlist.attribute.AttributeList;
+import com.iptv.core.hls.playlist.attribute.AttributeName;
+import com.iptv.core.hls.playlist.datatype.EnumeratedString;
 
 /**
- * 密钥
+ * 媒体数据的密钥
  */
 public final class Key {
-    private Attribute mAttribute = new Attribute();
+    private AttributeList mAttributeList = new AttributeList();
 
     /**
      * 构造函数
@@ -20,164 +20,151 @@ public final class Key {
     }
 
     /**
-     * 设置属性
-     */
-    public void setAttribute(String name, String value) {
-        if (name.equals(Attribute.METHOD)) {
-            mAttribute.putEnumeratedString(name, EnumeratedString.parse(value));
-        }
-        else if (name.equals(Attribute.URI)) {
-            mAttribute.putQuotedString(name, QuotedString.parse(value));
-        }
-        else if (name.equals(Attribute.IV)) {
-            mAttribute.putHexadecimalSequence(name, HexadecimalSequence.parse(value));
-        }
-        else if (name.equals(Attribute.KEY_FORMAT)) {
-            mAttribute.putQuotedString(name, QuotedString.parse(value));
-        }
-        else if (name.equals(Attribute.KEY_FORMAT_VERSIONS)) {
-            mAttribute.putQuotedString(name, QuotedString.parse(value));
-        }
-        else {
-            /**
-             * ignore
-             */
-        }
-    }
-
-    /**
      * 设置加密方式
      */
     public void setMethod(String method) {
-        if (!method.equals(Attribute.METHOD_AES_128)
-                && !method.equals(Attribute.METHOD_SAMPLE_AES)) {
+        if ((method == null) || !isValidMethod(method)) {
             throw new IllegalArgumentException("invalid method");
         }
 
-        mAttribute.putEnumeratedString(Attribute.METHOD, new EnumeratedString(method));
+        mAttributeList.putString(AttributeName.METHOD, method);
+    }
+
+    /**
+     * 是否有效的加密方式
+     */
+    private static boolean isValidMethod(String method) {
+        return method.equals(EnumeratedString.NONE)
+                || method.equals(EnumeratedString.AES_128)
+                || method.equals(EnumeratedString.SAMPLE_AES);
     }
 
     /**
      * 设置uri
      */
     public void setUri(String uri) {
-        mAttribute.putQuotedString(Attribute.URI, new QuotedString(uri));
+        if ((uri == null) || uri.isEmpty()) {
+            throw new IllegalArgumentException("invalid uri");
+        }
+
+        mAttributeList.putString(AttributeName.URI, uri);
     }
 
     /**
      * 设置初始向量
      */
     public void setInitVector(byte[] iv) {
-        if (iv.length != 16) {
-            throw new IllegalArgumentException("iv should be 128 bits");
+        if ((iv == null) || !isValidInitVector(iv)) {
+            throw new IllegalArgumentException("invalid iv");
         }
 
-        mAttribute.putHexadecimalSequence(Attribute.IV, new HexadecimalSequence(iv));
+        mAttributeList.putByteArray(AttributeName.IV, iv);
+    }
+
+    /**
+     * 是否有效的初始向量
+     */
+    private static boolean isValidInitVector(byte[] iv) {
+        return iv.length == 16;
     }
 
     /**
      * 设置密钥格式
      */
     public void setFormat(String format) {
-        if (!format.equals(Attribute.FORMAT_IDENTITY)) {
+        if ((format == null) || format.isEmpty()) {
             throw new IllegalArgumentException("invalid format");
         }
 
-        mAttribute.putQuotedString(Attribute.KEY_FORMAT, new QuotedString(format));
+        mAttributeList.putString(AttributeName.KEY_FORMAT, format);
     }
 
     /**
      * 设置密钥格式符合的（各个）版本
      */
     public void setVersions(int[] versions) {
-        mAttribute.putQuotedString(Attribute.KEY_FORMAT_VERSIONS,
-                new QuotedString(versions, "/"));
+        if ((versions == null) || (versions.length == 0)) {
+            throw new IllegalArgumentException("invalid versions");
+        }
+
+        mAttributeList.putIntArray(AttributeName.KEY_FORMAT_VERSIONS, versions);
     }
 
     /**
      * 是否定义了加密方式
      */
     public boolean containsMethod() {
-        return mAttribute.containsName(Attribute.METHOD);
+        return mAttributeList.containsName(AttributeName.METHOD);
     }
 
     /**
      * 是否定义了uri
      */
     public boolean containsUri() {
-        return mAttribute.containsName(Attribute.URI);
+        return mAttributeList.containsName(AttributeName.URI);
     }
 
     /**
      * 是否定义了初始向量
      */
     public boolean containsInitVector() {
-        return mAttribute.containsName(Attribute.IV);
+        return mAttributeList.containsName(AttributeName.IV);
     }
 
     /**
      * 获取加密方式
      */
     public String getMethod() {
-        EnumeratedString method = mAttribute.getEnumeratedString(Attribute.METHOD);
-        return method.value();
+        return mAttributeList.getString(AttributeName.METHOD);
     }
 
     /**
      * 获取uri
      */
     public String getUri() {
-        QuotedString uri = mAttribute.getQuotedString(Attribute.URI);
-        return uri.value();
+        return mAttributeList.getString(AttributeName.URI);
     }
 
     /**
      * 获取初始向量
      */
     public byte[] getInitVector() {
-        HexadecimalSequence iv = mAttribute.getHexadecimalSequence(Attribute.IV);
-        return iv.toByteArray();
+        return mAttributeList.getByteArray(AttributeName.IV);
     }
 
     /**
      * 获取密钥格式
      */
     public String getFormat() {
-        if (!mAttribute.containsName(Attribute.KEY_FORMAT)) {
+        String format;
+        if (!mAttributeList.containsName(AttributeName.KEY_FORMAT)) {
             /**
              * 默认值：标准格式
              */
-            return Attribute.FORMAT_IDENTITY;
+            format = "identity";
         }
         else {
-            QuotedString format = mAttribute.getQuotedString(Attribute.KEY_FORMAT);
-            return format.value();
+            format = mAttributeList.getString(AttributeName.KEY_FORMAT);
         }
+
+        return format;
     }
 
     /**
      * 获取密钥格式符合的（各个）版本
      */
     public int[] getVersions() {
-        if (!mAttribute.containsName(Attribute.KEY_FORMAT_VERSIONS)) {
+        int[] versions;
+        if (!mAttributeList.containsName(AttributeName.KEY_FORMAT_VERSIONS)) {
             /**
              * 默认值：版本是1
              */
-            return new int[] { 1 };
+            versions = new int[] { 1 };
         }
         else {
-            QuotedString versions = mAttribute.getQuotedString(Attribute.KEY_FORMAT_VERSIONS);
-            /**
-             * one or more integers separated by the "/" character
-             */
-            return versions.splitToIntArray("/");
+            versions = mAttributeList.getIntArray(AttributeName.KEY_FORMAT_VERSIONS);
         }
-    }
 
-    /**
-     * 生成属性列表
-     */
-    public String makeAttributeList() {
-        return mAttribute.toString();
+        return versions;
     }
 }

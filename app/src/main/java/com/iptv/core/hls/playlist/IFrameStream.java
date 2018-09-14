@@ -6,16 +6,15 @@ import com.iptv.core.hls.playlist.datatype.EnumeratedString;
 import com.iptv.core.hls.playlist.datatype.Resolution;
 
 /**
- * 流
+ * I帧流（快速浏览）
  */
-public final class Stream {
+public final class IFrameStream {
     private AttributeList mAttributeList = new AttributeList();
-    private String mUri = null;
 
     /**
      * 构造函数
      */
-    public Stream() {
+    public IFrameStream() {
         /**
          * nothing
          */
@@ -46,12 +45,12 @@ public final class Stream {
     /**
      * 设置媒体编码格式
      */
-    public void setCodecs(String[] codecs) {
-        if ((codecs == null) || (codecs.length == 0)) {
-            throw new IllegalArgumentException("invalid codecs");
+    public void setCodec(String codec) {
+        if ((codec == null) || codec.isEmpty()) {
+            throw new IllegalArgumentException("invalid codec");
         }
 
-        mAttributeList.putStringArray(AttributeName.CODECS, codecs);
+        mAttributeList.putString(AttributeName.CODECS, codec);
     }
 
     /**
@@ -63,17 +62,6 @@ public final class Stream {
         }
 
         mAttributeList.putResolution(AttributeName.RESOLUTION, new Resolution(width, height));
-    }
-
-    /**
-     * 设置视频帧率
-     */
-    public void setVideoFrameRate(float frameRate) {
-        if (frameRate <= 0.0f || frameRate > 60.0f) {
-            throw new IllegalArgumentException("invalid frame rate");
-        }
-
-        mAttributeList.putFloat(AttributeName.FRAME_RATE, frameRate);
     }
 
     /**
@@ -96,17 +84,6 @@ public final class Stream {
     }
 
     /**
-     * 设置音频（展示）组的id
-     */
-    public void setAudioGroupId(String groupId) {
-        if ((groupId == null) || groupId.isEmpty()) {
-            throw new IllegalArgumentException("invalid group-id");
-        }
-
-        mAttributeList.putString(AttributeName.AUDIO, groupId);
-    }
-
-    /**
      * 设置视频（展示）组的id
      */
     public void setVideoGroupId(String groupId) {
@@ -118,28 +95,6 @@ public final class Stream {
     }
 
     /**
-     * 设置字幕（展示）组的id
-     */
-    public void setSubtitleGroupId(String groupId) {
-        if ((groupId == null) || groupId.isEmpty()) {
-            throw new IllegalArgumentException("invalid group-id");
-        }
-
-        mAttributeList.putString(AttributeName.SUBTITLES, groupId);
-    }
-
-    /**
-     * 设置CC字幕（展示）组的id
-     */
-    public void setClosedCaptionGroupId(String groupId) {
-        if ((groupId == null) || groupId.isEmpty()) {
-            throw new IllegalArgumentException("invalid group-id");
-        }
-
-        mAttributeList.putString(AttributeName.CLOSED_CAPTIONS, groupId);
-    }
-
-    /**
      * 设置uri
      */
     public void setUri(String uri) {
@@ -147,7 +102,7 @@ public final class Stream {
             throw new IllegalArgumentException("invalid uri");
         }
 
-        mUri = uri;
+        mAttributeList.putString(AttributeName.URI, uri);
     }
 
     /**
@@ -167,7 +122,7 @@ public final class Stream {
     /**
      * 是否定义了媒体编码格式
      */
-    public boolean containsCodecs() {
+    public boolean containsCodec() {
         return mAttributeList.containsName(AttributeName.CODECS);
     }
 
@@ -179,24 +134,10 @@ public final class Stream {
     }
 
     /**
-     * 是否定义了视频帧率
-     */
-    public boolean containsVideoFrameRate() {
-        return mAttributeList.containsName(AttributeName.FRAME_RATE);
-    }
-
-    /**
      * 是否定义了HDCP层次
      */
     public boolean containsHDCPLevel() {
         return mAttributeList.containsName(AttributeName.HDCP_LEVEL);
-    }
-
-    /**
-     * 是否定义了音频（展示）组
-     */
-    public boolean containsAudioGroupId() {
-        return mAttributeList.containsName(AttributeName.AUDIO);
     }
 
     /**
@@ -207,24 +148,10 @@ public final class Stream {
     }
 
     /**
-     * 是否定义了字幕（展示）组
-     */
-    public boolean containsSubtitleGroupId() {
-        return mAttributeList.containsName(AttributeName.SUBTITLES);
-    }
-
-    /**
-     * 是否定义了CC字幕（展示）组
-     */
-    public boolean containsClosedCaptionGroupId() {
-        return mAttributeList.containsName(AttributeName.CLOSED_CAPTIONS);
-    }
-
-    /**
      * 是否定义了uri
      */
     public boolean containsUri() {
-        return mUri != null;
+        return mAttributeList.containsName(AttributeName.URI);
     }
 
     /**
@@ -244,8 +171,8 @@ public final class Stream {
     /**
      * 获取媒体编码格式
      */
-    public String[] getCodecs() {
-        return mAttributeList.getStringArray(AttributeName.CODECS);
+    public String getCodec() {
+        return mAttributeList.getString(AttributeName.CODECS);
     }
 
     /**
@@ -265,24 +192,10 @@ public final class Stream {
     }
 
     /**
-     * 获取视频帧率
-     */
-    public float getVideoFrameRate() {
-        return mAttributeList.getFloat(AttributeName.FRAME_RATE);
-    }
-
-    /**
      * 获取HDCP层次
      */
     public String getHDCPLevel() {
         return mAttributeList.getString(AttributeName.HDCP_LEVEL);
-    }
-
-    /**
-     * 获取音频（展示）组的id
-     */
-    public String getAudioGroupId() {
-        return mAttributeList.getString(AttributeName.AUDIO);
     }
 
     /**
@@ -293,27 +206,9 @@ public final class Stream {
     }
 
     /**
-     * 获取字幕（展示）组的id
-     */
-    public String getSubtitleGroupId() {
-        return mAttributeList.getString(AttributeName.SUBTITLES);
-    }
-
-    /**
-     * 获取CC字幕（展示）组的id
-     */
-    public String getClosedCaptionGroupId() {
-        return mAttributeList.getString(AttributeName.CLOSED_CAPTIONS);
-    }
-
-    /**
      * 获取uri
      */
     public String getUri() {
-        if (!containsUri()) {
-            throw new IllegalStateException("no uri");
-        }
-
-        return mUri;
+        return mAttributeList.getString(AttributeName.URI);
     }
 }

@@ -1,7 +1,10 @@
-package com.iptv.core.utils;
+package com.iptv.core.hls.exception;
 
 import java.io.IOException;
 
+/**
+ * 格式异常
+ */
 public final class MalformedFormatException extends IOException {
     /**
      * 构造函数
@@ -13,7 +16,7 @@ public final class MalformedFormatException extends IOException {
     /**
      * 构造函数
      */
-    public MalformedFormatException() {
+    private MalformedFormatException() {
         super();
     }
 }
