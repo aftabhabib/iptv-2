@@ -1,5 +1,7 @@
 package com.iptv.core.hls.playlist.attribute;
 
+import com.iptv.core.hls.exception.MalformedFormatException;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -82,5 +84,19 @@ public final class AttributeList {
         }
 
         return buffer.toString();
+    }
+
+    /**
+     * 根据字符串创建属性列表
+     */
+    public static AttributeList parse(String strAttributeList) throws MalformedFormatException {
+        AttributeList attributeList = new AttributeList();
+
+        for (String strAttribute : strAttributeList.split(",")) {
+            Attribute attribute = Attribute.parse(strAttribute);
+            attributeList.put(attribute);
+        }
+
+        return attributeList;
     }
 }
