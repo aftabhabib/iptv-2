@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 展示列表（内部按组归并）
+ * 展示列表
  */
 public final class RenditionList {
     private Map<String, List<Media>> mGroupTable = new HashMap<>();
@@ -30,48 +30,37 @@ public final class RenditionList {
     }
 
     /**
-     * 生成展示组的定义
+     * 放入展示
      */
-    private static String makeName(String type, String groupId) {
-        return type + "-" + groupId;
-    }
+    public void put(Media rendition) {
+        String key = makeKey(rendition.getType(), rendition.getGroupId());
 
-    /**
-     * 添加一个展示
-     */
-    public void addRendition(Media rendition) {
-        if (!isValidRendition(rendition)) {
-            throw new IllegalArgumentException("invalid rendition");
+        if (!mGroupTable.containsKey(key)) {
+            mGroupTable.put(key, new ArrayList<Media>());
         }
 
-        String name = makeName(rendition.getType(), rendition.getGroupId());
-
-        if (!mGroupTable.containsKey(name)) {
-            mGroupTable.put(name, new ArrayList<Media>());
-        }
-
-        mGroupTable.get(name).add(rendition);
+        mGroupTable.get(key).add(rendition);
     }
 
     /**
-     * 是不是有效的展示
+     * 获取指定的（展示）组
      */
-    private static boolean isValidRendition(Media rendition) {
-        return rendition.containsType() && rendition.containsGroupId();
-    }
+    public Media[] getGroup(String type, String groupId) {
+        String key = makeKey(type, groupId);
 
-    /**
-     * 获取指定（展示）组内的所有展示
-     */
-    public Media[] getRenditionsInGroup(String type, String groupId) {
-        String name = makeName(type, groupId);
-
-        if (!mGroupTable.containsKey(name)) {
+        if (!mGroupTable.containsKey(key)) {
             return null;
         }
         else {
-            List<Media> group = mGroupTable.get(name);
+            List<Media> group = mGroupTable.get(key);
             return group.toArray(new Media[group.size()]);
         }
+    }
+
+    /**
+     * 生成（展示）组的定义
+     */
+    private static String makeKey(String type, String groupId) {
+        return type + "-" + groupId;
     }
 }
