@@ -1,10 +1,11 @@
 package com.iptv.core.hls.playlist;
 
-import com.iptv.core.hls.exception.MalformedFormatException;
+import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
 import com.iptv.core.hls.playlist.datatype.Resolution;
+import com.iptv.core.hls.playlist.tag.Tag;
 
 /**
  * 流
@@ -121,7 +122,7 @@ public final class Stream {
     /**
      * 获取带宽
      */
-    public int getBandwidth() throws MalformedFormatException {
+    public int getBandwidth() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.BANDWIDTH);
         return attribute.getIntegerValue();
     }
@@ -129,7 +130,7 @@ public final class Stream {
     /**
      * 获取平均带宽
      */
-    public int getAvgBandwidth() throws MalformedFormatException {
+    public int getAvgBandwidth() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.AVG_BANDWIDTH);
         return attribute.getIntegerValue();
     }
@@ -137,7 +138,7 @@ public final class Stream {
     /**
      * 获取媒体编码格式
      */
-    public String[] getCodecs() throws MalformedFormatException {
+    public String[] getCodecs() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.CODECS);
         return attribute.getQuotedStringValue().splitContent(",");
     }
@@ -145,7 +146,7 @@ public final class Stream {
     /**
      * 获取视频图像宽
      */
-    public int getVideoWidth() throws MalformedFormatException {
+    public int getVideoWidth() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.RESOLUTION);
         return attribute.getResolutionValue().getWidth();
     }
@@ -153,7 +154,7 @@ public final class Stream {
     /**
      * 获取视频图像高
      */
-    public int getVideoHeight() throws MalformedFormatException {
+    public int getVideoHeight() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.RESOLUTION);
         return attribute.getResolutionValue().getHeight();
     }
@@ -161,7 +162,7 @@ public final class Stream {
     /**
      * 获取视频帧率
      */
-    public float getVideoFrameRate() throws MalformedFormatException {
+    public float getVideoFrameRate() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.FRAME_RATE);
         return attribute.getFloatValue();
     }
@@ -169,7 +170,7 @@ public final class Stream {
     /**
      * 获取HDCP层次
      */
-    public String getHDCPLevel() throws MalformedFormatException {
+    public String getHDCPLevel() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.HDCP_LEVEL);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -177,7 +178,7 @@ public final class Stream {
     /**
      * 获取音频（展示）组的id
      */
-    public String getAudioGroupId() throws MalformedFormatException {
+    public String getAudioGroupId() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.AUDIO);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -185,7 +186,7 @@ public final class Stream {
     /**
      * 获取视频（展示）组的id
      */
-    public String getVideoGroupId() throws MalformedFormatException {
+    public String getVideoGroupId() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.VIDEO);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -193,7 +194,7 @@ public final class Stream {
     /**
      * 获取字幕（展示）组的id
      */
-    public String getSubtitleGroupId() throws MalformedFormatException {
+    public String getSubtitleGroupId() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.SUBTITLES);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -201,7 +202,7 @@ public final class Stream {
     /**
      * 获取CC字幕（展示）组的id
      */
-    public String getClosedCaptionGroupId() throws MalformedFormatException {
+    public String getClosedCaptionGroupId() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.CLOSED_CAPTIONS);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -218,5 +219,10 @@ public final class Stream {
      */
     public String getUri() {
         return mUri;
+    }
+
+    @Override
+    public String toString() {
+        return Tag.Name.STREAM_INF + ":" + mAttributeList.toString() + "\r\n" + mUri;
     }
 }

@@ -1,9 +1,10 @@
 package com.iptv.core.hls.playlist;
 
-import com.iptv.core.hls.exception.MalformedFormatException;
+import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
+import com.iptv.core.hls.playlist.tag.Tag;
 
 /**
  * 媒体
@@ -145,7 +146,7 @@ public final class Media {
     /**
      * 获取uri
      */
-    public String getUri() throws MalformedFormatException {
+    public String getUri() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.URI);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -153,7 +154,7 @@ public final class Media {
     /**
      * 获取媒体所属（展示）组的id
      */
-    public String getGroupId() throws MalformedFormatException {
+    public String getGroupId() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.GROUP_ID);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -161,7 +162,7 @@ public final class Media {
     /**
      * 获取语言
      */
-    public String getLanguage() throws MalformedFormatException {
+    public String getLanguage() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.LANGUAGE);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -169,7 +170,7 @@ public final class Media {
     /**
      * 获取与该表现连带的语言
      */
-    public String getAssociatedLanguage() throws MalformedFormatException {
+    public String getAssociatedLanguage() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.ASSOCIATED_LANGUAGE);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -177,7 +178,7 @@ public final class Media {
     /**
      * 获取名称
      */
-    public String getName() throws MalformedFormatException {
+    public String getName() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.NAME);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -185,7 +186,7 @@ public final class Media {
     /**
      * 是不是默认的选择
      */
-    public boolean isDefaultSelect() throws MalformedFormatException {
+    public boolean isDefaultSelect() throws MalformedPlaylistException {
         boolean state;
         if (!mAttributeList.containsAttribute(Attribute.Name.DEFAULT)) {
             /**
@@ -204,7 +205,7 @@ public final class Media {
     /**
      * 是不是自动的选择
      */
-    public boolean isAutoSelect() throws MalformedFormatException {
+    public boolean isAutoSelect() throws MalformedPlaylistException {
         boolean state;
         if (!mAttributeList.containsAttribute(Attribute.Name.AUTO_SELECT)) {
             /**
@@ -223,7 +224,7 @@ public final class Media {
     /**
      * 是不是强制的选择
      */
-    public boolean isForcedSelect() throws MalformedFormatException {
+    public boolean isForcedSelect() throws MalformedPlaylistException {
         boolean state;
         if (!mAttributeList.containsAttribute(Attribute.Name.FORCED)) {
             /**
@@ -242,7 +243,7 @@ public final class Media {
     /**
      * 获取流内（CC字幕轨道）的id
      */
-    public String getInStreamId() throws MalformedFormatException {
+    public String getInStreamId() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.IN_STREAM_ID);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -250,7 +251,7 @@ public final class Media {
     /**
      * 获取特性
      */
-    public String[] getCharacteristics() throws MalformedFormatException {
+    public String[] getCharacteristics() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.CHARACTERISTICS);
         return attribute.getQuotedStringValue().splitContent(",");
     }
@@ -258,10 +259,15 @@ public final class Media {
     /**
      * 获取音频声道数
      */
-    public int getAudioChannels() throws MalformedFormatException {
+    public int getAudioChannels() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.CHANNELS);
 
         String[] parameters = attribute.getQuotedStringValue().splitContent("/");
         return Integer.parseInt(parameters[0]);
+    }
+
+    @Override
+    public String toString() {
+        return Tag.Name.MEDIA + ":" + mAttributeList.toString();
     }
 }

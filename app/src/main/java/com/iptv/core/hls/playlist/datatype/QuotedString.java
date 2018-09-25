@@ -1,6 +1,6 @@
 package com.iptv.core.hls.playlist.datatype;
 
-import com.iptv.core.hls.exception.MalformedFormatException;
+import com.iptv.core.hls.exception.MalformedPlaylistException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -64,9 +64,9 @@ public final class QuotedString {
     /**
      * 来自字符串
      */
-    public static QuotedString valueOf(String str) throws MalformedFormatException {
+    public static QuotedString valueOf(String str) throws MalformedPlaylistException {
         if (!isValidFormat(str)) {
-            throw new MalformedFormatException("should be within a pair of double quotes");
+            throw new MalformedPlaylistException("should be within a pair of double quotes");
         }
 
         return new QuotedString(str.substring(1, str.length() - 1));

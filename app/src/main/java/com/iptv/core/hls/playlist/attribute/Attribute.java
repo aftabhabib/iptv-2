@@ -1,6 +1,6 @@
 package com.iptv.core.hls.playlist.attribute;
 
-import com.iptv.core.hls.exception.MalformedFormatException;
+import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.datatype.EnumeratedString;
 import com.iptv.core.hls.playlist.datatype.HexadecimalSequence;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
@@ -31,7 +31,7 @@ public final class Attribute {
     /**
      * 获取布尔型属性值
      */
-    public boolean getBooleanValue() throws MalformedFormatException {
+    public boolean getBooleanValue() throws MalformedPlaylistException {
         if (mValue.equals(EnumeratedString.YES)) {
             return true;
         }
@@ -39,50 +39,50 @@ public final class Attribute {
             return false;
         }
         else {
-            throw new MalformedFormatException("only YES or NO");
+            throw new MalformedPlaylistException("only YES or NO");
         }
     }
 
     /**
      * 获取整型属性值
      */
-    public int getIntegerValue() throws MalformedFormatException {
+    public int getIntegerValue() throws MalformedPlaylistException {
         try {
             return Integer.parseInt(mValue);
         }
         catch (NumberFormatException e) {
-            throw new MalformedFormatException("should be decimal integer");
+            throw new MalformedPlaylistException("should be decimal integer");
         }
     }
 
     /**
      * 获取长整型属性值
      */
-    public long getLongValue() throws MalformedFormatException {
+    public long getLongValue() throws MalformedPlaylistException {
         try {
             return Long.parseLong(mValue);
         }
         catch (NumberFormatException e) {
-            throw new MalformedFormatException("should be decimal integer");
+            throw new MalformedPlaylistException("should be decimal integer");
         }
     }
 
     /**
      * 获取浮点型属性值
      */
-    public float getFloatValue() throws MalformedFormatException {
+    public float getFloatValue() throws MalformedPlaylistException {
         try {
             return Float.parseFloat(mValue);
         }
         catch (NumberFormatException e) {
-            throw new MalformedFormatException("should be decimal float");
+            throw new MalformedPlaylistException("should be decimal float");
         }
     }
 
     /**
      * 获取16进制序列型属性值
      */
-    public HexadecimalSequence getHexadecimalSequenceValue() throws MalformedFormatException {
+    public HexadecimalSequence getHexadecimalSequenceValue() throws MalformedPlaylistException {
         return HexadecimalSequence.valueOf(mValue);
     }
 
@@ -96,14 +96,14 @@ public final class Attribute {
     /**
      * 获取引用字符串型属性值
      */
-    public QuotedString getQuotedStringValue() throws MalformedFormatException {
+    public QuotedString getQuotedStringValue() throws MalformedPlaylistException {
         return QuotedString.valueOf(mValue);
     }
 
     /**
      * 获取分辨率型属性值
      */
-    public Resolution getResolutionValue() throws MalformedFormatException {
+    public Resolution getResolutionValue() throws MalformedPlaylistException {
         return Resolution.valueOf(mValue);
     }
 
@@ -115,10 +115,10 @@ public final class Attribute {
     /**
      * 根据字符串创建属性
      */
-    public static Attribute parse(String strAttribute) throws MalformedFormatException {
+    public static Attribute parse(String strAttribute) throws MalformedPlaylistException {
         String[] result = strAttribute.split("=");
         if (result.length != 2) {
-            throw new MalformedFormatException("should be <name>=<value>");
+            throw new MalformedPlaylistException("should be <name>=<value>");
         }
 
         return new Attribute(result[0], result[1]);
