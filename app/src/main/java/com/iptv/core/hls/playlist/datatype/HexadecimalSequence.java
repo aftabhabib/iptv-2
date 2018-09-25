@@ -24,7 +24,7 @@ public final class HexadecimalSequence {
     /**
      * 获取值
      */
-    public byte[] getValue() {
+    public byte[] toByteArray() {
         return mValue;
     }
 
