@@ -38,34 +38,28 @@ public final class Resolution {
 
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
-
-        buffer.append(mWidth);
-        buffer.append("x");
-        buffer.append(mHeight);
-
-        return buffer.toString();
+        return String.valueOf(mWidth) + "x" + String.valueOf(mHeight);
     }
 
     /**
      * 来自字符串
      */
-    public static Resolution valueOf(String content)
+    public static Resolution valueOf(String str)
             throws MalformedFormatException, NumberFormatException {
-        if (!isValidFormat(content)) {
+        if (!isValidFormat(str)) {
             throw new MalformedFormatException("should be two integers " +
                     "separated by the \"x\" character");
         }
 
-        String[] result = content.split("x");
+        String[] result = str.split("x");
         return new Resolution(Integer.parseInt(result[0]), Integer.parseInt(result[1]));
     }
 
     /**
      * 是否有效的格式
      */
-    private static boolean isValidFormat(String content) {
-        Matcher matcher = REGEX_FORMAT.matcher(content);
+    private static boolean isValidFormat(String str) {
+        Matcher matcher = REGEX_FORMAT.matcher(str);
         return matcher.find();
     }
 }

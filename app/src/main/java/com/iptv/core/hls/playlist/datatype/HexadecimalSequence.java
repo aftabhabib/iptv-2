@@ -12,31 +12,45 @@ import java.util.regex.Pattern;
 public final class HexadecimalSequence {
     private static final Pattern REGEX_FORMAT = Pattern.compile("^(0x|0X)[A-Za-z0-9]+$");
 
+    private byte[] mValue;
+
     /**
-     * 读
+     * 构造函数
      */
-    public static byte[] read(String value) throws MalformedFormatException {
-        if (!isValidFormat(value)) {
+    public HexadecimalSequence(byte[] value) {
+        mValue = value;
+    }
+
+    /**
+     * 获取值
+     */
+    public byte[] getValue() {
+        return mValue;
+    }
+
+    @Override
+    public String toString() {
+        BigInteger bigInteger = new BigInteger(mValue);
+        return "0x" + bigInteger.toString(16);
+    }
+
+    /**
+     * 来自字符串
+     */
+    public static HexadecimalSequence valueOf(String str) throws MalformedFormatException {
+        if (!isValidFormat(str)) {
             throw new MalformedFormatException("should be prefixed with 0x or 0X");
         }
 
-        BigInteger bigInteger = new BigInteger(value.substring(2), 16);
-        return bigInteger.toByteArray();
+        BigInteger bigInteger = new BigInteger(str.substring(2), 16);
+        return new HexadecimalSequence(bigInteger.toByteArray());
     }
 
     /**
      * 是否有效的格式
      */
-    private static boolean isValidFormat(String content) {
-        Matcher matcher = REGEX_FORMAT.matcher(content);
+    private static boolean isValidFormat(String str) {
+        Matcher matcher = REGEX_FORMAT.matcher(str);
         return matcher.find();
-    }
-
-    /**
-     * 写
-     */
-    public static String write(byte[] value) {
-        BigInteger bigInteger = new BigInteger(value);
-        return "0x" + bigInteger.toString(16);
     }
 }

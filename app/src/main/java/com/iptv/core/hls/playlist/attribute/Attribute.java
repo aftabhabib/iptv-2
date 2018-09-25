@@ -1,6 +1,7 @@
 package com.iptv.core.hls.playlist.attribute;
 
 import com.iptv.core.hls.exception.MalformedFormatException;
+import com.iptv.core.hls.playlist.datatype.EnumeratedString;
 import com.iptv.core.hls.playlist.datatype.HexadecimalSequence;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
 import com.iptv.core.hls.playlist.datatype.Resolution;
@@ -25,6 +26,21 @@ public final class Attribute {
      */
     public String getName() {
         return mName;
+    }
+
+    /**
+     * 获取布尔型属性值
+     */
+    public boolean getBooleanValue() throws MalformedFormatException {
+        if (mValue.equals(EnumeratedString.YES)) {
+            return true;
+        }
+        else if (mValue.equals(EnumeratedString.NO)) {
+            return false;
+        }
+        else {
+            throw new MalformedFormatException("only YES or NO");
+        }
     }
 
     /**
@@ -66,8 +82,8 @@ public final class Attribute {
     /**
      * 获取16进制序列型属性值
      */
-    public byte[] getHexadecimalSequenceValue() throws MalformedFormatException {
-        return HexadecimalSequence.read(mValue);
+    public HexadecimalSequence getHexadecimalSequenceValue() throws MalformedFormatException {
+        return HexadecimalSequence.valueOf(mValue);
     }
 
     /**
@@ -80,8 +96,8 @@ public final class Attribute {
     /**
      * 获取引用字符串型属性值
      */
-    public String getQuotedStringValue() throws MalformedFormatException {
-        return QuotedString.read(mValue);
+    public QuotedString getQuotedStringValue() throws MalformedFormatException {
+        return QuotedString.valueOf(mValue);
     }
 
     /**
@@ -111,6 +127,13 @@ public final class Attribute {
     /**
      * 创建属性
      */
+    public static Attribute create(String name, boolean value) {
+        return new Attribute(name, value ? EnumeratedString.YES : EnumeratedString.NO);
+    }
+
+    /**
+     * 创建属性
+     */
     public static Attribute create(String name, int value) {
         return new Attribute(name, String.valueOf(value));
     }
@@ -132,8 +155,8 @@ public final class Attribute {
     /**
      * 创建属性
      */
-    public static Attribute create(String name, byte[] value) {
-        return new Attribute(name, HexadecimalSequence.write(value));
+    public static Attribute create(String name, HexadecimalSequence value) {
+        return new Attribute(name, value.toString());
     }
 
     /**
