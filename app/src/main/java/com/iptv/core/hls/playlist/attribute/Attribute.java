@@ -102,7 +102,7 @@ public final class Attribute {
     public static Attribute parse(String strAttribute) throws MalformedFormatException {
         String[] result = strAttribute.split("=");
         if (result.length != 2) {
-            throw new MalformedFormatException("should be name=value");
+            throw new MalformedFormatException("should be <name>=<value>");
         }
 
         return new Attribute(result[0], result[1]);
