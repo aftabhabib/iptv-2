@@ -1,6 +1,6 @@
 package com.iptv.core.hls.playlist;
 
-import com.iptv.core.hls.exception.MalformedFormatException;
+import com.iptv.core.hls.exception.MalformedPlaylistException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,13 +30,6 @@ public final class ByteRange {
     }
 
     /**
-     * 是否定义了偏移
-     */
-    public boolean containsOffset() {
-        return mOffset >= 0;
-    }
-
-    /**
      * 获取长度
      */
     public long getLength() {
@@ -47,10 +40,6 @@ public final class ByteRange {
      * 获取偏移
      */
     public long getOffset() {
-        if (!containsOffset()) {
-            throw new IllegalStateException("no offset");
-        }
-
         return mOffset;
     }
 
@@ -59,7 +48,7 @@ public final class ByteRange {
         StringBuffer buffer = new StringBuffer();
 
         buffer.append(mLength);
-        if (containsOffset()) {
+        if (mOffset > 0) {
             buffer.append("@");
             buffer.append(mOffset);
         }
@@ -70,12 +59,12 @@ public final class ByteRange {
     /**
      * 来自字符串
      */
-    public static ByteRange valueOf(String content) throws MalformedFormatException {
-        if (isValidFormat(content)) {
-            throw new MalformedFormatException("should be <n>[@<o>]");
+    public static ByteRange valueOf(String str) throws MalformedPlaylistException {
+        if (isValidFormat(str)) {
+            throw new MalformedPlaylistException("should be <n>[@<o>]");
         }
 
-        String[] results = content.split("@");
+        String[] results = str.split("@");
         if (results.length == 1) {
             return new ByteRange(Long.parseLong(results[0]));
         }
@@ -87,8 +76,8 @@ public final class ByteRange {
     /**
      * 是否有效的格式
      */
-    private static boolean isValidFormat(String content) {
-        Matcher matcher = REGEX_FORMAT.matcher(content);
+    private static boolean isValidFormat(String str) {
+        Matcher matcher = REGEX_FORMAT.matcher(str);
         return matcher.find();
     }
 }
