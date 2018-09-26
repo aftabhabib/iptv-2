@@ -1,70 +1,75 @@
 package com.iptv.core.hls.playlist;
 
+import com.iptv.core.hls.exception.MalformedPlaylistException;
+import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
-import com.iptv.core.hls.playlist.attribute.AttributeName;
+import com.iptv.core.hls.playlist.datatype.QuotedString;
+import com.iptv.core.hls.playlist.tag.Tag;
 
 /**
  * 映射（片段的初始化数据）
  */
 public final class Map {
-    private AttributeList mAttributeList = new AttributeList();
+    private AttributeList mAttributeList;
 
     /**
      * 构造函数
      */
     public Map() {
-        /**
-         * nothing
-         */
+        mAttributeList = new AttributeList();
+    }
+
+    /**
+     * 构造函数
+     */
+    public Map(AttributeList attributeList) {
+        mAttributeList = attributeList;
     }
 
     /**
      * 设置uri
      */
     public void setUri(String uri) {
-        if ((uri == null) || uri.isEmpty()) {
-            throw new IllegalArgumentException("invalid uri");
-        }
-
-        mAttributeList.putString(AttributeName.URI, uri);
+        Attribute attribute = Attribute.create(Attribute.Name.URI, new QuotedString(uri));
+        mAttributeList.put(attribute);
     }
 
     /**
      * 设置字节范围
      */
     public void setByteRange(ByteRange range) {
-        if (range == null) {
-            throw new IllegalArgumentException("invalid range");
-        }
-
-        mAttributeList.putByteRange(AttributeName.BYTE_RANGE, range);
+        Attribute attribute = Attribute.create(
+                Attribute.Name.BYTE_RANGE, new QuotedString(range.toString()));
+        mAttributeList.put(attribute);
     }
 
     /**
      * 是否定义了uri
      */
-    public boolean containsUri() {
-        return mAttributeList.containsName(AttributeName.URI);
-    }
-
-    /**
-     * 是否定义了字节范围
-     */
-    public boolean containsByteRange() {
-        return mAttributeList.containsName(AttributeName.BYTE_RANGE);
+    public boolean containsAttribute(String attributeName) {
+        return mAttributeList.containsAttribute(attributeName);
     }
 
     /**
      * 获取uri
      */
-    public String getUri() {
-        return mAttributeList.getString(AttributeName.URI);
+    public String getUri() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.URI);
+        return attribute.getQuotedStringValue().getContent();
     }
 
     /**
      * 获取字节范围
      */
-    public ByteRange getByteRange() {
-        return mAttributeList.getByteRange(AttributeName.BYTE_RANGE);
+    public ByteRange getByteRange() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.BYTE_RANGE);
+
+        String strRange = attribute.getQuotedStringValue().getContent();
+        return ByteRange.valueOf(strRange);
+    }
+
+    @Override
+    public String toString() {
+        return Tag.Name.MAP + ":" + mAttributeList.toString();
     }
 }
