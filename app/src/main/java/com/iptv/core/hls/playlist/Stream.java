@@ -115,7 +115,7 @@ public final class Stream {
     /**
      * 是否定义了属性
      */
-    public boolean contains(String attributeName) {
+    public boolean containsAttribute(String attributeName) {
         return mAttributeList.containsAttribute(attributeName);
     }
 

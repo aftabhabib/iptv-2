@@ -85,9 +85,9 @@ public final class IFrameStream {
     }
 
     /**
-     * 是否定义了带宽
+     * 是否定义了属性
      */
-    public boolean contains(String attributeName) {
+    public boolean containsAttribute(String attributeName) {
         return mAttributeList.containsAttribute(attributeName);
     }
 
