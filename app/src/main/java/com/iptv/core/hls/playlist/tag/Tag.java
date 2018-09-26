@@ -3,30 +3,14 @@ package com.iptv.core.hls.playlist.tag;
 /**
  * 标签
  */
-public final class Tag {
+public abstract class Tag {
     private String mName;
-    private String mValue;
 
     /**
      * 构造函数
      */
     public Tag(String name) {
-        this(name,null);
-    }
-
-    /**
-     * 构造函数
-     */
-    public Tag(String name, String value) {
         mName = name;
-        mValue = value;
-    }
-
-    /**
-     * 是否有值
-     */
-    public boolean containsValue() {
-        return mValue != null;
     }
 
     /**
@@ -36,55 +20,59 @@ public final class Tag {
         return mName;
     }
 
-    /**
-     * 获取值
-     */
-    public String getValue() {
-        if (!containsValue()) {
-            throw new IllegalStateException("no value");
-        }
-
-        return mValue;
-    }
-
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer = new StringBuffer(mName);
 
-        buffer.append(mName);
         if (containsValue()) {
-            buffer.append(":");
-            buffer.append(mValue);
+            buffer.append(':');
+            buffer.append(getStringValue());
         }
 
         return buffer.toString();
     }
 
     /**
-     * 来自字符串
+     * 是否有值
      */
-    public static Tag valueOf(String line) {
-        if (!isTag(line)) {
-            throw new IllegalArgumentException("not a tag");
-        }
-
-        String[] results = line.split(":");
-        if (results.length == 1) {
-            return new Tag(results[0]);
-        }
-        else {
-            return new Tag(results[0], results[1]);
-        }
-    }
+    protected abstract boolean containsValue();
 
     /**
-     * 是不是标签
+     * 获取字符串型的值
      */
-    public static boolean isTag(String line) {
-        if (line == null) {
-            throw new IllegalArgumentException("invalid line");
-        }
+    protected abstract String getStringValue();
 
-        return line.startsWith("#EXT");
+    /**
+     * 标签名
+     */
+    public static class Name {
+        public static final String M3U = "#EXTM3U";
+        public static final String VERSION = "#EXT-X-VERSION";
+
+        public static final String TARGET_DURATION = "#EXT-X-TARGETDURATION";
+        public static final String MEDIA_SEQUENCE = "#EXT-X-MEDIA-SEQUENCE";
+        public static final String DISCONTINUITY_SEQUENCE = "#EXT-X-DISCONTINUITY-SEQUENCE";
+        public static final String END_LIST = "#EXT-X-ENDLIST";
+        public static final String PLAYLIST_TYPE = "#EXT-X-PLAYLIST-TYPE";
+        public static final String I_FRAMES_ONLY = "#EXT-X-I-FRAMES-ONLY";
+
+        public static final String INF = "#EXTINF";
+        public static final String KEY = "#EXT-X-KEY";
+        public static final String DISCONTINUITY = "#EXT-X-DISCONTINUITY";
+        public static final String BYTE_RANGE = "#EXT-X-BYTERANGE";
+        public static final String MAP = "#EXT-X-MAP";
+
+        public static final String MEDIA = "#EXT-X-MEDIA";
+        public static final String STREAM_INF = "#EXT-X-STREAM-INF";
+        public static final String I_FRAME_STREAM_INF = "EXT-X-I-FRAME-STREAM-INF";
+
+        /**
+         * 构造函数（私有属性，不允许创建实例）
+         */
+        private Name() {
+            /**
+             * nothing
+             */
+        }
     }
 }
