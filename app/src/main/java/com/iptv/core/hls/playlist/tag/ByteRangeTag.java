@@ -1,5 +1,6 @@
 package com.iptv.core.hls.playlist.tag;
 
+import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.ByteRange;
 
 /**
@@ -7,6 +8,15 @@ import com.iptv.core.hls.playlist.ByteRange;
  */
 public final class ByteRangeTag extends Tag {
     private ByteRange mRange;
+
+    /**
+     * 构造函数
+     */
+    public ByteRangeTag(String strRange) throws MalformedPlaylistException {
+        super(Name.BYTE_RANGE);
+
+        mRange = ByteRange.valueOf(strRange);
+    }
 
     /**
      * 构造函数

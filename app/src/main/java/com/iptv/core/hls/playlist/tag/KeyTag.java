@@ -1,5 +1,6 @@
 package com.iptv.core.hls.playlist.tag;
 
+import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
 
 /**
@@ -7,6 +8,15 @@ import com.iptv.core.hls.playlist.attribute.AttributeList;
  */
 public final class KeyTag extends Tag {
     private AttributeList mAttributeList;
+
+    /**
+     * 构造函数
+     */
+    public KeyTag(String strAttributeList) throws MalformedPlaylistException {
+        super(Name.KEY);
+
+        mAttributeList = AttributeList.parse(strAttributeList);
+    }
 
     /**
      * 构造函数
