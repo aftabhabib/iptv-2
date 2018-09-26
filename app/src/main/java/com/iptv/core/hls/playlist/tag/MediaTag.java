@@ -1,5 +1,6 @@
 package com.iptv.core.hls.playlist.tag;
 
+import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
@@ -20,20 +21,113 @@ public final class MediaTag extends Tag {
     }
 
     /**
-     * 获取属性列表
+     * 是否定义了属性
      */
-    public AttributeList getAttributeList() {
-        return mAttributeList;
+    public boolean containsAttribute(String attributeName) {
+        return mAttributeList.containsAttribute(attributeName);
+    }
+
+    /**
+     * 获取类型
+     */
+    public String getType() {
+        Attribute attribute = mAttributeList.get(Attribute.Name.TYPE);
+        return attribute.getEnumeratedStringValue();
+    }
+
+    /**
+     * 获取uri
+     */
+    public String getUri() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.URI);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取媒体所属（展示）组的id
+     */
+    public String getGroupId() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.GROUP_ID);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取语言
+     */
+    public String getLanguage() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.LANGUAGE);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取与该表现连带的语言
+     */
+    public String getAssociatedLanguage() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.ASSOCIATED_LANGUAGE);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取名称
+     */
+    public String getTitle() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.NAME);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 是不是默认的选择
+     */
+    public boolean isDefaultSelect() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.DEFAULT);
+        return attribute.getBooleanValue();
+    }
+
+    /**
+     * 是不是自动的选择
+     */
+    public boolean isAutoSelect() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.AUTO_SELECT);
+        return attribute.getBooleanValue();
+    }
+
+    /**
+     * 是不是强制的选择
+     */
+    public boolean isForcedSelect() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.FORCED);
+        return attribute.getBooleanValue();
+    }
+
+    /**
+     * 获取流内（CC字幕轨道）的id
+     */
+    public String getInStreamId() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.IN_STREAM_ID);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取特性
+     */
+    public String[] getCharacteristics() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.CHARACTERISTICS);
+        return attribute.getQuotedStringValue().splitContent(",");
+    }
+
+    /**
+     * 获取音频声道数
+     */
+    public int getAudioChannels() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.CHANNELS);
+
+        String[] parameters = attribute.getQuotedStringValue().splitContent("/");
+        return Integer.parseInt(parameters[0]);
     }
 
     @Override
-    protected boolean containsValue() {
-        return true;
-    }
-
-    @Override
-    protected String getStringValue() {
-        return mAttributeList.toString();
+    public String toString() {
+        return mName + ":" + mAttributeList.toString();
     }
 
     /**

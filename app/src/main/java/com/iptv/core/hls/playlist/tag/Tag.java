@@ -3,8 +3,8 @@ package com.iptv.core.hls.playlist.tag;
 /**
  * 标签
  */
-public abstract class Tag {
-    private String mName;
+public class Tag {
+    protected String mName;
 
     /**
      * 构造函数
@@ -22,25 +22,8 @@ public abstract class Tag {
 
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer(mName);
-
-        if (containsValue()) {
-            buffer.append(':');
-            buffer.append(getStringValue());
-        }
-
-        return buffer.toString();
+        return mName;
     }
-
-    /**
-     * 是否有值
-     */
-    protected abstract boolean containsValue();
-
-    /**
-     * 获取字符串型的值
-     */
-    protected abstract String getStringValue();
 
     /**
      * 标签名

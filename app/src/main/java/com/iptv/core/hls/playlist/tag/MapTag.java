@@ -1,5 +1,6 @@
 package com.iptv.core.hls.playlist.tag;
 
+import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.ByteRange;
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
@@ -21,20 +22,33 @@ public class MapTag extends Tag {
     }
 
     /**
-     * 获取属性列表
+     * 是否定义了uri
      */
-    public AttributeList getAttributeList() {
-        return mAttributeList;
+    public boolean containsAttribute(String attributeName) {
+        return mAttributeList.containsAttribute(attributeName);
+    }
+
+    /**
+     * 获取uri
+     */
+    public String getUri() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.URI);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取字节范围
+     */
+    public ByteRange getByteRange() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.BYTE_RANGE);
+
+        String strRange = attribute.getQuotedStringValue().getContent();
+        return ByteRange.valueOf(strRange);
     }
 
     @Override
-    protected boolean containsValue() {
-        return true;
-    }
-
-    @Override
-    protected String getStringValue() {
-        return mAttributeList.toString();
+    public String toString() {
+        return mName + ":" + mAttributeList.toString();
     }
 
     /**

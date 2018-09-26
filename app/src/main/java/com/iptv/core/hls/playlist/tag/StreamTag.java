@@ -1,5 +1,6 @@
 package com.iptv.core.hls.playlist.tag;
 
+import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
@@ -21,20 +22,103 @@ public final class StreamTag extends Tag {
     }
 
     /**
-     * 获取属性列表
+     * 是否定义了属性
      */
-    public AttributeList getAttributeList() {
-        return mAttributeList;
+    public boolean containsAttribute(String attributeName) {
+        return mAttributeList.containsAttribute(attributeName);
+    }
+
+    /**
+     * 获取带宽
+     */
+    public int getBandwidth() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.BANDWIDTH);
+        return attribute.getIntegerValue();
+    }
+
+    /**
+     * 获取平均带宽
+     */
+    public int getAvgBandwidth() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.AVG_BANDWIDTH);
+        return attribute.getIntegerValue();
+    }
+
+    /**
+     * 获取媒体编码格式
+     */
+    public String[] getCodecs() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.CODECS);
+        return attribute.getQuotedStringValue().splitContent(",");
+    }
+
+    /**
+     * 获取视频图像宽
+     */
+    public int getVideoWidth() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.RESOLUTION);
+        return attribute.getResolutionValue().getWidth();
+    }
+
+    /**
+     * 获取视频图像高
+     */
+    public int getVideoHeight() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.RESOLUTION);
+        return attribute.getResolutionValue().getHeight();
+    }
+
+    /**
+     * 获取视频帧率
+     */
+    public float getVideoFrameRate() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.FRAME_RATE);
+        return attribute.getFloatValue();
+    }
+
+    /**
+     * 获取HDCP层次
+     */
+    public String getHDCPLevel() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.HDCP_LEVEL);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取音频（展示）组的id
+     */
+    public String getAudioGroupId() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.AUDIO);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取视频（展示）组的id
+     */
+    public String getVideoGroupId() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.VIDEO);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取字幕（展示）组的id
+     */
+    public String getSubtitleGroupId() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.SUBTITLES);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取CC字幕（展示）组的id
+     */
+    public String getClosedCaptionGroupId() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.CLOSED_CAPTIONS);
+        return attribute.getQuotedStringValue().getContent();
     }
 
     @Override
-    protected boolean containsValue() {
-        return true;
-    }
-
-    @Override
-    protected String getStringValue() {
-        return mAttributeList.toString();
+    public String toString() {
+        return mName + ":" + mAttributeList.toString();
     }
 
     /**

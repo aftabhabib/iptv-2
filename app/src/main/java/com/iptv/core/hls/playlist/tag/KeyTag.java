@@ -1,5 +1,6 @@
 package com.iptv.core.hls.playlist.tag;
 
+import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
 import com.iptv.core.hls.playlist.datatype.HexadecimalSequence;
@@ -21,20 +22,75 @@ public final class KeyTag extends Tag {
     }
 
     /**
-     * 获取属性列表
+     * 是否定义了属性
      */
-    public AttributeList getAttributeList() {
-        return mAttributeList;
+    public boolean containsAttribute(String attributeName) {
+        return mAttributeList.containsAttribute(attributeName);
+    }
+
+    /**
+     * 获取加密方式
+     */
+    public String getMethod() {
+        Attribute attribute = mAttributeList.get(Attribute.Name.METHOD);
+        return attribute.getEnumeratedStringValue();
+    }
+
+    /**
+     * 获取uri
+     */
+    public String getUri() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.URI);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取初始向量
+     */
+    public byte[] getInitVector() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.IV);
+        return attribute.getHexadecimalSequenceValue().toByteArray();
+    }
+
+    /**
+     * 获取密钥格式
+     */
+    public String getFormat() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.KEY_FORMAT);
+        return attribute.getQuotedStringValue().getContent();
+    }
+
+    /**
+     * 获取密钥格式符合的（各个）版本
+     */
+    public int[] getVersions() throws MalformedPlaylistException {
+        Attribute attribute = mAttributeList.get(Attribute.Name.KEY_FORMAT_VERSIONS);
+
+        String[] strVersions = attribute.getQuotedStringValue().splitContent("/");
+        return toIntegerArray(strVersions);
+    }
+
+    /**
+     * 字符串型数组转为整型数组
+     */
+    private static int[] toIntegerArray(String[] src) throws MalformedPlaylistException {
+        int[] dst = new int[src.length];
+
+        try {
+            for (int i = 0; i < src.length; i++) {
+                dst[i] = Integer.parseInt(src[i]);
+            }
+        }
+        catch (NumberFormatException e) {
+            throw new MalformedPlaylistException("should be decimal integer");
+        }
+
+        return dst;
     }
 
     @Override
-    protected boolean containsValue() {
-        return true;
-    }
-
-    @Override
-    protected String getStringValue() {
-        return mAttributeList.toString();
+    public String toString() {
+        return mName + ":" + mAttributeList.toString();
     }
 
     /**
