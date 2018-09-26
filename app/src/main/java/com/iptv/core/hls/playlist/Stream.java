@@ -5,7 +5,6 @@ import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
 import com.iptv.core.hls.playlist.datatype.Resolution;
-import com.iptv.core.hls.playlist.tag.Tag;
 
 /**
  * 流
@@ -219,10 +218,5 @@ public final class Stream {
      */
     public String getUri() {
         return mUri;
-    }
-
-    @Override
-    public String toString() {
-        return Tag.Name.STREAM_INF + ":" + mAttributeList.toString() + "\r\n" + mUri;
     }
 }

@@ -4,7 +4,6 @@ import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
-import com.iptv.core.hls.playlist.tag.Tag;
 
 /**
  * 映射（片段的初始化数据）
@@ -66,10 +65,5 @@ public final class Map {
 
         String strRange = attribute.getQuotedStringValue().getContent();
         return ByteRange.valueOf(strRange);
-    }
-
-    @Override
-    public String toString() {
-        return Tag.Name.MAP + ":" + mAttributeList.toString();
     }
 }

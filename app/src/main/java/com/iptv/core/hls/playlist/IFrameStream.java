@@ -5,7 +5,6 @@ import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
 import com.iptv.core.hls.playlist.datatype.Resolution;
-import com.iptv.core.hls.playlist.tag.Tag;
 
 /**
  * I帧流（快速浏览）
@@ -153,10 +152,5 @@ public final class IFrameStream {
     public String getUri() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.URI);
         return attribute.getQuotedStringValue().getContent();
-    }
-
-    @Override
-    public String toString() {
-        return Tag.Name.I_FRAME_STREAM_INF + ":" + mAttributeList.toString();
     }
 }
