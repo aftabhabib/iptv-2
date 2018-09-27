@@ -1,6 +1,6 @@
 package com.iptv.core.hls.playlist.tag;
 
-import com.iptv.core.hls.playlist.ByteRange;
+import com.iptv.core.hls.playlist.datatype.ByteRange;
 
 /**
  * 字节范围标签

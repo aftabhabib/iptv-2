@@ -1,4 +1,4 @@
-package com.iptv.core.hls.playlist;
+package com.iptv.core.hls.playlist.datatype;
 
 import com.iptv.core.hls.exception.MalformedPlaylistException;
 

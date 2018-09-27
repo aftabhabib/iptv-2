@@ -1,7 +1,7 @@
 package com.iptv.core.hls.playlist.tag;
 
 import com.iptv.core.hls.exception.MalformedPlaylistException;
-import com.iptv.core.hls.playlist.ByteRange;
+import com.iptv.core.hls.playlist.datatype.ByteRange;
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
