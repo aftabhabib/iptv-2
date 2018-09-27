@@ -3,7 +3,7 @@ package com.iptv.core.hls.playlist.tag;
 /**
  * 标签
  */
-public class Tag {
+public abstract class Tag {
     protected String mName;
 
     /**
@@ -17,11 +17,6 @@ public class Tag {
      * 获取名称
      */
     public String getName() {
-        return mName;
-    }
-
-    @Override
-    public String toString() {
         return mName;
     }
 

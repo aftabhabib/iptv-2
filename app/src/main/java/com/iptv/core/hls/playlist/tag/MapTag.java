@@ -9,7 +9,7 @@ import com.iptv.core.hls.playlist.datatype.QuotedString;
 /**
  * 映射标签
  */
-public class MapTag extends Tag {
+public final class MapTag extends Tag {
     private AttributeList mAttributeList;
 
     /**
