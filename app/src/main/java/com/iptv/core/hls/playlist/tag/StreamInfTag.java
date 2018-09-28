@@ -9,13 +9,13 @@ import com.iptv.core.hls.playlist.datatype.Resolution;
 /**
  * 流标签
  */
-public final class StreamTag extends Tag {
+public final class StreamInfTag extends Tag {
     private AttributeList mAttributeList;
 
     /**
      * 构造函数
      */
-    public StreamTag(AttributeList attributeList) {
+    public StreamInfTag(AttributeList attributeList) {
         super(Name.STREAM_INF);
 
         mAttributeList = attributeList;
@@ -225,8 +225,8 @@ public final class StreamTag extends Tag {
         /**
          * 创建
          */
-        public StreamTag build() {
-            return new StreamTag(mAttributeList);
+        public StreamInfTag build() {
+            return new StreamInfTag(mAttributeList);
         }
     }
 }

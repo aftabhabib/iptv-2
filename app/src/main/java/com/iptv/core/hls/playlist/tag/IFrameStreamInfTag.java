@@ -9,13 +9,13 @@ import com.iptv.core.hls.playlist.datatype.Resolution;
 /**
  * I帧流标签
  */
-public final class IFrameStreamTag extends Tag {
+public final class IFrameStreamInfTag extends Tag {
     private AttributeList mAttributeList;
 
     /**
      * 构造函数
      */
-    public IFrameStreamTag(AttributeList attributeList) {
+    public IFrameStreamInfTag(AttributeList attributeList) {
         super(Name.I_FRAME_STREAM_INF);
 
         mAttributeList = attributeList;
@@ -174,8 +174,8 @@ public final class IFrameStreamTag extends Tag {
         /**
          * 创建
          */
-        public IFrameStreamTag build() {
-            return new IFrameStreamTag(mAttributeList);
+        public IFrameStreamInfTag build() {
+            return new IFrameStreamInfTag(mAttributeList);
         }
     }
 }

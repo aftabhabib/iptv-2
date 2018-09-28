@@ -3,13 +3,13 @@ package com.iptv.core.hls.playlist.tag;
 /**
  * 媒体片段标签
  */
-public final class SegmentTag extends Tag {
+public final class InfTag extends Tag {
     private float mDuration;
 
     /**
      * 构造函数
      */
-    public SegmentTag(float duration) {
+    public InfTag(float duration) {
         super(Name.INF);
 
         mDuration = duration;
