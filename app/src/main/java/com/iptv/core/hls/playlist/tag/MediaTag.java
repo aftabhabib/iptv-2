@@ -32,7 +32,7 @@ public final class MediaTag extends Tag {
      */
     public String getType() {
         Attribute attribute = mAttributeList.get(Attribute.Name.TYPE);
-        return attribute.getEnumeratedStringValue();
+        return attribute.getStringValue();
     }
 
     /**
@@ -149,7 +149,7 @@ public final class MediaTag extends Tag {
          * 设置类型
          */
         public void setType(String type) {
-            Attribute attribute = Attribute.create(Attribute.Name.TYPE, type);
+            Attribute attribute = new Attribute(Attribute.Name.TYPE, type);
             mAttributeList.put(attribute);
         }
 
@@ -157,7 +157,7 @@ public final class MediaTag extends Tag {
          * 设置uri
          */
         public void setUri(String uri) {
-            Attribute attribute = Attribute.create(Attribute.Name.URI, new QuotedString(uri));
+            Attribute attribute = new Attribute(Attribute.Name.URI, new QuotedString(uri));
             mAttributeList.put(attribute);
         }
 
@@ -165,8 +165,8 @@ public final class MediaTag extends Tag {
          * 设置媒体所属（展示）组的id
          */
         public void setGroupId(String groupId) {
-            Attribute attribute = Attribute.create(
-                    Attribute.Name.GROUP_ID, new QuotedString(groupId));
+            Attribute attribute = new Attribute(Attribute.Name.GROUP_ID,
+                    new QuotedString(groupId));
             mAttributeList.put(attribute);
         }
 
@@ -174,8 +174,8 @@ public final class MediaTag extends Tag {
          * 设置语言
          */
         public void setLanguage(String language) {
-            Attribute attribute = Attribute.create(
-                    Attribute.Name.LANGUAGE, new QuotedString(language));
+            Attribute attribute = new Attribute(Attribute.Name.LANGUAGE,
+                    new QuotedString(language));
             mAttributeList.put(attribute);
         }
 
@@ -183,8 +183,8 @@ public final class MediaTag extends Tag {
          * 设置连带的语言
          */
         public void setAssociatedLanguage(String language) {
-            Attribute attribute = Attribute.create(
-                    Attribute.Name.ASSOCIATED_LANGUAGE, new QuotedString(language));
+            Attribute attribute = new Attribute(Attribute.Name.ASSOCIATED_LANGUAGE,
+                    new QuotedString(language));
             mAttributeList.put(attribute);
         }
 
@@ -192,7 +192,7 @@ public final class MediaTag extends Tag {
          * 设置名称
          */
         public void setName(String name) {
-            Attribute attribute = Attribute.create(Attribute.Name.NAME, new QuotedString(name));
+            Attribute attribute = new Attribute(Attribute.Name.NAME, new QuotedString(name));
             mAttributeList.put(attribute);
         }
 
@@ -200,7 +200,7 @@ public final class MediaTag extends Tag {
          * 设置（该表现）是默认的选择
          */
         public void setDefaultSelect(boolean state) {
-            Attribute attribute = Attribute.create(Attribute.Name.DEFAULT, state);
+            Attribute attribute = new Attribute(Attribute.Name.DEFAULT, state);
             mAttributeList.put(attribute);
         }
 
@@ -208,7 +208,7 @@ public final class MediaTag extends Tag {
          * 设置（该表现）是自动的选择
          */
         public void setAutoSelect(boolean state) {
-            Attribute attribute = Attribute.create(Attribute.Name.AUTO_SELECT, state);
+            Attribute attribute = new Attribute(Attribute.Name.AUTO_SELECT, state);
             mAttributeList.put(attribute);
         }
 
@@ -216,7 +216,7 @@ public final class MediaTag extends Tag {
          * 设置（该表现）是强制的选择
          */
         public void setForcedSelect(boolean state) {
-            Attribute attribute = Attribute.create(Attribute.Name.FORCED, state);
+            Attribute attribute = new Attribute(Attribute.Name.FORCED, state);
             mAttributeList.put(attribute);
         }
 
@@ -224,8 +224,8 @@ public final class MediaTag extends Tag {
          * 设置CC字幕轨道的id
          */
         public void setClosedCaptionStreamId(String streamId) {
-            Attribute attribute = Attribute.create(
-                    Attribute.Name.IN_STREAM_ID, new QuotedString(streamId));
+            Attribute attribute = new Attribute(Attribute.Name.IN_STREAM_ID,
+                    new QuotedString(streamId));
             mAttributeList.put(attribute);
         }
 
@@ -233,8 +233,8 @@ public final class MediaTag extends Tag {
          * 设置特性
          */
         public void setCharacteristics(String[] characteristics) {
-            Attribute attribute = Attribute.create(
-                    Attribute.Name.CHARACTERISTICS, new QuotedString(characteristics, ','));
+            Attribute attribute = new Attribute(Attribute.Name.CHARACTERISTICS,
+                    new QuotedString(characteristics, ','));
             mAttributeList.put(attribute);
         }
 
@@ -244,8 +244,8 @@ public final class MediaTag extends Tag {
         public void setAudioChannels(int channels) {
             String[] parameters = new String[] { String.valueOf(channels) };
 
-            Attribute attribute = Attribute.create(
-                    Attribute.Name.CHANNELS, new QuotedString(parameters, '/'));
+            Attribute attribute = new Attribute(Attribute.Name.CHANNELS,
+                    new QuotedString(parameters, '/'));
             mAttributeList.put(attribute);
         }
 

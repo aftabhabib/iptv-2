@@ -33,7 +33,7 @@ public final class KeyTag extends Tag {
      */
     public String getMethod() {
         Attribute attribute = mAttributeList.get(Attribute.Name.METHOD);
-        return attribute.getEnumeratedStringValue();
+        return attribute.getStringValue();
     }
 
     /**
@@ -112,7 +112,7 @@ public final class KeyTag extends Tag {
          * 设置加密方式
          */
         public void setMethod(String method) {
-            Attribute attribute = Attribute.create(Attribute.Name.METHOD, method);
+            Attribute attribute = new Attribute(Attribute.Name.METHOD, method);
             mAttributeList.put(attribute);
         }
 
@@ -120,7 +120,7 @@ public final class KeyTag extends Tag {
          * 设置uri
          */
         public void setUri(String uri) {
-            Attribute attribute = Attribute.create(Attribute.Name.URI, new QuotedString(uri));
+            Attribute attribute = new Attribute(Attribute.Name.URI, new QuotedString(uri));
             mAttributeList.put(attribute);
         }
 
@@ -128,8 +128,7 @@ public final class KeyTag extends Tag {
          * 设置初始向量
          */
         public void setInitVector(byte[] iv) {
-            Attribute attribute = Attribute.create(
-                    Attribute.Name.IV, new HexadecimalSequence(iv));
+            Attribute attribute = new Attribute(Attribute.Name.IV, new HexadecimalSequence(iv));
             mAttributeList.put(attribute);
         }
 
@@ -137,8 +136,8 @@ public final class KeyTag extends Tag {
          * 设置密钥格式
          */
         public void setFormat(String format) {
-            Attribute attribute = Attribute.create(
-                    Attribute.Name.KEY_FORMAT, new QuotedString(format));
+            Attribute attribute = new Attribute(Attribute.Name.KEY_FORMAT,
+                    new QuotedString(format));
             mAttributeList.put(attribute);
         }
 
@@ -148,8 +147,8 @@ public final class KeyTag extends Tag {
         public void setVersions(int[] versions) {
             String[] strVersions = toStringArray(versions);
 
-            Attribute attribute = Attribute.create(
-                    Attribute.Name.KEY_FORMAT_VERSIONS, new QuotedString(strVersions, '/'));
+            Attribute attribute = new Attribute(Attribute.Name.KEY_FORMAT_VERSIONS,
+                    new QuotedString(strVersions, '/'));
             mAttributeList.put(attribute);
         }
 

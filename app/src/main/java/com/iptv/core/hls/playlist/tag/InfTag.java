@@ -5,14 +5,16 @@ package com.iptv.core.hls.playlist.tag;
  */
 public final class InfTag extends Tag {
     private float mDuration;
+    private String mTitle;
 
     /**
      * 构造函数
      */
-    public InfTag(float duration) {
+    public InfTag(float duration, String title) {
         super(Name.INF);
 
         mDuration = duration;
+        mTitle = title;
     }
 
     /**
@@ -24,6 +26,6 @@ public final class InfTag extends Tag {
 
     @Override
     public String toString() {
-        return mName + ":" + String.valueOf(mDuration) + ",";
+        return mName + ":" + String.valueOf(mDuration) + "," + mTitle;
     }
 }

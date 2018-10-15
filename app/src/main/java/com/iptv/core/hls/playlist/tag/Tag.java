@@ -14,13 +14,6 @@ public abstract class Tag {
     }
 
     /**
-     * 获取名称
-     */
-    public String getName() {
-        return mName;
-    }
-
-    /**
      * 标签名
      */
     public static class Name {
