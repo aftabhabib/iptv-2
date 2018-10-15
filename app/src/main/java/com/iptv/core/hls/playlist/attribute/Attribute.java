@@ -1,6 +1,7 @@
 package com.iptv.core.hls.playlist.attribute;
 
 import com.iptv.core.hls.exception.MalformedPlaylistException;
+import com.iptv.core.hls.playlist.datatype.ByteRange;
 import com.iptv.core.hls.playlist.datatype.EnumeratedString;
 import com.iptv.core.hls.playlist.datatype.HexadecimalSequence;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
@@ -73,6 +74,14 @@ public final class Attribute {
      * 构造函数
      */
     public Attribute(String name, Resolution value) {
+        mName = name;
+        mValue = value.toString();
+    }
+
+    /**
+     * 构造函数
+     */
+    public Attribute(String name, ByteRange value) {
         mName = name;
         mValue = value.toString();
     }
@@ -161,6 +170,13 @@ public final class Attribute {
      */
     public Resolution getResolutionValue() throws MalformedPlaylistException {
         return Resolution.valueOf(mValue);
+    }
+
+    /**
+     * 获取字节范围型属性值
+     */
+    public ByteRange getRangeValue() throws MalformedPlaylistException {
+        return ByteRange.valueOf(mValue);
     }
 
     @Override
