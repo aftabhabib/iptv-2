@@ -16,9 +16,65 @@ public final class Attribute {
     /**
      * 构造函数
      */
-    private Attribute(String name, String value) {
+    public Attribute(String name, boolean value) {
+        mName = name;
+        mValue = value ? EnumeratedString.YES : EnumeratedString.NO;
+    }
+
+    /**
+     * 构造函数
+     */
+    public Attribute(String name, int value) {
+        mName = name;
+        mValue = String.valueOf(value);
+    }
+
+    /**
+     * 构造函数
+     */
+    public Attribute(String name, float value) {
+        mName = name;
+        mValue = String.valueOf(value);
+    }
+
+    /**
+     * 构造函数
+     */
+    public Attribute(String name, long value) {
+        mName = name;
+        mValue = String.valueOf(value);
+    }
+
+    /**
+     * 构造函数
+     */
+    public Attribute(String name, String value) {
         mName = name;
         mValue = value;
+    }
+
+    /**
+     * 构造函数
+     */
+    public Attribute(String name, HexadecimalSequence value) {
+        mName = name;
+        mValue = value.toString();
+    }
+
+    /**
+     * 构造函数
+     */
+    public Attribute(String name, QuotedString value) {
+        mName = name;
+        mValue = value.toString();
+    }
+
+    /**
+     * 构造函数
+     */
+    public Attribute(String name, Resolution value) {
+        mName = name;
+        mValue = value.toString();
     }
 
     /**
@@ -80,17 +136,17 @@ public final class Attribute {
     }
 
     /**
+     * 获取字符串型属性值
+     */
+    public String getStringValue() {
+        return mValue;
+    }
+
+    /**
      * 获取16进制序列型属性值
      */
     public HexadecimalSequence getHexadecimalSequenceValue() throws MalformedPlaylistException {
         return HexadecimalSequence.valueOf(mValue);
-    }
-
-    /**
-     * 获取枚举字符串型属性值
-     */
-    public String getEnumeratedStringValue() {
-        return mValue;
     }
 
     /**
@@ -122,62 +178,6 @@ public final class Attribute {
         }
 
         return new Attribute(result[0], result[1]);
-    }
-
-    /**
-     * 创建属性
-     */
-    public static Attribute create(String name, boolean value) {
-        return new Attribute(name, value ? EnumeratedString.YES : EnumeratedString.NO);
-    }
-
-    /**
-     * 创建属性
-     */
-    public static Attribute create(String name, int value) {
-        return new Attribute(name, String.valueOf(value));
-    }
-
-    /**
-     * 创建属性
-     */
-    public static Attribute create(String name, long value) {
-        return new Attribute(name, String.valueOf(value));
-    }
-
-    /**
-     * 创建属性
-     */
-    public static Attribute create(String name, float value) {
-        return new Attribute(name, String.valueOf(value));
-    }
-
-    /**
-     * 创建属性
-     */
-    public static Attribute create(String name, HexadecimalSequence value) {
-        return new Attribute(name, value.toString());
-    }
-
-    /**
-     * 创建属性
-     */
-    public static Attribute create(String name, String value) {
-        return new Attribute(name, value);
-    }
-
-    /**
-     * 创建属性
-     */
-    public static Attribute create(String name, QuotedString value) {
-        return new Attribute(name, value.toString());
-    }
-
-    /**
-     * 创建属性
-     */
-    public static Attribute create(String name, Resolution value) {
-        return new Attribute(name, value.toString());
     }
 
     /**
