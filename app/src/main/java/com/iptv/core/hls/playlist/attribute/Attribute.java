@@ -83,7 +83,7 @@ public final class Attribute {
      */
     public Attribute(String name, ByteRange value) {
         mName = name;
-        mValue = value.toString();
+        mValue = new QuotedString(value.toString()).toString();
     }
 
     /**
@@ -176,7 +176,7 @@ public final class Attribute {
      * 获取字节范围型属性值
      */
     public ByteRange getRangeValue() throws MalformedPlaylistException {
-        return ByteRange.valueOf(mValue);
+        return ByteRange.valueOf(QuotedString.valueOf(mValue).getContent());
     }
 
     @Override
