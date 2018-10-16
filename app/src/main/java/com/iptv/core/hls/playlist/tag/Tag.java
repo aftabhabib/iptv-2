@@ -14,6 +14,23 @@ public abstract class Tag {
     }
 
     /**
+     * 获取标签名
+     */
+    public String getName() {
+        return mName;
+    }
+
+    /**
+     * 获取协议版本
+     */
+    public abstract int getProtocolVersion();
+
+    @Override
+    public String toString() {
+        return mName;
+    }
+
+    /**
      * 标签名
      */
     public static class Name {

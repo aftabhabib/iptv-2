@@ -25,6 +25,11 @@ public final class ByteRangeTag extends Tag {
     }
 
     @Override
+    public int getProtocolVersion() {
+        return 4;
+    }
+
+    @Override
     public String toString() {
         return mName + ":" + mRange.toString();
     }

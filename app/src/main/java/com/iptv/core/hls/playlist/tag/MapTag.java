@@ -31,7 +31,7 @@ public final class MapTag extends Tag {
     /**
      * 获取uri
      */
-    public String getUri() throws MalformedPlaylistException {
+    public String getUri() {
         Attribute attribute = mAttributeList.get(Attribute.Name.URI);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -41,7 +41,12 @@ public final class MapTag extends Tag {
      */
     public ByteRange getByteRange() throws MalformedPlaylistException {
         Attribute attribute = mAttributeList.get(Attribute.Name.BYTE_RANGE);
-        return attribute.getRangeValue();
+        return ByteRange.valueOf(attribute.getQuotedStringValue().getContent());
+    }
+
+    @Override
+    public int getProtocolVersion() {
+        return 5;
     }
 
     @Override
@@ -76,7 +81,8 @@ public final class MapTag extends Tag {
          * 设置字节范围
          */
         public void setByteRange(ByteRange range) {
-            Attribute attribute = new Attribute(Attribute.Name.BYTE_RANGE, range);
+            Attribute attribute = new Attribute(Attribute.Name.BYTE_RANGE,
+                    new QuotedString(range.toString()));
             mAttributeList.put(attribute);
         }
 

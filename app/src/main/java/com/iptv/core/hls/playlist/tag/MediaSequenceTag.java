@@ -23,6 +23,11 @@ public final class MediaSequenceTag extends Tag {
     }
 
     @Override
+    public int getProtocolVersion() {
+        return 1;
+    }
+
+    @Override
     public String toString() {
         return mName + ":" + String.valueOf(mSequenceNumber);
     }

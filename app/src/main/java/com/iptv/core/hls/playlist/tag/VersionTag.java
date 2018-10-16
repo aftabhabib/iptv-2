@@ -23,6 +23,11 @@ public final class VersionTag extends Tag {
     }
 
     @Override
+    public int getProtocolVersion() {
+        return 2;
+    }
+
+    @Override
     public String toString() {
         return mName + ":" + String.valueOf(mVersion);
     }

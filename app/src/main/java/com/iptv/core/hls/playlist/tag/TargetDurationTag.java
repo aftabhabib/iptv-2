@@ -23,6 +23,11 @@ public final class TargetDurationTag extends Tag {
     }
 
     @Override
+    public int getProtocolVersion() {
+        return 1;
+    }
+
+    @Override
     public String toString() {
         return mName + ":" + String.valueOf(mTargetDuration);
     }

@@ -7,6 +7,34 @@ public final class InfTag extends Tag {
     private float mDuration;
     private String mTitle;
 
+    private int mProtocolVersion;
+
+    /**
+     * 构造函数
+     */
+    public InfTag(int duration) {
+        this(duration, "");
+    }
+
+    /**
+     * 构造函数
+     */
+    public InfTag(int duration, String title) {
+        super(Name.INF);
+
+        mDuration = (float)duration;
+        mTitle = title;
+
+        mProtocolVersion = 1;
+    }
+
+    /**
+     * 构造函数
+     */
+    public InfTag(float duration) {
+        this(duration, "");
+    }
+
     /**
      * 构造函数
      */
@@ -15,6 +43,8 @@ public final class InfTag extends Tag {
 
         mDuration = duration;
         mTitle = title;
+
+        mProtocolVersion = 3;
     }
 
     /**
@@ -22,6 +52,11 @@ public final class InfTag extends Tag {
      */
     public float getDuration() {
         return mDuration;
+    }
+
+    @Override
+    public int getProtocolVersion() {
+        return mProtocolVersion;
     }
 
     @Override

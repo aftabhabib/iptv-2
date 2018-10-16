@@ -1,8 +1,9 @@
 package com.iptv.core.hls.playlist.tag;
 
-import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
+import com.iptv.core.hls.playlist.datatype.AudioChannelParameter;
+import com.iptv.core.hls.playlist.datatype.EnumeratedString;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
 
 /**
@@ -38,7 +39,7 @@ public final class MediaTag extends Tag {
     /**
      * 获取uri
      */
-    public String getUri() throws MalformedPlaylistException {
+    public String getUri() {
         Attribute attribute = mAttributeList.get(Attribute.Name.URI);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -46,7 +47,7 @@ public final class MediaTag extends Tag {
     /**
      * 获取媒体所属（展示）组的id
      */
-    public String getGroupId() throws MalformedPlaylistException {
+    public String getGroupId() {
         Attribute attribute = mAttributeList.get(Attribute.Name.GROUP_ID);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -54,7 +55,7 @@ public final class MediaTag extends Tag {
     /**
      * 获取语言
      */
-    public String getLanguage() throws MalformedPlaylistException {
+    public String getLanguage() {
         Attribute attribute = mAttributeList.get(Attribute.Name.LANGUAGE);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -62,7 +63,7 @@ public final class MediaTag extends Tag {
     /**
      * 获取与该表现连带的语言
      */
-    public String getAssociatedLanguage() throws MalformedPlaylistException {
+    public String getAssociatedLanguage() {
         Attribute attribute = mAttributeList.get(Attribute.Name.ASSOCIATED_LANGUAGE);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -70,7 +71,7 @@ public final class MediaTag extends Tag {
     /**
      * 获取名称
      */
-    public String getTitle() throws MalformedPlaylistException {
+    public String getTitle() {
         Attribute attribute = mAttributeList.get(Attribute.Name.NAME);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -78,31 +79,31 @@ public final class MediaTag extends Tag {
     /**
      * 是不是默认的选择
      */
-    public boolean isDefaultSelect() throws MalformedPlaylistException {
+    public String isDefaultSelect() {
         Attribute attribute = mAttributeList.get(Attribute.Name.DEFAULT);
-        return attribute.getBooleanValue();
+        return attribute.getStringValue();
     }
 
     /**
      * 是不是自动的选择
      */
-    public boolean isAutoSelect() throws MalformedPlaylistException {
+    public String isAutoSelect() {
         Attribute attribute = mAttributeList.get(Attribute.Name.AUTO_SELECT);
-        return attribute.getBooleanValue();
+        return attribute.getStringValue();
     }
 
     /**
      * 是不是强制的选择
      */
-    public boolean isForcedSelect() throws MalformedPlaylistException {
+    public String isForcedSelect() {
         Attribute attribute = mAttributeList.get(Attribute.Name.FORCED);
-        return attribute.getBooleanValue();
+        return attribute.getStringValue();
     }
 
     /**
      * 获取流内（CC字幕轨道）的id
      */
-    public String getInStreamId() throws MalformedPlaylistException {
+    public String getInStreamId() {
         Attribute attribute = mAttributeList.get(Attribute.Name.IN_STREAM_ID);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -110,19 +111,38 @@ public final class MediaTag extends Tag {
     /**
      * 获取特性
      */
-    public String[] getCharacteristics() throws MalformedPlaylistException {
+    public String[] getCharacteristics() {
         Attribute attribute = mAttributeList.get(Attribute.Name.CHARACTERISTICS);
-        return attribute.getQuotedStringValue().splitContent(",");
+        return attribute.getQuotedStringValue().getContent().split(",");
     }
 
     /**
      * 获取音频声道数
      */
-    public int getAudioChannels() throws MalformedPlaylistException {
+    public AudioChannelParameter getAudioChannels() {
         Attribute attribute = mAttributeList.get(Attribute.Name.CHANNELS);
+        return AudioChannelParameter.valueOf(attribute.getQuotedStringValue().getContent());
+    }
 
-        String[] parameters = attribute.getQuotedStringValue().splitContent("/");
-        return Integer.parseInt(parameters[0]);
+    @Override
+    public int getProtocolVersion() {
+        int protocolVersion = 4;
+
+        if (containsAttribute(Attribute.Name.FORCED)
+                || containsAttribute(Attribute.Name.CHARACTERISTICS)) {
+            protocolVersion = 5;
+        }
+
+        if (containsAttribute(Attribute.Name.ASSOCIATED_LANGUAGE)
+                || containsAttribute(Attribute.Name.IN_STREAM_ID)) {
+            protocolVersion = 6;
+        }
+
+        if (containsAttribute(Attribute.Name.CHANNELS)) {
+            protocolVersion = 7;
+        }
+
+        return protocolVersion;
     }
 
     @Override
@@ -200,7 +220,8 @@ public final class MediaTag extends Tag {
          * 设置（该表现）是默认的选择
          */
         public void setDefaultSelect(boolean state) {
-            Attribute attribute = new Attribute(Attribute.Name.DEFAULT, state);
+            Attribute attribute = new Attribute(Attribute.Name.DEFAULT,
+                    state ? EnumeratedString.YES : EnumeratedString.NO);
             mAttributeList.put(attribute);
         }
 
@@ -208,7 +229,8 @@ public final class MediaTag extends Tag {
          * 设置（该表现）是自动的选择
          */
         public void setAutoSelect(boolean state) {
-            Attribute attribute = new Attribute(Attribute.Name.AUTO_SELECT, state);
+            Attribute attribute = new Attribute(Attribute.Name.AUTO_SELECT,
+                    state ? EnumeratedString.YES : EnumeratedString.NO);
             mAttributeList.put(attribute);
         }
 
@@ -216,7 +238,8 @@ public final class MediaTag extends Tag {
          * 设置（该表现）是强制的选择
          */
         public void setForcedSelect(boolean state) {
-            Attribute attribute = new Attribute(Attribute.Name.FORCED, state);
+            Attribute attribute = new Attribute(Attribute.Name.FORCED,
+                    state ? EnumeratedString.YES : EnumeratedString.NO);
             mAttributeList.put(attribute);
         }
 
@@ -241,11 +264,9 @@ public final class MediaTag extends Tag {
         /**
          * 设置音频声道数
          */
-        public void setAudioChannels(int channels) {
-            String[] parameters = new String[] { String.valueOf(channels) };
-
+        public void setAudioChannels(AudioChannelParameter parameter) {
             Attribute attribute = new Attribute(Attribute.Name.CHANNELS,
-                    new QuotedString(parameters, '/'));
+                    new QuotedString(parameter.toString()));
             mAttributeList.put(attribute);
         }
 

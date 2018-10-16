@@ -9,7 +9,7 @@ public final class IFrameOnlyTag extends Tag {
     }
 
     @Override
-    public String toString() {
-        return mName;
+    public int getProtocolVersion() {
+        return 4;
     }
 }

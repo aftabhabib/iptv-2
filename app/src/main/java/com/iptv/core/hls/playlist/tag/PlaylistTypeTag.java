@@ -23,6 +23,11 @@ public final class PlaylistTypeTag extends Tag {
     }
 
     @Override
+    public int getProtocolVersion() {
+        return 3;
+    }
+
+    @Override
     public String toString() {
         return mName + ":" + mType;
     }

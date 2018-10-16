@@ -23,6 +23,11 @@ public final class DiscontinuitySequenceTag extends Tag {
     }
 
     @Override
+    public int getProtocolVersion() {
+        return 6;
+    }
+
+    @Override
     public String toString() {
         return mName + ":" + String.valueOf(mSequenceNumber);
     }

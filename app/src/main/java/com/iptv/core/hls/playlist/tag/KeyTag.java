@@ -1,8 +1,8 @@
 package com.iptv.core.hls.playlist.tag;
 
-import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
+import com.iptv.core.hls.playlist.datatype.EnumeratedString;
 import com.iptv.core.hls.playlist.datatype.HexadecimalSequence;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
 
@@ -39,7 +39,7 @@ public final class KeyTag extends Tag {
     /**
      * 获取uri
      */
-    public String getUri() throws MalformedPlaylistException {
+    public String getUri() {
         Attribute attribute = mAttributeList.get(Attribute.Name.URI);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -47,7 +47,7 @@ public final class KeyTag extends Tag {
     /**
      * 获取初始向量
      */
-    public byte[] getInitVector() throws MalformedPlaylistException {
+    public byte[] getInitVector() {
         Attribute attribute = mAttributeList.get(Attribute.Name.IV);
         return attribute.getHexadecimalSequenceValue().toByteArray();
     }
@@ -55,7 +55,7 @@ public final class KeyTag extends Tag {
     /**
      * 获取密钥格式
      */
-    public String getFormat() throws MalformedPlaylistException {
+    public String getFormat() {
         Attribute attribute = mAttributeList.get(Attribute.Name.KEY_FORMAT);
         return attribute.getQuotedStringValue().getContent();
     }
@@ -63,29 +63,40 @@ public final class KeyTag extends Tag {
     /**
      * 获取密钥格式符合的（各个）版本
      */
-    public int[] getVersions() throws MalformedPlaylistException {
+    public int[] getVersions() {
         Attribute attribute = mAttributeList.get(Attribute.Name.KEY_FORMAT_VERSIONS);
 
-        String[] strVersions = attribute.getQuotedStringValue().splitContent("/");
+        String[] strVersions = attribute.getQuotedStringValue().getContent().split("/");
         return toIntegerArray(strVersions);
     }
 
     /**
      * 字符串型数组转为整型数组
      */
-    private static int[] toIntegerArray(String[] src) throws MalformedPlaylistException {
+    private static int[] toIntegerArray(String[] src) {
         int[] dst = new int[src.length];
 
-        try {
-            for (int i = 0; i < src.length; i++) {
-                dst[i] = Integer.parseInt(src[i]);
-            }
-        }
-        catch (NumberFormatException e) {
-            throw new MalformedPlaylistException("should be decimal integer");
+        for (int i = 0; i < src.length; i++) {
+            dst[i] = Integer.parseInt(src[i]);
         }
 
         return dst;
+    }
+
+    @Override
+    public int getProtocolVersion() {
+        int versionVersion = 1;
+
+        if (containsAttribute(Attribute.Name.IV)) {
+            versionVersion = 2;
+        }
+
+        if (containsAttribute(Attribute.Name.KEY_FORMAT)
+                || containsAttribute(Attribute.Name.KEY_FORMAT_VERSIONS)) {
+            versionVersion = 5;
+        }
+
+        return versionVersion;
     }
 
     @Override
