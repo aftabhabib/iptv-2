@@ -79,7 +79,7 @@ public final class MediaTag extends Tag {
     /**
      * 是不是默认的选择
      */
-    public String isDefaultSelect() {
+    public String getDefaultSelect() {
         Attribute attribute = mAttributeList.get(Attribute.Name.DEFAULT);
         return attribute.getStringValue();
     }
@@ -87,7 +87,7 @@ public final class MediaTag extends Tag {
     /**
      * 是不是自动的选择
      */
-    public String isAutoSelect() {
+    public String getAutoSelect() {
         Attribute attribute = mAttributeList.get(Attribute.Name.AUTO_SELECT);
         return attribute.getStringValue();
     }
@@ -95,7 +95,7 @@ public final class MediaTag extends Tag {
     /**
      * 是不是强制的选择
      */
-    public String isForcedSelect() {
+    public String getForcedSelect() {
         Attribute attribute = mAttributeList.get(Attribute.Name.FORCED);
         return attribute.getStringValue();
     }
