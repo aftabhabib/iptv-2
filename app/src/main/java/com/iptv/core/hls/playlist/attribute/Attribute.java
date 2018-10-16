@@ -16,14 +16,6 @@ public final class Attribute {
     /**
      * 构造函数
      */
-    public Attribute(String name, Boolean value) {
-        mName = name;
-        mValue = value;
-    }
-
-    /**
-     * 构造函数
-     */
     public Attribute(String name, Integer value) {
         mName = name;
         mValue = value;
@@ -85,18 +77,6 @@ public final class Attribute {
     }
 
     /**
-     * 获取布尔型属性值
-     */
-    public Boolean getBooleanValue() {
-        if (mValue instanceof Boolean) {
-            return (Boolean)mValue;
-        }
-        else {
-            throw new WrongDataTypeException("not Boolean type");
-        }
-    }
-
-    /**
      * 获取整型属性值
      */
     public Integer getIntegerValue() {
@@ -123,7 +103,7 @@ public final class Attribute {
     /**
      * 获取浮点型属性值
      */
-    public float getFloatValue() {
+    public Float getFloatValue() {
         if (mValue instanceof Float) {
             return (Float)mValue;
         }
