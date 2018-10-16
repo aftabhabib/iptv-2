@@ -16,6 +16,13 @@ public final class QuotedString {
     /**
      * 构造函数
      */
+    public QuotedString(ByteRange range) {
+        mContent = range.toString();
+    }
+
+    /**
+     * 构造函数
+     */
     public QuotedString(String[] parts, char separator) {
         StringBuffer buffer = new StringBuffer();
 
@@ -50,10 +57,10 @@ public final class QuotedString {
     }
 
     /**
-     * 根据指定的分隔符拆分内容
+     * 内容转为字节范围
      */
-    public String[] splitContent(String regex) {
-        return mContent.split(regex);
+    public ByteRange toRange() throws MalformedPlaylistException {
+        return ByteRange.valueOf(mContent);
     }
 
     @Override
