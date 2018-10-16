@@ -1,8 +1,7 @@
 package com.iptv.core.hls.playlist.attribute;
 
 import com.iptv.core.hls.exception.MalformedPlaylistException;
-import com.iptv.core.hls.playlist.datatype.ByteRange;
-import com.iptv.core.hls.playlist.datatype.EnumeratedString;
+import com.iptv.core.hls.exception.WrongDataTypeException;
 import com.iptv.core.hls.playlist.datatype.HexadecimalSequence;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
 import com.iptv.core.hls.playlist.datatype.Resolution;
@@ -12,38 +11,38 @@ import com.iptv.core.hls.playlist.datatype.Resolution;
  */
 public final class Attribute {
     private String mName;
-    private String mValue;
+    private Object mValue;
 
     /**
      * 构造函数
      */
-    public Attribute(String name, boolean value) {
+    public Attribute(String name, Boolean value) {
         mName = name;
-        mValue = value ? EnumeratedString.YES : EnumeratedString.NO;
+        mValue = value;
     }
 
     /**
      * 构造函数
      */
-    public Attribute(String name, int value) {
+    public Attribute(String name, Integer value) {
         mName = name;
-        mValue = String.valueOf(value);
+        mValue = value;
     }
 
     /**
      * 构造函数
      */
-    public Attribute(String name, float value) {
+    public Attribute(String name, Float value) {
         mName = name;
-        mValue = String.valueOf(value);
+        mValue = value;
     }
 
     /**
      * 构造函数
      */
-    public Attribute(String name, long value) {
+    public Attribute(String name, Long value) {
         mName = name;
-        mValue = String.valueOf(value);
+        mValue = value;
     }
 
     /**
@@ -59,7 +58,7 @@ public final class Attribute {
      */
     public Attribute(String name, HexadecimalSequence value) {
         mName = name;
-        mValue = value.toString();
+        mValue = value;
     }
 
     /**
@@ -67,7 +66,7 @@ public final class Attribute {
      */
     public Attribute(String name, QuotedString value) {
         mName = name;
-        mValue = value.toString();
+        mValue = value;
     }
 
     /**
@@ -76,14 +75,6 @@ public final class Attribute {
     public Attribute(String name, Resolution value) {
         mName = name;
         mValue = value.toString();
-    }
-
-    /**
-     * 构造函数
-     */
-    public Attribute(String name, ByteRange value) {
-        mName = name;
-        mValue = new QuotedString(value.toString()).toString();
     }
 
     /**
@@ -96,51 +87,48 @@ public final class Attribute {
     /**
      * 获取布尔型属性值
      */
-    public boolean getBooleanValue() throws MalformedPlaylistException {
-        if (mValue.equals(EnumeratedString.YES)) {
-            return true;
-        }
-        else if (mValue.equals(EnumeratedString.NO)) {
-            return false;
+    public Boolean getBooleanValue() {
+        if (mValue instanceof Boolean) {
+            return (Boolean)mValue;
         }
         else {
-            throw new MalformedPlaylistException("only YES or NO");
+            throw new WrongDataTypeException("not Boolean type");
         }
     }
 
     /**
      * 获取整型属性值
      */
-    public int getIntegerValue() throws MalformedPlaylistException {
-        try {
-            return Integer.parseInt(mValue);
+    public Integer getIntegerValue() {
+        if (mValue instanceof Integer) {
+            return (Integer)mValue;
         }
-        catch (NumberFormatException e) {
-            throw new MalformedPlaylistException("should be decimal integer");
+        else {
+            throw new WrongDataTypeException("not Integer type");
         }
     }
 
     /**
      * 获取长整型属性值
      */
-    public long getLongValue() throws MalformedPlaylistException {
-        try {
-            return Long.parseLong(mValue);
+    public Long getLongValue() {
+        if (mValue instanceof Long) {
+            return (Long)mValue;
         }
-        catch (NumberFormatException e) {
-            throw new MalformedPlaylistException("should be decimal integer");
+        else {
+            throw new WrongDataTypeException("not Long type");
         }
     }
 
     /**
      * 获取浮点型属性值
      */
-    public float getFloatValue() throws MalformedPlaylistException {
-        try {
-            return Float.parseFloat(mValue);
+    public float getFloatValue() {
+        if (mValue instanceof Float) {
+            return (Float)mValue;
         }
-        catch (NumberFormatException e) {
-            throw new MalformedPlaylistException("should be decimal float");
+        else {
+            throw new WrongDataTypeException("not Float type");
         }
     }
 
@@ -148,40 +136,53 @@ public final class Attribute {
      * 获取字符串型属性值
      */
     public String getStringValue() {
-        return mValue;
+        if (mValue instanceof String) {
+            return (String)mValue;
+        }
+        else {
+            throw new WrongDataTypeException("not String type");
+        }
     }
 
     /**
      * 获取16进制序列型属性值
      */
-    public HexadecimalSequence getHexadecimalSequenceValue() throws MalformedPlaylistException {
-        return HexadecimalSequence.valueOf(mValue);
+    public HexadecimalSequence getHexadecimalSequenceValue() {
+        if (mValue instanceof HexadecimalSequence) {
+            return (HexadecimalSequence)mValue;
+        }
+        else {
+            throw new WrongDataTypeException("not HexadecimalSequence type");
+        }
     }
 
     /**
      * 获取引用字符串型属性值
      */
-    public QuotedString getQuotedStringValue() throws MalformedPlaylistException {
-        return QuotedString.valueOf(mValue);
+    public QuotedString getQuotedStringValue() {
+        if (mValue instanceof QuotedString) {
+            return (QuotedString)mValue;
+        }
+        else {
+            throw new WrongDataTypeException("not QuotedString type");
+        }
     }
 
     /**
      * 获取分辨率型属性值
      */
-    public Resolution getResolutionValue() throws MalformedPlaylistException {
-        return Resolution.valueOf(mValue);
-    }
-
-    /**
-     * 获取字节范围型属性值
-     */
-    public ByteRange getRangeValue() throws MalformedPlaylistException {
-        return ByteRange.valueOf(QuotedString.valueOf(mValue).getContent());
+    public Resolution getResolutionValue() {
+        if (mValue instanceof Resolution) {
+            return (Resolution)mValue;
+        }
+        else {
+            throw new WrongDataTypeException("not Resolution type");
+        }
     }
 
     @Override
     public String toString() {
-        return mName + "=" + mValue;
+        return mName + "=" + mValue.toString();
     }
 
     /**
