@@ -16,13 +16,6 @@ public final class QuotedString {
     /**
      * 构造函数
      */
-    public QuotedString(ByteRange range) {
-        mContent = range.toString();
-    }
-
-    /**
-     * 构造函数
-     */
     public QuotedString(String[] parts, char separator) {
         StringBuffer buffer = new StringBuffer();
 
@@ -54,13 +47,6 @@ public final class QuotedString {
      */
     public String getContent() {
         return mContent;
-    }
-
-    /**
-     * 内容转为字节范围
-     */
-    public ByteRange toRange() throws MalformedPlaylistException {
-        return ByteRange.valueOf(mContent);
     }
 
     @Override
