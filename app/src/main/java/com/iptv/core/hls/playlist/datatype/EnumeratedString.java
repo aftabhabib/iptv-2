@@ -15,13 +15,19 @@ public final class EnumeratedString {
      */
     public static final String VIDEO = "VIDEO";
     public static final String AUDIO = "AUDIO";
-    public static final String SUBTITLE = "SUBTITLES";
+    public static final String SUBTITLES = "SUBTITLES";
     public static final String CLOSED_CAPTIONS = "CLOSED-CAPTIONS";
 
     /**
-     * HDCP类型
+     * HDCP层次
      */
     public static final String TYPE_0 = "TYPE-0";
+
+    /**
+     * 媒体播放列表类型
+     */
+    public static final String EVENT = "EVENT";
+    public static final String VOD = "VOD";
 
     /**
      * 没有
@@ -33,10 +39,4 @@ public final class EnumeratedString {
      */
     public static final String YES = "YES";
     public static final String NO = "NO";
-
-    /**
-     * 媒体播放列表类型
-     */
-    public static final String EVENT = "EVENT";
-    public static final String VOD = "VOD";
 }
