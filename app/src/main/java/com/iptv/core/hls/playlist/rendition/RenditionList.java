@@ -1,17 +1,15 @@
 package com.iptv.core.hls.playlist.rendition;
 
-import com.iptv.core.hls.playlist.Media;
+import com.iptv.core.hls.playlist.tag.MediaTag;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * 展示列表
  */
 public final class RenditionList {
-    private Map<String, List<Media>> mGroupTable = new HashMap<>();
+    private Map<String, RenditionGroup> mGroupTable = new HashMap<>();
 
     /**
      * 构造函数
@@ -32,35 +30,34 @@ public final class RenditionList {
     /**
      * 放入展示
      */
-    public void put(Media rendition) {
-        String key = makeKey(rendition.getType(), rendition.getGroupId());
+    public void put(MediaTag rendition) {
+        String groupSpec = makeGroupSpec(rendition.getType(), rendition.getGroupId());
 
-        if (!mGroupTable.containsKey(key)) {
-            mGroupTable.put(key, new ArrayList<Media>());
+        if (!mGroupTable.containsKey(groupSpec)) {
+            mGroupTable.put(groupSpec, new RenditionGroup());
         }
 
-        mGroupTable.get(key).add(rendition);
+        mGroupTable.get(groupSpec).add(rendition);
     }
 
     /**
      * 获取指定的（展示）组
      */
-    public Media[] getGroup(String type, String groupId) {
-        String key = makeKey(type, groupId);
+    public RenditionGroup getGroup(String type, String groupId) {
+        String groupSpec = makeGroupSpec(type, groupId);
 
-        if (!mGroupTable.containsKey(key)) {
+        if (!mGroupTable.containsKey(groupSpec)) {
             return null;
         }
         else {
-            List<Media> group = mGroupTable.get(key);
-            return group.toArray(new Media[group.size()]);
+            return mGroupTable.get(groupSpec);
         }
     }
 
     /**
      * 生成（展示）组的定义
      */
-    private static String makeKey(String type, String groupId) {
+    private static String makeGroupSpec(String type, String groupId) {
         return type + "-" + groupId;
     }
 }
