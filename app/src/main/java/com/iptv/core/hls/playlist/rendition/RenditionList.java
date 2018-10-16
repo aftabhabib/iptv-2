@@ -30,7 +30,7 @@ public final class RenditionList {
     /**
      * 放入展示
      */
-    public void put(MediaTag rendition) {
+    public void add(MediaTag rendition) {
         String groupSpec = makeGroupSpec(rendition.getType(), rendition.getGroupId());
 
         if (!mGroupTable.containsKey(groupSpec)) {
