@@ -1,6 +1,5 @@
 package com.iptv.core.hls.utils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -19,28 +18,16 @@ public final class HttpHelper {
     /**
      * GET
      */
-    public static synchronized InputStream get(String url, Map<String, String> properties) {
-        InputStream input = null;
+    public static synchronized InputStream get(
+            String url, Map<String, String> properties) throws IOException {
+        Response response = call(createGetRequest(url, properties));
+        if (!response.isSuccessful()) {
+            response.close();
 
-        try {
-            Response response = call(createGetRequest(url, properties));
-            if (response.isSuccessful()) {
-                input = response.body().byteStream();
-            }
-            else {
-                /**
-                 * 访问失败
-                 */
-                response.close();
-            }
-        }
-        catch (IOException e) {
-            /**
-             * 网络异常
-             */
+            throw new IOException("access " + url + " fail, " + response.message());
         }
 
-        return input;
+        return response.body().byteStream();
     }
 
     /**
@@ -83,45 +70,6 @@ public final class HttpHelper {
         }
 
         return builder.build();
-    }
-
-    /**
-     * 读负载
-     */
-    public static byte[] readContent(InputStream input) {
-        byte[] data = null;
-
-        try {
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-
-            byte[] buf = new byte[1024];
-            while (true) {
-                int bytesRead = input.read(buf);
-                if (bytesRead < 0) {
-                    break;
-                }
-
-                output.write(buf, 0, bytesRead);
-            }
-
-            data = output.toByteArray();
-        }
-        catch (IOException e) {
-            /**
-             * 网络异常
-             */
-        }
-
-        try {
-            input.close();
-        }
-        catch (IOException e) {
-            /**
-             * ignore
-             */
-        }
-
-        return data;
     }
 
     /**
