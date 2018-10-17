@@ -1,5 +1,6 @@
 package com.iptv.core.hls.utils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -82,6 +83,45 @@ public final class HttpHelper {
         }
 
         return builder.build();
+    }
+
+    /**
+     * 读负载
+     */
+    public static byte[] readContent(InputStream input) {
+        byte[] data = null;
+
+        try {
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+            byte[] buf = new byte[1024];
+            while (true) {
+                int bytesRead = input.read(buf);
+                if (bytesRead < 0) {
+                    break;
+                }
+
+                output.write(buf, 0, bytesRead);
+            }
+
+            data = output.toByteArray();
+        }
+        catch (IOException e) {
+            /**
+             * 网络异常
+             */
+        }
+
+        try {
+            input.close();
+        }
+        catch (IOException e) {
+            /**
+             * ignore
+             */
+        }
+
+        return data;
     }
 
     /**
