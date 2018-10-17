@@ -1,7 +1,5 @@
 package com.iptv.core.hls.playlist.datatype;
 
-import com.iptv.core.hls.exception.MalformedPlaylistException;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,11 +42,10 @@ public final class Resolution {
     /**
      * 来自字符串
      */
-    public static Resolution valueOf(String str)
-            throws MalformedPlaylistException, NumberFormatException {
+    public static Resolution valueOf(String str) {
         if (!isValidFormat(str)) {
-            throw new MalformedPlaylistException("should be two integers " +
-                    "separated by the \"x\" character");
+            throw new IllegalArgumentException(
+                    "should be two integers separated by the \"x\" character");
         }
 
         String[] result = str.split("x");

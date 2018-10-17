@@ -1,7 +1,5 @@
 package com.iptv.core.hls.playlist.datatype;
 
-import com.iptv.core.hls.exception.MalformedPlaylistException;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,9 +57,9 @@ public final class ByteRange {
     /**
      * 来自字符串
      */
-    public static ByteRange valueOf(String str) throws MalformedPlaylistException {
+    public static ByteRange valueOf(String str) {
         if (isValidFormat(str)) {
-            throw new MalformedPlaylistException("should be <n>[@<o>]");
+            throw new IllegalArgumentException("should be <n>[@<o>]");
         }
 
         String[] results = str.split("@");

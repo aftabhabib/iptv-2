@@ -1,7 +1,5 @@
 package com.iptv.core.hls.playlist.datatype;
 
-import com.iptv.core.hls.exception.MalformedPlaylistException;
-
 import java.math.BigInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,9 +35,10 @@ public final class HexadecimalSequence {
     /**
      * 来自字符串
      */
-    public static HexadecimalSequence valueOf(String str) throws MalformedPlaylistException {
+    public static HexadecimalSequence valueOf(String str) {
         if (!isValidFormat(str)) {
-            throw new MalformedPlaylistException("should be prefixed with 0x or 0X");
+            throw new IllegalArgumentException(
+                    "should be from the set [A-Za-z] or [0-9] that is prefixed with 0x or 0X");
         }
 
         BigInteger bigInteger = new BigInteger(str.substring(2), 16);
