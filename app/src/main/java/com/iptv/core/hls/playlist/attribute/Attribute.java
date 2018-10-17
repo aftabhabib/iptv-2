@@ -1,7 +1,5 @@
 package com.iptv.core.hls.playlist.attribute;
 
-import com.iptv.core.hls.exception.MalformedPlaylistException;
-import com.iptv.core.hls.exception.WrongDataTypeException;
 import com.iptv.core.hls.playlist.datatype.HexadecimalSequence;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
 import com.iptv.core.hls.playlist.datatype.Resolution;
@@ -66,7 +64,7 @@ public final class Attribute {
      */
     public Attribute(String name, Resolution value) {
         mName = name;
-        mValue = value.toString();
+        mValue = value;
     }
 
     /**
@@ -80,84 +78,49 @@ public final class Attribute {
      * 获取整型属性值
      */
     public Integer getIntegerValue() {
-        if (mValue instanceof Integer) {
-            return (Integer)mValue;
-        }
-        else {
-            throw new WrongDataTypeException("not Integer type");
-        }
+        return (Integer)mValue;
     }
 
     /**
      * 获取长整型属性值
      */
     public Long getLongValue() {
-        if (mValue instanceof Long) {
-            return (Long)mValue;
-        }
-        else {
-            throw new WrongDataTypeException("not Long type");
-        }
+        return (Long)mValue;
     }
 
     /**
      * 获取浮点型属性值
      */
     public Float getFloatValue() {
-        if (mValue instanceof Float) {
-            return (Float)mValue;
-        }
-        else {
-            throw new WrongDataTypeException("not Float type");
-        }
+        return (Float)mValue;
     }
 
     /**
      * 获取字符串型属性值
      */
     public String getStringValue() {
-        if (mValue instanceof String) {
-            return (String)mValue;
-        }
-        else {
-            throw new WrongDataTypeException("not String type");
-        }
+        return (String)mValue;
     }
 
     /**
      * 获取16进制序列型属性值
      */
     public HexadecimalSequence getHexadecimalSequenceValue() {
-        if (mValue instanceof HexadecimalSequence) {
-            return (HexadecimalSequence)mValue;
-        }
-        else {
-            throw new WrongDataTypeException("not HexadecimalSequence type");
-        }
+        return (HexadecimalSequence)mValue;
     }
 
     /**
      * 获取引用字符串型属性值
      */
     public QuotedString getQuotedStringValue() {
-        if (mValue instanceof QuotedString) {
-            return (QuotedString)mValue;
-        }
-        else {
-            throw new WrongDataTypeException("not QuotedString type");
-        }
+        return (QuotedString)mValue;
     }
 
     /**
      * 获取分辨率型属性值
      */
     public Resolution getResolutionValue() {
-        if (mValue instanceof Resolution) {
-            return (Resolution)mValue;
-        }
-        else {
-            throw new WrongDataTypeException("not Resolution type");
-        }
+        return (Resolution)mValue;
     }
 
     @Override
@@ -168,10 +131,10 @@ public final class Attribute {
     /**
      * 根据字符串创建属性
      */
-    public static Attribute parse(String strAttribute) throws MalformedPlaylistException {
+    public static Attribute parse(String strAttribute) {
         String[] result = strAttribute.split("=");
         if (result.length != 2) {
-            throw new MalformedPlaylistException("should be <name>=<value>");
+            throw new IllegalArgumentException("attribute should be <name>=<value>");
         }
 
         return new Attribute(result[0], result[1]);
