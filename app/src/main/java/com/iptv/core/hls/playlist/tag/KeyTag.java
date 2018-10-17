@@ -2,7 +2,6 @@ package com.iptv.core.hls.playlist.tag;
 
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
-import com.iptv.core.hls.playlist.datatype.EnumeratedString;
 import com.iptv.core.hls.playlist.datatype.HexadecimalSequence;
 import com.iptv.core.hls.playlist.datatype.QuotedString;
 
