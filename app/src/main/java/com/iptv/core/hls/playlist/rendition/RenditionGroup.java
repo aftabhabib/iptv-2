@@ -1,9 +1,5 @@
 package com.iptv.core.hls.playlist.rendition;
 
-import com.iptv.core.hls.playlist.attribute.Attribute;
-import com.iptv.core.hls.playlist.datatype.EnumeratedString;
-import com.iptv.core.hls.playlist.tag.MediaTag;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +7,7 @@ import java.util.List;
  * 展示组
  */
 public final class RenditionGroup {
-    private List<MediaTag> mTagList = new ArrayList<>();
+    private List<Rendition> mRenditionList = new ArrayList<>();
 
     /**
      * 构造函数
@@ -25,18 +21,17 @@ public final class RenditionGroup {
     /**
      * 加入展示
      */
-    public void add(MediaTag tag) {
-        mTagList.add(tag);
+    public void add(Rendition rendition) {
+        mRenditionList.add(rendition);
     }
 
     /**
      * 获取默认的展示
      */
-    public MediaTag getDefaultRendition() {
-        for (MediaTag tag : mTagList) {
-            if (tag.containsAttribute(Attribute.Name.DEFAULT)
-                    && tag.getDefaultSelect().equals(EnumeratedString.YES)) {
-                return tag;
+    public Rendition getDefaultRendition() {
+        for (Rendition rendition : mRenditionList) {
+            if (rendition.isDefaultSelection()) {
+                return rendition;
             }
         }
 
@@ -46,11 +41,10 @@ public final class RenditionGroup {
     /**
      * 获取与语言环境匹配的展示
      */
-    public MediaTag getRenditionByLanguage(String language) {
-        for (MediaTag tag : mTagList) {
-            if (tag.containsAttribute(Attribute.Name.LANGUAGE)
-                    && tag.getLanguage().equals(language)) {
-                return tag;
+    public Rendition getRenditionByLanguage(String language) {
+        for (Rendition rendition : mRenditionList) {
+            if (rendition.getLanguage().equals(language)) {
+                return rendition;
             }
         }
 

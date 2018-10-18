@@ -1,7 +1,5 @@
 package com.iptv.core.hls.playlist.rendition;
 
-import com.iptv.core.hls.playlist.tag.MediaTag;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +28,7 @@ public final class RenditionList {
     /**
      * 放入展示
      */
-    public void add(MediaTag rendition) {
+    public void add(Rendition rendition) {
         String groupSpec = makeGroupSpec(rendition.getType(), rendition.getGroupId());
 
         if (!mGroupTable.containsKey(groupSpec)) {
@@ -45,13 +43,11 @@ public final class RenditionList {
      */
     public RenditionGroup getGroup(String type, String groupId) {
         String groupSpec = makeGroupSpec(type, groupId);
-
-        if (!mGroupTable.containsKey(groupSpec)) {
-            return null;
-        }
-        else {
+        if (mGroupTable.containsKey(groupSpec)) {
             return mGroupTable.get(groupSpec);
         }
+
+        return null;
     }
 
     /**
