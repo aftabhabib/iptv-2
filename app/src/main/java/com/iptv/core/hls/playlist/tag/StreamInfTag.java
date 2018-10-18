@@ -108,7 +108,7 @@ public final class StreamInfTag extends Tag {
     }
 
     /**
-     * 获取CC字幕（展示）组的id
+     * 获取隱藏字幕（展示）组的id
      */
     public String getClosedCaptionGroupId() {
         Attribute attribute = mAttributeList.get(Attribute.Name.CLOSED_CAPTIONS);
@@ -243,7 +243,7 @@ public final class StreamInfTag extends Tag {
         }
 
         /**
-         * 设置CC字幕（展示）组的id
+         * 设置隱藏字幕（展示）组的id
          */
         public void setClosedCaptionGroupId(String groupId) {
             Attribute attribute = new Attribute(Attribute.Name.CLOSED_CAPTIONS,

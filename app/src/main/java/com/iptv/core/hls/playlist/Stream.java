@@ -86,14 +86,14 @@ public final class Stream {
     }
 
     /**
-     * 是否包含可替代的CC展示
+     * 是否包含可替代的隱藏字幕展示
      */
     public boolean containsAlternativeClosedCaptionRenditions() {
         return mStreamInfTag.containsAttribute(Attribute.Name.CLOSED_CAPTIONS);
     }
 
     /**
-     * 获取可替代的CC展示
+     * 获取可替代的隱藏字幕展示
      */
     public RenditionGroup getAlternativeClosedCaptionRenditions() {
         return mRenditionList.getGroup(

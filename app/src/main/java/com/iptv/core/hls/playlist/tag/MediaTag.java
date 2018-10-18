@@ -101,7 +101,7 @@ public final class MediaTag extends Tag {
     }
 
     /**
-     * 获取流内（CC字幕轨道）的id
+     * 获取流内（隱藏字幕轨道）的id
      */
     public String getInStreamId() {
         Attribute attribute = mAttributeList.get(Attribute.Name.IN_STREAM_ID);
@@ -217,7 +217,7 @@ public final class MediaTag extends Tag {
         }
 
         /**
-         * 设置（该表现）是默认的选择
+         * 设置（该表现）是否是默认的选择
          */
         public void setDefaultSelect(boolean state) {
             Attribute attribute = new Attribute(Attribute.Name.DEFAULT,
@@ -226,7 +226,7 @@ public final class MediaTag extends Tag {
         }
 
         /**
-         * 设置（该表现）是自动的选择
+         * 设置（该表现）是否是自动的选择
          */
         public void setAutoSelect(boolean state) {
             Attribute attribute = new Attribute(Attribute.Name.AUTO_SELECT,
@@ -235,7 +235,7 @@ public final class MediaTag extends Tag {
         }
 
         /**
-         * 设置（该表现）是强制的选择
+         * 设置（该表现）是否是强制的选择
          */
         public void setForcedSelect(boolean state) {
             Attribute attribute = new Attribute(Attribute.Name.FORCED,
@@ -244,9 +244,9 @@ public final class MediaTag extends Tag {
         }
 
         /**
-         * 设置CC字幕轨道的id
+         * 设置流内（隱藏字幕轨道）的id
          */
-        public void setClosedCaptionStreamId(String streamId) {
+        public void setInStreamId(String streamId) {
             Attribute attribute = new Attribute(Attribute.Name.IN_STREAM_ID,
                     new QuotedString(streamId));
             mAttributeList.put(attribute);
