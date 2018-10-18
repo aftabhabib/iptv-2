@@ -25,7 +25,7 @@ public final class CacheManager {
      */
     public Cache getCache(String name) {
         if (!mCacheTable.containsKey(name)) {
-            mCacheTable.put(name, new SimpleCacheImpl(3));
+            mCacheTable.put(name, new SimpleCacheImpl());
         }
 
         return mCacheTable.get(name);
