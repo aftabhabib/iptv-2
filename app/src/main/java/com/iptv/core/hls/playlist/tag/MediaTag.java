@@ -79,7 +79,7 @@ public final class MediaTag extends Tag {
     /**
      * 是不是默认的选择
      */
-    public String getDefaultSelect() {
+    public String getDefaultSelection() {
         Attribute attribute = mAttributeList.get(Attribute.Name.DEFAULT);
         return attribute.getStringValue();
     }
@@ -87,7 +87,7 @@ public final class MediaTag extends Tag {
     /**
      * 是不是自动的选择
      */
-    public String getAutoSelect() {
+    public String getAutoSelection() {
         Attribute attribute = mAttributeList.get(Attribute.Name.AUTO_SELECT);
         return attribute.getStringValue();
     }
@@ -95,7 +95,7 @@ public final class MediaTag extends Tag {
     /**
      * 是不是强制的选择
      */
-    public String getForcedSelect() {
+    public String getForcedSelection() {
         Attribute attribute = mAttributeList.get(Attribute.Name.FORCED);
         return attribute.getStringValue();
     }
@@ -219,7 +219,7 @@ public final class MediaTag extends Tag {
         /**
          * 设置（该表现）是否是默认的选择
          */
-        public void setDefaultSelect(boolean state) {
+        public void setDefaultSelection(boolean state) {
             Attribute attribute = new Attribute(Attribute.Name.DEFAULT,
                     state ? EnumeratedString.YES : EnumeratedString.NO);
             mAttributeList.put(attribute);
@@ -228,7 +228,7 @@ public final class MediaTag extends Tag {
         /**
          * 设置（该表现）是否是自动的选择
          */
-        public void setAutoSelect(boolean state) {
+        public void setAutoSelection(boolean state) {
             Attribute attribute = new Attribute(Attribute.Name.AUTO_SELECT,
                     state ? EnumeratedString.YES : EnumeratedString.NO);
             mAttributeList.put(attribute);
@@ -237,7 +237,7 @@ public final class MediaTag extends Tag {
         /**
          * 设置（该表现）是否是强制的选择
          */
-        public void setForcedSelect(boolean state) {
+        public void setForcedSelection(boolean state) {
             Attribute attribute = new Attribute(Attribute.Name.FORCED,
                     state ? EnumeratedString.YES : EnumeratedString.NO);
             mAttributeList.put(attribute);
