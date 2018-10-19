@@ -1,25 +1,25 @@
 package com.iptv.core.hls.playlist.tag;
 
 /**
- * 目标时长标签
+ * 最大时长标签
  */
 public final class TargetDurationTag extends Tag {
-    private int mTargetDuration;
+    private int mDuration;
 
     /**
      * 构造函数
      */
-    public TargetDurationTag(int targetDuration) {
+    public TargetDurationTag(int duration) {
         super(Name.TARGET_DURATION);
 
-        mTargetDuration = targetDuration;
+        mDuration = duration;
     }
 
     /**
-     * 获取目标时长
+     * 获取时长
      */
-    public int getTargetDuration() {
-        return mTargetDuration;
+    public int getDuration() {
+        return mDuration;
     }
 
     @Override
@@ -29,6 +29,6 @@ public final class TargetDurationTag extends Tag {
 
     @Override
     public String toString() {
-        return mName + ":" + String.valueOf(mTargetDuration);
+        return mName + ":" + String.valueOf(mDuration);
     }
 }
