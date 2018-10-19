@@ -134,7 +134,7 @@ public final class Attribute {
     public static Attribute parse(String strAttribute) {
         String[] result = strAttribute.split("=");
         if (result.length != 2) {
-            throw new IllegalArgumentException("attribute should be <name>=<value>");
+            throw new IllegalArgumentException("should be <name>=<value>");
         }
 
         return new Attribute(result[0], result[1]);
