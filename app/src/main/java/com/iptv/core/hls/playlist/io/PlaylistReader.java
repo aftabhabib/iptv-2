@@ -1,6 +1,12 @@
 package com.iptv.core.hls.playlist.io;
 
+import com.iptv.core.hls.playlist.IFrameStream;
+import com.iptv.core.hls.playlist.MasterPlaylist;
+import com.iptv.core.hls.playlist.MediaPlaylist;
 import com.iptv.core.hls.playlist.Playlist;
+import com.iptv.core.hls.playlist.Rendition;
+import com.iptv.core.hls.playlist.Segment;
+import com.iptv.core.hls.playlist.Stream;
 import com.iptv.core.hls.playlist.attribute.AttributeList;
 import com.iptv.core.hls.playlist.datatype.ByteRange;
 import com.iptv.core.hls.playlist.tag.ByteRangeTag;
@@ -24,6 +30,9 @@ import com.iptv.core.hls.playlist.tag.VersionTag;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public final class PlaylistReader {
     private static final int ST_PLAYLIST_HEADER = 0;
@@ -37,6 +46,16 @@ public final class PlaylistReader {
 
     private BufferedReader mReader;
     private int mState = ST_PLAYLIST_HEADER;
+
+    private List<Tag> mBasicMeta = new ArrayList<>();
+    private List<Tag> mMediaPlaylistMeta = new ArrayList<>();
+    private List<Tag> mMasterPlaylistMeta = new ArrayList<>();
+    private List<Tag> mSegmentMeta = new ArrayList<>();
+    private List<Tag> mStreamMeta = new ArrayList<>();
+
+    private List<Segment> mSegmentList = new LinkedList<>();
+    private List<Stream> mStreamList = new ArrayList<>();
+    private List<IFrameStream> mIFrameStreamList = new ArrayList<>();
 
     /**
      * 构造函数
@@ -82,12 +101,23 @@ public final class PlaylistReader {
             }
         }
 
-        if ((mState != ST_SEGMENT && mState != ST_PLAYLIST_END)
-                && (mState != ST_STREAM && mState != ST_IFRAME_STREAM)) {
-            throw new IOException("malformed format");
+        if (!(mState == ST_SEGMENT
+                || mState == ST_PLAYLIST_END
+                || mState == ST_STREAM
+                || mState == ST_IFRAME_STREAM)) {
+            throw new IllegalStateException("malformed format");
         }
 
-        return null;
+        if (!mMediaPlaylistMeta.isEmpty() && !mSegmentList.isEmpty()) {
+            return createMediaPlaylist();
+        }
+        else if (!mMasterPlaylistMeta.isEmpty()
+                && (!mStreamList.isEmpty() || !mIFrameStreamList.isEmpty())) {
+            return createMasterPlaylist();
+        }
+        else {
+            throw new IllegalStateException("malformed format");
+        }
     }
 
     /**
@@ -204,7 +234,7 @@ public final class PlaylistReader {
     /**
      * 处理标签
      */
-    private void processTag(Tag tag) throws IOException {
+    private void processTag(Tag tag) {
         String tagName = tag.getName();
 
         switch (mState) {
@@ -213,55 +243,43 @@ public final class PlaylistReader {
                     mState = ST_PLAYLIST_META;
                 }
                 else {
-                    throw new IOException("malformed format");
+                    throw new IllegalStateException("malformed format");
                 }
 
                 break;
             }
             case ST_PLAYLIST_META: {
                 if (tagName.equals(Tag.Name.VERSION)) {
-                    /**
-                     * Basic meta
-                     */
+                    mBasicMeta.add(tag);
                 }
                 else if (tagName.equals(Tag.Name.TARGET_DURATION)
                         || tagName.equals(Tag.Name.MEDIA_SEQUENCE)
                         || tagName.equals(Tag.Name.PLAYLIST_TYPE)
                         || tagName.equals(Tag.Name.I_FRAMES_ONLY)
                         || tagName.equals(Tag.Name.DISCONTINUITY_SEQUENCE)) {
-                    /**
-                     * MediaPlaylist's meta
-                     */
+                    mMediaPlaylistMeta.add(tag);
                 }
                 else if (tagName.equals(Tag.Name.MEDIA)) {
-                    /**
-                     * MasterPlaylist's meta
-                     */
+                    mMasterPlaylistMeta.add(tag);
                 }
                 else if (tagName.equals(Tag.Name.MAP)
                         || tagName.equals(Tag.Name.KEY)
                         || tagName.equals(Tag.Name.BYTE_RANGE)
                         || tagName.equals(Tag.Name.DISCONTINUITY)
                         || tagName.equals(Tag.Name.INF)) {
-                    /**
-                     * Segment meta
-                     */
+                    mSegmentMeta.add(tag);
                     mState = ST_SEGMENT_META;
                 }
                 else if (tagName.equals(Tag.Name.STREAM_INF)) {
-                    /**
-                     * Stream meta
-                     */
+                    mStreamMeta.add(tag);
                     mState = ST_STREAM_META;
                 }
                 else if (tagName.equals(Tag.Name.I_FRAME_STREAM_INF)) {
-                    /**
-                     * I-Frame stream
-                     */
+                    mIFrameStreamList.add(createIFrameStream((IFrameStreamInfTag)tag));
                     mState = ST_IFRAME_STREAM;
                 }
                 else {
-                    throw new IOException("malformed format");
+                    throw new IllegalStateException("malformed format");
                 }
 
                 break;
@@ -272,12 +290,10 @@ public final class PlaylistReader {
                         || tagName.equals(Tag.Name.BYTE_RANGE)
                         || tagName.equals(Tag.Name.DISCONTINUITY)
                         || tagName.equals(Tag.Name.INF)) {
-                    /**
-                     * Segment meta
-                     */
+                    mSegmentMeta.add(tag);
                 }
                 else {
-                    throw new IOException("malformed format");
+                    throw new IllegalStateException("malformed format");
                 }
 
                 break;
@@ -288,38 +304,60 @@ public final class PlaylistReader {
                         || tagName.equals(Tag.Name.BYTE_RANGE)
                         || tagName.equals(Tag.Name.DISCONTINUITY)
                         || tagName.equals(Tag.Name.INF)) {
-                    /**
-                     * Segment meta
-                     */
+                    mSegmentMeta.add(tag);
                     mState = ST_SEGMENT_META;
                 }
                 else if (tagName.equals(Tag.Name.END_LIST)) {
+                    mMediaPlaylistMeta.add(tag);
                     mState = ST_PLAYLIST_END;
                 }
                 else {
-                    throw new IOException("malformed format");
+                    throw new IllegalStateException("malformed format");
                 }
+
+                break;
             }
             case ST_STREAM:
             case ST_IFRAME_STREAM: {
                 if (tagName.equals(Tag.Name.STREAM_INF)) {
-                    /**
-                     * Stream meta
-                     */
+                    mStreamMeta.add(tag);
                     mState = ST_SEGMENT_META;
                 }
                 else if (tagName.equals(Tag.Name.I_FRAME_STREAM_INF)) {
-                    /**
-                     * I-Frame stream
-                     */
+                    mIFrameStreamList.add(createIFrameStream((IFrameStreamInfTag)tag));
                     mState = ST_IFRAME_STREAM;
                 }
                 else {
-                    throw new IOException("malformed format");
+                    throw new IllegalStateException("malformed format");
                 }
+
+                break;
             }
             default: {
-                throw new IOException("malformed format");
+                throw new IllegalStateException("malformed format");
+            }
+        }
+    }
+
+    /**
+     * 处理uri
+     */
+    private void processUri(String uri) {
+        switch (mState) {
+            case ST_SEGMENT_META: {
+                mSegmentList.add(createSegment(uri));
+                mState = ST_SEGMENT;
+
+                break;
+            }
+            case ST_STREAM_META: {
+                mStreamList.add(createStream(uri));
+                mState = ST_STREAM;
+
+                break;
+            }
+            default: {
+                throw new IllegalStateException("malformed format");
             }
         }
     }
@@ -327,28 +365,117 @@ public final class PlaylistReader {
     /**
      * 创建媒体片段
      */
-    private void processUri(String uri) throws IOException {
-        switch (mState) {
-            case ST_SEGMENT_META: {
-                /**
-                 * add new segment
-                 */
-                mState = ST_SEGMENT;
+    private Segment createSegment(String uri) {
+        MapTag mapTag = null;
+        KeyTag keyTag = null;
+        ByteRangeTag rangeTag = null;
+        DiscontinuityTag discontinuityTag = null;
+        InfTag infTag = null;
 
-                break;
-            }
-            case ST_STREAM_META: {
-                /**
-                 * add new stream
-                 */
-                mState = ST_STREAM;
+        while (!mSegmentMeta.isEmpty()) {
+            Tag tag = mSegmentMeta.remove(0);
 
-                break;
+            String tagName = tag.getName();
+            if (tagName.equals(Tag.Name.MAP)) {
+                mapTag = (MapTag)tag;
             }
-            default: {
-                throw new IOException("malformed format");
+            else if (tagName.equals(Tag.Name.KEY)) {
+                keyTag = (KeyTag)tag;
+            }
+            else if (tagName.equals(Tag.Name.BYTE_RANGE)) {
+                rangeTag = (ByteRangeTag)tag;
+            }
+            else if (tagName.equals(Tag.Name.DISCONTINUITY)) {
+                discontinuityTag = (DiscontinuityTag)tag;
+            }
+            else if (tagName.equals(Tag.Name.INF)) {
+                infTag = (InfTag)tag;
             }
         }
+
+        return new Segment(mapTag, keyTag, rangeTag, discontinuityTag, infTag, uri);
+    }
+
+    /**
+     * 创建流
+     */
+    private Stream createStream(String uri) {
+        StreamInfTag streamInfTag = null;
+
+        while (!mStreamMeta.isEmpty()) {
+            Tag tag = mStreamMeta.remove(0);
+
+            String tagName = tag.getName();
+            if (tagName.equals(Tag.Name.STREAM_INF)) {
+                streamInfTag = (StreamInfTag)tag;
+            }
+        }
+
+        return new Stream(streamInfTag, uri);
+    }
+
+    /**
+     * 创建I帧流
+     */
+    private IFrameStream createIFrameStream(IFrameStreamInfTag iFrameStreamInfTag) {
+        return new IFrameStream(iFrameStreamInfTag);
+    }
+
+    /**
+     * 创建媒体播放列表
+     */
+    private Playlist createMediaPlaylist() {
+        TargetDurationTag targetDurationTag = null;
+        MediaSequenceTag mediaSequenceTag = null;
+        EndListTag endListTag = null;
+        PlaylistTypeTag playlistTypeTag = null;
+        IFrameOnlyTag iFrameOnlyTag = null;
+        DiscontinuitySequenceTag discontinuitySequenceTag = null;
+
+        while (!mMediaPlaylistMeta.isEmpty()) {
+            Tag tag = mMediaPlaylistMeta.remove(0);
+
+            String tagName = tag.getName();
+            if (tagName.equals(Tag.Name.TARGET_DURATION)) {
+                targetDurationTag = (TargetDurationTag)tag;
+            }
+            else if (tagName.equals(Tag.Name.MEDIA_SEQUENCE)) {
+                mediaSequenceTag = (MediaSequenceTag)tag;
+            }
+            else if (tagName.equals(Tag.Name.END_LIST)) {
+                endListTag = (EndListTag)tag;
+            }
+            else if (tagName.equals(Tag.Name.PLAYLIST_TYPE)) {
+                playlistTypeTag = (PlaylistTypeTag)tag;
+            }
+            else if (tagName.equals(Tag.Name.I_FRAMES_ONLY)) {
+                iFrameOnlyTag = (IFrameOnlyTag)tag;
+            }
+            else if (tagName.equals(Tag.Name.DISCONTINUITY_SEQUENCE)) {
+                discontinuitySequenceTag = (DiscontinuitySequenceTag)tag;
+            }
+        }
+
+        return new MediaPlaylist(targetDurationTag, mediaSequenceTag, endListTag,
+                playlistTypeTag, iFrameOnlyTag, discontinuitySequenceTag, mSegmentList);
+    }
+
+    /**
+     * 创建主播放列表
+     */
+    private Playlist createMasterPlaylist() {
+        List<Rendition> renditionList = new LinkedList<>();
+
+        while (!mMasterPlaylistMeta.isEmpty()) {
+            Tag tag = mMediaPlaylistMeta.remove(0);
+
+            String tagName = tag.getName();
+            if (tagName.equals(Tag.Name.MEDIA)) {
+                renditionList.add(new Rendition((MediaTag)tag));
+            }
+        }
+
+        return new MasterPlaylist(renditionList, mStreamList, mIFrameStreamList);
     }
 
     /**
