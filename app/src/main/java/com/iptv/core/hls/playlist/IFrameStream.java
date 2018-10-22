@@ -1,156 +1,86 @@
 package com.iptv.core.hls.playlist;
 
-import com.iptv.core.hls.exception.MalformedPlaylistException;
 import com.iptv.core.hls.playlist.attribute.Attribute;
-import com.iptv.core.hls.playlist.attribute.AttributeList;
-import com.iptv.core.hls.playlist.datatype.QuotedString;
-import com.iptv.core.hls.playlist.datatype.Resolution;
+import com.iptv.core.hls.playlist.datatype.EnumeratedString;
+import com.iptv.core.hls.playlist.tag.IFrameStreamInfTag;
+import com.iptv.core.hls.utils.HttpHelper;
+import com.iptv.core.hls.utils.UrlHelper;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * I帧流（快速浏览）
+ * I帧流
  */
 public final class IFrameStream {
-    private AttributeList mAttributeList;
+    private String mPlaylistUrl;
+
+    private List<Rendition> mVideoRenditionList = new ArrayList<>();
+
+    private IFrameStreamInfTag mIFrameStreamInfTag;
 
     /**
      * 构造函数
      */
-    public IFrameStream() {
-        mAttributeList = new AttributeList();
+    public IFrameStream(IFrameStreamInfTag iFrameStreamInfTag) {
+        mIFrameStreamInfTag = iFrameStreamInfTag;
     }
 
     /**
-     * 构造函数
+     * 设置播放列表url
      */
-    public IFrameStream(AttributeList attributeList) {
-        mAttributeList = attributeList;
+    void setPlaylistUrl(String playlistUrl) {
+        mPlaylistUrl = playlistUrl;
     }
 
     /**
-     * 设置带宽
+     * 设置展示列表
      */
-    public void setBandwidth(int bandwidth) {
-        Attribute attribute = Attribute.create(Attribute.Name.BANDWIDTH, bandwidth);
-        mAttributeList.put(attribute);
-    }
+    void setRenditionList(List<Rendition> renditionList) {
+        for (Rendition rendition : renditionList) {
+            String type = rendition.getType();
+            String groupId = rendition.getGroupId();
 
-    /**
-     * 设置平均带宽
-     */
-    public void setAvgBandwidth(int bandwidth) {
-        Attribute attribute = Attribute.create(Attribute.Name.AVG_BANDWIDTH, bandwidth);
-        mAttributeList.put(attribute);
-    }
-
-    /**
-     * 设置媒体编码格式
-     */
-    public void setCodec(String codec) {
-        Attribute attribute = Attribute.create(Attribute.Name.CODECS, new QuotedString(codec));
-        mAttributeList.put(attribute);
-    }
-
-    /**
-     * 设置视频分辨率
-     */
-    public void setVideoResolution(int width, int height) {
-        Attribute attribute = Attribute.create(
-                Attribute.Name.RESOLUTION, new Resolution(width, height));
-        mAttributeList.put(attribute);
-    }
-
-    /**
-     * 设置HDCP层次
-     */
-    public void setHDCPLevel(String level) {
-        Attribute attribute = Attribute.create(Attribute.Name.HDCP_LEVEL, level);
-        mAttributeList.put(attribute);
-    }
-
-    /**
-     * 设置视频（展示）组的id
-     */
-    public void setVideoGroupId(String groupId) {
-        Attribute attribute = Attribute.create(Attribute.Name.VIDEO, new QuotedString(groupId));
-        mAttributeList.put(attribute);
-    }
-
-    /**
-     * 设置uri
-     */
-    public void setUri(String uri) {
-        Attribute attribute = Attribute.create(Attribute.Name.URI, new QuotedString(uri));
-        mAttributeList.put(attribute);
-    }
-
-    /**
-     * 是否定义了属性
-     */
-    public boolean containsAttribute(String attributeName) {
-        return mAttributeList.containsAttribute(attributeName);
+            if (type.equals(EnumeratedString.VIDEO)) {
+                if (containsVideoRenditions()
+                        && mIFrameStreamInfTag.getVideoGroupId().equals(groupId)) {
+                    mVideoRenditionList.add(rendition);
+                }
+            }
+        }
     }
 
     /**
      * 获取带宽
      */
-    public int getBandwidth() throws MalformedPlaylistException {
-        Attribute attribute = mAttributeList.get(Attribute.Name.BANDWIDTH);
-        return attribute.getIntegerValue();
+    public int getBandwidth() {
+        return mIFrameStreamInfTag.getBandwidth();
     }
 
     /**
-     * 获取平均带宽
+     * 是否包含（可替代的）视频展示
      */
-    public int getAvgBandwidth() throws MalformedPlaylistException {
-        Attribute attribute = mAttributeList.get(Attribute.Name.AVG_BANDWIDTH);
-        return attribute.getIntegerValue();
+    public boolean containsVideoRenditions() {
+        return mIFrameStreamInfTag.containsAttribute(Attribute.Name.VIDEO);
     }
 
     /**
-     * 获取媒体编码格式
+     * 获取（可替代的）视频展示
      */
-    public String getCodec() throws MalformedPlaylistException {
-        Attribute attribute = mAttributeList.get(Attribute.Name.CODECS);
-        return attribute.getQuotedStringValue().getContent();
+    public Rendition[] getVideoRenditions() {
+        return mVideoRenditionList.toArray(
+                new Rendition[mVideoRenditionList.size()]);
     }
 
     /**
-     * 获取视频图像宽
+     * 获取媒体列表
      */
-    public int getVideoWidth() throws MalformedPlaylistException {
-        Attribute attribute = mAttributeList.get(Attribute.Name.RESOLUTION);
-        return attribute.getResolutionValue().getWidth();
-    }
+    public Playlist getPlaylist() throws IOException {
+        InputStream input = HttpHelper.get(
+                UrlHelper.makeUrl(mPlaylistUrl, mIFrameStreamInfTag.getUri()), null);
 
-    /**
-     * 获取视频图像高
-     */
-    public int getVideoHeight() throws MalformedPlaylistException {
-        Attribute attribute = mAttributeList.get(Attribute.Name.RESOLUTION);
-        return attribute.getResolutionValue().getHeight();
-    }
-
-    /**
-     * 获取HDCP层次
-     */
-    public String getHDCPLevel() throws MalformedPlaylistException {
-        Attribute attribute = mAttributeList.get(Attribute.Name.HDCP_LEVEL);
-        return attribute.getQuotedStringValue().getContent();
-    }
-
-    /**
-     * 获取视频（展示）组的id
-     */
-    public String getVideoGroupId() throws MalformedPlaylistException {
-        Attribute attribute = mAttributeList.get(Attribute.Name.VIDEO);
-        return attribute.getQuotedStringValue().getContent();
-    }
-
-    /**
-     * 获取uri
-     */
-    public String getUri() throws MalformedPlaylistException {
-        Attribute attribute = mAttributeList.get(Attribute.Name.URI);
-        return attribute.getQuotedStringValue().getContent();
+        return null;
     }
 }

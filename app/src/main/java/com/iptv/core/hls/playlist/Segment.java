@@ -28,38 +28,51 @@ import javax.crypto.spec.SecretKeySpec;
  * 片段
  */
 public final class Segment {
+    private String mPlaylistUrl;
+
     private long mSequenceNumber;
     private long mDiscontinuitySequenceNumber;
 
     private MapTag mMapTag;
     private KeyTag mKeyTag;
-
     private ByteRangeTag mRangeTag;
     private DiscontinuityTag mDiscontinuityTag;
-
     private InfTag mInfTag;
     private String mUri;
-    private String mPlaylistUrl;
 
     /**
      * 构造函数
      */
-    public Segment(long sequenceNumber, long discontinuitySequenceNumber,
-                   MapTag mapTag, KeyTag keyTag,
+    public Segment(MapTag mapTag, KeyTag keyTag,
                    ByteRangeTag rangeTag, DiscontinuityTag discontinuityTag,
-                   InfTag infTag, String uri, String playlistUrl) {
-        mSequenceNumber = sequenceNumber;
-        mDiscontinuitySequenceNumber = discontinuitySequenceNumber;
-
+                   InfTag infTag, String uri) {
         mMapTag = mapTag;
         mKeyTag = keyTag;
-
         mRangeTag = rangeTag;
         mDiscontinuityTag = discontinuityTag;
-
         mInfTag = infTag;
         mUri = uri;
+    }
+
+    /**
+     * 设置播放列表url
+     */
+    void setPlaylistUrl(String playlistUrl) {
         mPlaylistUrl = playlistUrl;
+    }
+
+    /**
+     * 设置序号
+     */
+    void setSequenceNumber(long sequenceNumber) {
+        mSequenceNumber = sequenceNumber;
+    }
+
+    /**
+     * 设置不连续序号
+     */
+    void setDiscontinuitySequenceNumber(long discontinuitySequenceNumber) {
+        mDiscontinuitySequenceNumber = discontinuitySequenceNumber;
     }
 
     /**

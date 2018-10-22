@@ -2,35 +2,77 @@ package com.iptv.core.hls.playlist;
 
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.datatype.EnumeratedString;
-import com.iptv.core.hls.playlist.rendition.RenditionGroup;
-import com.iptv.core.hls.playlist.rendition.RenditionList;
 import com.iptv.core.hls.playlist.tag.StreamInfTag;
 import com.iptv.core.hls.utils.HttpHelper;
 import com.iptv.core.hls.utils.UrlHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 流
  */
 public final class Stream {
-    private RenditionList mRenditionList;
+    private String mPlaylistUrl;
+
+    private List<Rendition> mAudioRenditionList = new ArrayList<>();
+    private List<Rendition> mVideoRenditionList = new ArrayList<>();
+    private List<Rendition> mSubtitleRenditionList = new ArrayList<>();
+    private List<Rendition> mClosedCaptionRenditionList = new ArrayList<>();
 
     private StreamInfTag mStreamInfTag;
     private String mUri;
-    private String mPlaylistUrl;
 
     /**
      * 构造函数
      */
-    public Stream(RenditionList renditionList,
-                  StreamInfTag streamInfTag, String uri, String playlistUrl) {
-        mRenditionList = renditionList;
-
+    public Stream(StreamInfTag streamInfTag, String uri) {
         mStreamInfTag = streamInfTag;
         mUri = uri;
+    }
+
+    /**
+     * 设置播放列表url
+     */
+    void setPlaylistUrl(String playlistUrl) {
         mPlaylistUrl = playlistUrl;
+    }
+
+    /**
+     * 设置展示列表
+     */
+    void setRenditionList(List<Rendition> renditionList) {
+        for (Rendition rendition : renditionList) {
+            String type = rendition.getType();
+            String groupId = rendition.getGroupId();
+
+            if (type.equals(EnumeratedString.AUDIO)) {
+                if (containsAudioRenditions()
+                        && mStreamInfTag.getAudioGroupId().equals(groupId)) {
+                    mAudioRenditionList.add(rendition);
+                }
+            }
+            else if (type.equals(EnumeratedString.VIDEO)) {
+                if (containsVideoRenditions()
+                        && mStreamInfTag.getVideoGroupId().equals(groupId)) {
+                    mVideoRenditionList.add(rendition);
+                }
+            }
+            else if (type.equals(EnumeratedString.SUBTITLES)) {
+                if (containsSubtitleRenditions()
+                        && mStreamInfTag.getSubtitleGroupId().equals(groupId)) {
+                    mSubtitleRenditionList.add(rendition);
+                }
+            }
+            else if (type.equals(EnumeratedString.CLOSED_CAPTIONS)) {
+                if (containsClosedCaptionRenditions()
+                        && mStreamInfTag.getClosedCaptionGroupId().equals(groupId)) {
+                    mClosedCaptionRenditionList.add(rendition);
+                }
+            }
+        }
     }
 
     /**
@@ -41,72 +83,72 @@ public final class Stream {
     }
 
     /**
-     * 是否包含可替代的音频展示
+     * 是否包含（可替代的）音频展示
      */
-    public boolean containsAlternativeAudioRenditions() {
+    public boolean containsAudioRenditions() {
         return mStreamInfTag.containsAttribute(Attribute.Name.AUDIO);
     }
 
     /**
-     * 获取可替代的音频展示
+     * 获取（可替代的）音频展示
      */
-    public RenditionGroup getAlternativeAudioRenditions() {
-        return mRenditionList.getGroup(
-                EnumeratedString.AUDIO, mStreamInfTag.getAudioGroupId());
+    private Rendition[] getAudioRenditions() {
+        return mAudioRenditionList.toArray(
+                new Rendition[mAudioRenditionList.size()]);
     }
 
     /**
-     * 是否包含可替代的视频展示
+     * 是否包含（可替代的）视频展示
      */
-    public boolean containsAlternativeVideoRenditions() {
+    public boolean containsVideoRenditions() {
         return mStreamInfTag.containsAttribute(Attribute.Name.VIDEO);
     }
 
     /**
-     * 获取可替代的视频展示
+     * 获取（可替代的）视频展示
      */
-    public RenditionGroup getAlternativeVideoRenditions() {
-        return mRenditionList.getGroup(
-                EnumeratedString.VIDEO, mStreamInfTag.getVideoGroupId());
+    public Rendition[] getVideoRenditions() {
+        return mVideoRenditionList.toArray(
+                new Rendition[mVideoRenditionList.size()]);
     }
 
     /**
-     * 是否包含可替代的字幕展示
+     * 是否包含（可替代的）字幕展示
      */
-    public boolean containsAlternativeSubtitleRenditions() {
+    public boolean containsSubtitleRenditions() {
         return mStreamInfTag.containsAttribute(Attribute.Name.SUBTITLES);
     }
 
     /**
-     * 获取可替代的字幕展示
+     * 获取（可替代的）字幕展示
      */
-    public RenditionGroup getAlternativeSubtitleRenditions() {
-        return mRenditionList.getGroup(
-                EnumeratedString.SUBTITLES, mStreamInfTag.getSubtitleGroupId());
+    public Rendition[] getSubtitleRenditions() {
+        return mSubtitleRenditionList.toArray(
+                new Rendition[mSubtitleRenditionList.size()]);
     }
 
     /**
-     * 是否包含可替代的隱藏字幕展示
+     * 是否包含（可替代的）隱藏字幕展示
      */
-    public boolean containsAlternativeClosedCaptionRenditions() {
+    public boolean containsClosedCaptionRenditions() {
         return mStreamInfTag.containsAttribute(Attribute.Name.CLOSED_CAPTIONS);
     }
 
     /**
-     * 获取可替代的隱藏字幕展示
+     * 获取（可替代的）隱藏字幕展示
      */
-    public RenditionGroup getAlternativeClosedCaptionRenditions() {
-        return mRenditionList.getGroup(
-                EnumeratedString.CLOSED_CAPTIONS, mStreamInfTag.getClosedCaptionGroupId());
+    public Rendition[] getClosedCaptionRenditions() {
+        return mClosedCaptionRenditionList.toArray(
+                new Rendition[mClosedCaptionRenditionList.size()]);
     }
 
     /**
      * 获取媒体列表
      */
-    public MediaPlaylist getPlaylist() throws IOException {
+    public Playlist getPlaylist() throws IOException {
         InputStream input = HttpHelper.get(
                 UrlHelper.makeUrl(mPlaylistUrl, mUri), null);
 
-        return MediaPlaylist.read(input);
+        return null;
     }
 }
