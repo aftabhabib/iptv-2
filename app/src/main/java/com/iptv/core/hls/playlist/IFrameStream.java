@@ -75,6 +75,19 @@ public final class IFrameStream {
     }
 
     /**
+     * 获取默认的音频展示
+     */
+    public Rendition getDefaultVideoRendition() {
+        for (Rendition rendition : mVideoRenditionList) {
+            if (rendition.isDefaultSelection()) {
+                return rendition;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * 获取媒体列表
      */
     public Playlist getPlaylist() throws IOException {

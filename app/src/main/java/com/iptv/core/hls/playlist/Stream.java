@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * 流
  */
-public final class Stream {
+public final class Stream implements Comparable<Integer> {
     private String mPlaylistUrl;
 
     private List<Rendition> mAudioRenditionList = new ArrayList<>();
@@ -241,5 +241,10 @@ public final class Stream {
                 UrlHelper.makeUrl(mPlaylistUrl, mUri), null);
 
         return null;
+    }
+
+    @Override
+    public int compareTo(Integer bandwidth) {
+        return getBandwidth() - bandwidth;
     }
 }

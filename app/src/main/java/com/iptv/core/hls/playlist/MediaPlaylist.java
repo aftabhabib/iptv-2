@@ -1,202 +1,152 @@
 package com.iptv.core.hls.playlist;
 
 import com.iptv.core.hls.playlist.datatype.EnumeratedString;
+import com.iptv.core.hls.playlist.tag.DiscontinuitySequenceTag;
+import com.iptv.core.hls.playlist.tag.EndListTag;
+import com.iptv.core.hls.playlist.tag.IFrameOnlyTag;
+import com.iptv.core.hls.playlist.tag.MediaSequenceTag;
+import com.iptv.core.hls.playlist.tag.PlaylistTypeTag;
+import com.iptv.core.hls.playlist.tag.TargetDurationTag;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 媒体播放列表
  */
-public final class MediaPlaylist {
-    private int mVersion = 3;
-    private int mTargetDuration = 10;
-    private int mMediaSequence = 0;
-    private int mDiscontinuitySequence = 0;
-    private boolean mEndOfList = false;
-    private String mType = null;
-    private boolean mIFrameOnly = false;
+public final class MediaPlaylist extends Playlist {
+    private TargetDurationTag mTargetDurationTag;
+    private MediaSequenceTag mMediaSequenceTag;
+    private EndListTag mEndListTag;
+    private PlaylistTypeTag mPlaylistTypeTag;
+    private IFrameOnlyTag mIFrameOnlyTag;
+    private DiscontinuitySequenceTag mDiscontinuitySequenceTag;
 
-    private List<Segment> mSegmentList = new ArrayList<>();
+    private List<Segment> mSegmentList;
 
     /**
      * 构造函数
      */
-    public MediaPlaylist() {
-        /**
-         * nothing
-         */
+    public MediaPlaylist(TargetDurationTag targetDurationTag,
+                         MediaSequenceTag mediaSequenceTag,
+                         EndListTag endListTag,
+                         PlaylistTypeTag playlistTypeTag,
+                         IFrameOnlyTag iFrameOnlyTag,
+                         DiscontinuitySequenceTag discontinuitySequenceTag,
+                         List<Segment> segmentList) {
+        super();
+
+        mTargetDurationTag = targetDurationTag;
+        mMediaSequenceTag = mediaSequenceTag;
+        mEndListTag = endListTag;
+        mPlaylistTypeTag = playlistTypeTag;
+        mIFrameOnlyTag = iFrameOnlyTag;
+        mDiscontinuitySequenceTag = discontinuitySequenceTag;
+
+        mSegmentList = segmentList;
     }
 
     /**
-     * 设置版本
+     * 获取最大的片段时长
      */
-    public void setVersion(int version) {
-        if (version <= 0) {
-            throw new IllegalArgumentException("invalid version");
-        }
-
-        mVersion = version;
+    public int getMaxSegmentDuration() {
+        return mTargetDurationTag.getDuration();
     }
 
     /**
-     * 设置片段的最大时长
+     * 是否不再有片段
      */
-    public void setTargetDuration(int targetDuration) {
-        if (targetDuration <= 0) {
-            throw new IllegalArgumentException("invalid target duration");
-        }
-
-        mTargetDuration = targetDuration;
-    }
-
-    /**
-     * 设置起始片段的序号
-     */
-    public void setMediaSequence(int sequenceNumber) {
-        if (sequenceNumber < 0) {
-            throw new IllegalArgumentException("invalid sequence number");
-        }
-
-        mMediaSequence = sequenceNumber;
-    }
-
-    /**
-     * 设置起始片段的不连续序号
-     */
-    public void setDiscontinuitySequence(int sequenceNumber) {
-        if (sequenceNumber < 0) {
-            throw new IllegalArgumentException("invalid sequence number");
-        }
-
-        mDiscontinuitySequence = sequenceNumber;
-    }
-
-    /**
-     * 设置列表结束
-     */
-    public void setEndOfList() {
-        mEndOfList = true;
-    }
-
-    /**
-     * 设置类型
-     */
-    public void setType(String type) {
-        if ((type == null) || !isValidType(type)) {
-            throw new IllegalArgumentException("invalid type");
-        }
-
-        mType = type;
-    }
-
-    /**
-     * 是不是有效的类型
-     */
-    private static boolean isValidType(String type) {
-        return type.equals(EnumeratedString.EVENT) || type.equals(EnumeratedString.VOD);
-    }
-
-    /**
-     * 设置（片段）只有I帧（快速浏览）
-     */
-    public void setIFrameOnly() {
-        mIFrameOnly = true;
-    }
-
-    /**
-     * 加入片段
-     */
-    public void addSegment(Segment segment) {
-        if ((segment == null) || !isValidSegment(segment)) {
-            throw new IllegalArgumentException("invalid segment");
-        }
-
-        mSegmentList.add(segment);
-    }
-
-    /**
-     * 是不是有效的片段
-     */
-    private boolean isValidSegment(Segment segment) {
-        return true;
-    }
-
-    /**
-     * 是否定义了类型
-     */
-    public boolean containsType() {
-        return mType != null;
-    }
-
-    /**
-     * 是否定义了片段
-     */
-    public boolean containsSegment() {
-        return !mSegmentList.isEmpty();
-    }
-
-    /**
-     * 获取版本号
-     */
-    public int getVersion() {
-        return mVersion;
-    }
-
-    /**
-     * 获取片段的最大时长
-     */
-    public int getTargetDuration() {
-        return mTargetDuration;
-    }
-
-    /**
-     * 获取起始片段的序号
-     */
-    public int getMediaSequence() {
-        return mMediaSequence;
-    }
-
-    /**
-     * 获取起始片段的不连续序号
-     */
-    public int getDiscontinuitySequence() {
-        return mDiscontinuitySequence;
-    }
-
-    /**
-     * 播放列表是否结束
-     */
-    public boolean endOfList() {
-        return mEndOfList;
+    public boolean noMoreSegments() {
+        return mEndListTag != null;
     }
 
     /**
      * 获取类型
      */
     public String getType() {
-        if (!containsType()) {
-            throw new IllegalStateException("no type");
+        if (mPlaylistTypeTag == null) {
+            return "undefined";
         }
-
-        return mType;
+        else {
+            return mPlaylistTypeTag.getType();
+        }
     }
 
     /**
      * 是不是只有I帧
      */
     public boolean isIFrameOnly() {
-        return mIFrameOnly;
+        return mIFrameOnlyTag != null;
     }
 
     /**
-     * 获取所有片段
+     * 获取起始序号
      */
-    public Segment[] getSegments() {
-        if (!containsSegment()) {
-            throw new IllegalStateException("no segment");
+    private long getFirstSequenceNumber() {
+        if (mMediaSequenceTag == null) {
+            return 0;
+        }
+        else {
+            return mMediaSequenceTag.getSequenceNumber();
+        }
+    }
+
+    /**
+     * 获取起始不连续序号
+     */
+    private long getFirstDiscontinuitySequenceNumber() {
+        if (mDiscontinuitySequenceTag == null) {
+            return 0;
+        }
+        else {
+            return mDiscontinuitySequenceTag.getSequenceNumber();
+        }
+    }
+
+    /**
+     * 获取片段总数
+     */
+    public int getSegmentCount() {
+        return mSegmentList.size();
+    }
+
+    /**
+     * 获取片段总数
+     */
+    public Segment getSegment(int index) {
+        if (index < 0 || index >= mSegmentList.size()) {
+            throw new IllegalArgumentException("invalid index");
         }
 
-        return mSegmentList.toArray(new Segment[mSegmentList.size()]);
+        return mSegmentList.get(index);
+    }
+
+    /**
+     * 获取播放时长
+     */
+    public float getPlayDuration() {
+        float duration = 0;
+
+        for (int i = 0; i < mSegmentList.size(); i++) {
+            duration += mSegmentList.get(i).getDuration();
+        }
+
+        return duration;
+    }
+
+    /**
+     * 与另一媒体播放列表相比是否更新、追加了片段
+     */
+    public boolean isNewerThan(MediaPlaylist other) {
+        if (getType().equals(EnumeratedString.VOD)
+                || (getType().equals(EnumeratedString.EVENT) && noMoreSegments())) {
+            throw new IllegalStateException("playlist should not change");
+        }
+
+        if ((getFirstSequenceNumber() > other.getFirstSequenceNumber())
+                || (getSegmentCount() > other.getSegmentCount())) {
+            return true;
+        }
+
+        return false;
     }
 }

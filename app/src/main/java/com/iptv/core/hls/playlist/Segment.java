@@ -27,7 +27,7 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * 片段
  */
-public final class Segment {
+public final class Segment implements Comparable<Long> {
     private String mPlaylistUrl;
 
     private long mSequenceNumber;
@@ -282,5 +282,18 @@ public final class Segment {
         }
 
         return HttpHelper.get(UrlHelper.makeUrl(mPlaylistUrl, mUri), properties);
+    }
+
+    @Override
+    public int compareTo(Long sequenceNumber) {
+        if (mSequenceNumber > sequenceNumber) {
+            return 1;
+        }
+        else if (mSequenceNumber < sequenceNumber) {
+            return -1;
+        }
+        else {
+            return 0;
+        }
     }
 }
