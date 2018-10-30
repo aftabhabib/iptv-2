@@ -13,7 +13,7 @@ public abstract class Playlist {
     public static final int TYPE_MEDIA = 0;
     public static final int TYPE_MASTER = 1;
 
-    protected String mBaseUri;
+    private String mBaseUri;
     private VersionTag mVersionTag;
 
     /**
@@ -39,6 +39,13 @@ public abstract class Playlist {
         else {
             return mVersionTag.getVersion();
         }
+    }
+
+    /**
+     * 获取基础uri
+     */
+    public String getBaseUri() {
+        return mBaseUri;
     }
 
     /**
