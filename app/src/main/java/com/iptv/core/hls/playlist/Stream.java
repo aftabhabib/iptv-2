@@ -33,7 +33,7 @@ public final class Stream {
     /**
      * 是否包含（可替代的）音频展示
      */
-    public boolean containsAudioRenditions() {
+    public boolean containsAudioRendition() {
         return mStreamInfTag.containsAttribute(Attribute.Name.AUDIO);
     }
 
@@ -41,8 +41,8 @@ public final class Stream {
      * 获取（可替代的）音频展示
      */
     public Rendition[] getAudioRenditions(Rendition[] renditions) {
-        if (!containsAudioRenditions()) {
-            throw new IllegalStateException("no alternative audio renditions");
+        if (!containsAudioRendition()) {
+            throw new IllegalStateException("no alternative audio rendition");
         }
 
         List<Rendition> audioGroup = new ArrayList<>();
@@ -60,7 +60,7 @@ public final class Stream {
     /**
      * 是否包含（可替代的）视频展示
      */
-    public boolean containsVideoRenditions() {
+    public boolean containsVideoRendition() {
         return mStreamInfTag.containsAttribute(Attribute.Name.VIDEO);
     }
 
@@ -68,8 +68,8 @@ public final class Stream {
      * 获取（可替代的）视频展示
      */
     public Rendition[] getVideoRenditions(Rendition[] renditions) {
-        if (!containsVideoRenditions()) {
-            throw new IllegalStateException("no alternative video renditions");
+        if (!containsVideoRendition()) {
+            throw new IllegalStateException("no alternative video rendition");
         }
 
         List<Rendition> videoGroup = new ArrayList<>();
@@ -87,7 +87,7 @@ public final class Stream {
     /**
      * 是否包含（可替代的）字幕展示
      */
-    public boolean containsSubtitleRenditions() {
+    public boolean containsSubtitleRendition() {
         return mStreamInfTag.containsAttribute(Attribute.Name.SUBTITLES);
     }
 
@@ -95,8 +95,8 @@ public final class Stream {
      * 获取（可替代的）字幕展示
      */
     public Rendition[] getSubtitleRenditions(Rendition[] renditions) {
-        if (!containsSubtitleRenditions()) {
-            throw new IllegalStateException("no alternative subtitle renditions");
+        if (!containsSubtitleRendition()) {
+            throw new IllegalStateException("no alternative subtitle rendition");
         }
 
         List<Rendition> subtitleGroup = new ArrayList<>();
@@ -114,7 +114,7 @@ public final class Stream {
     /**
      * 是否包含（可替代的）隱藏字幕展示
      */
-    public boolean containsClosedCaptionRenditions() {
+    public boolean containsClosedCaptionRendition() {
         return mStreamInfTag.containsAttribute(Attribute.Name.CLOSED_CAPTIONS);
     }
 
@@ -122,8 +122,8 @@ public final class Stream {
      * 获取（可替代的）隱藏字幕展示
      */
     public Rendition[] getClosedCaptionRenditions(Rendition[] renditions) {
-        if (!containsClosedCaptionRenditions()) {
-            throw new IllegalStateException("no alternative closed caption renditions");
+        if (!containsClosedCaptionRendition()) {
+            throw new IllegalStateException("no alternative closed caption rendition");
         }
 
         List<Rendition> ccGroup = new ArrayList<>();
