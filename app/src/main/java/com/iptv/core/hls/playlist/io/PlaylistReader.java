@@ -26,26 +26,24 @@ import com.iptv.core.hls.playlist.tag.StreamInfTag;
 import com.iptv.core.hls.playlist.tag.Tag;
 import com.iptv.core.hls.playlist.tag.TargetDurationTag;
 import com.iptv.core.hls.playlist.tag.VersionTag;
+import com.iptv.core.hls.utils.HttpHelper;
+import com.iptv.core.hls.utils.UrlHelper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * 播放列表读取器
+ */
 public final class PlaylistReader {
-    private static final int ST_PLAYLIST_HEADER = 0;
-    private static final int ST_PLAYLIST_META = 1;
-    private static final int ST_SEGMENT_META = 2;
-    private static final int ST_STREAM_META = 3;
-    private static final int ST_SEGMENT = 4;
-    private static final int ST_STREAM = 5;
-    private static final int ST_IFRAME_STREAM = 6;
-    private static final int ST_PLAYLIST_END = 7;
-
+    private String mBaseUri;
     private BufferedReader mReader;
-    private int mState = ST_PLAYLIST_HEADER;
 
     private List<Tag> mBasicMeta = new ArrayList<>();
     private List<Tag> mMediaPlaylistMeta = new ArrayList<>();
@@ -57,11 +55,30 @@ public final class PlaylistReader {
     private List<Stream> mStreamList = new ArrayList<>();
     private List<IFrameStream> mIFrameStreamList = new ArrayList<>();
 
+    private static final int ST_PLAYLIST_HEADER = 0;
+    private static final int ST_PLAYLIST_META = 1;
+    private static final int ST_SEGMENT_META = 2;
+    private static final int ST_STREAM_META = 3;
+    private static final int ST_SEGMENT = 4;
+    private static final int ST_STREAM = 5;
+    private static final int ST_IFRAME_STREAM = 6;
+    private static final int ST_PLAYLIST_END = 7;
+
+    private int mState = ST_PLAYLIST_HEADER;
+
     /**
      * 构造函数
      */
-    public PlaylistReader(Reader reader) {
-        mReader = new BufferedReader(reader);
+    public PlaylistReader(String url, Map<String, String> properties) throws IOException {
+        this(UrlHelper.getBaseUri(url), HttpHelper.get(url, properties));
+    }
+
+    /**
+     * 构造函数
+     */
+    private PlaylistReader(String baseUri, InputStream input) {
+        mBaseUri = baseUri;
+        mReader = new BufferedReader(new InputStreamReader(input));
     }
 
     /**
@@ -425,12 +442,22 @@ public final class PlaylistReader {
      * 创建媒体播放列表
      */
     private Playlist createMediaPlaylist() {
+        VersionTag versionTag = null;
         TargetDurationTag targetDurationTag = null;
         MediaSequenceTag mediaSequenceTag = null;
         EndListTag endListTag = null;
         PlaylistTypeTag playlistTypeTag = null;
         IFrameOnlyTag iFrameOnlyTag = null;
         DiscontinuitySequenceTag discontinuitySequenceTag = null;
+
+        while (!mBasicMeta.isEmpty()) {
+            Tag tag = mBasicMeta.remove(0);
+
+            String tagName = tag.getName();
+            if (tagName.equals(Tag.Name.VERSION)) {
+                versionTag = (VersionTag)tag;
+            }
+        }
 
         while (!mMediaPlaylistMeta.isEmpty()) {
             Tag tag = mMediaPlaylistMeta.remove(0);
@@ -456,15 +483,26 @@ public final class PlaylistReader {
             }
         }
 
-        return new MediaPlaylist(targetDurationTag, mediaSequenceTag, endListTag,
-                playlistTypeTag, iFrameOnlyTag, discontinuitySequenceTag, mSegmentList);
+        return new MediaPlaylist(mBaseUri, versionTag, targetDurationTag,
+                mediaSequenceTag, endListTag, playlistTypeTag,
+                iFrameOnlyTag, discontinuitySequenceTag, mSegmentList);
     }
 
     /**
      * 创建主播放列表
      */
     private Playlist createMasterPlaylist() {
+        VersionTag versionTag = null;
         List<Rendition> renditionList = new LinkedList<>();
+
+        while (!mBasicMeta.isEmpty()) {
+            Tag tag = mBasicMeta.remove(0);
+
+            String tagName = tag.getName();
+            if (tagName.equals(Tag.Name.VERSION)) {
+                versionTag = (VersionTag)tag;
+            }
+        }
 
         while (!mMasterPlaylistMeta.isEmpty()) {
             Tag tag = mMediaPlaylistMeta.remove(0);
@@ -475,13 +513,14 @@ public final class PlaylistReader {
             }
         }
 
-        return new MasterPlaylist(renditionList, mStreamList, mIFrameStreamList);
+        return new MasterPlaylist(mBaseUri, versionTag,
+                renditionList, mStreamList, mIFrameStreamList);
     }
 
     /**
      * 安静地关闭
      */
-    public void closeQuitly() {
+    public void close() {
         try {
             mReader.close();
         }

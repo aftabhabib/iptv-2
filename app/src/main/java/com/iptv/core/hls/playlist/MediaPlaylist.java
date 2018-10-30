@@ -7,6 +7,7 @@ import com.iptv.core.hls.playlist.tag.IFrameOnlyTag;
 import com.iptv.core.hls.playlist.tag.MediaSequenceTag;
 import com.iptv.core.hls.playlist.tag.PlaylistTypeTag;
 import com.iptv.core.hls.playlist.tag.TargetDurationTag;
+import com.iptv.core.hls.playlist.tag.VersionTag;
 
 import java.util.List;
 
@@ -26,14 +27,16 @@ public final class MediaPlaylist extends Playlist {
     /**
      * 构造函数
      */
-    public MediaPlaylist(TargetDurationTag targetDurationTag,
+    public MediaPlaylist(String baseUri,
+                         VersionTag versionTag,
+                         TargetDurationTag targetDurationTag,
                          MediaSequenceTag mediaSequenceTag,
                          EndListTag endListTag,
                          PlaylistTypeTag playlistTypeTag,
                          IFrameOnlyTag iFrameOnlyTag,
                          DiscontinuitySequenceTag discontinuitySequenceTag,
                          List<Segment> segmentList) {
-        super();
+        super(baseUri, versionTag);
 
         mTargetDurationTag = targetDurationTag;
         mMediaSequenceTag = mediaSequenceTag;
@@ -45,11 +48,40 @@ public final class MediaPlaylist extends Playlist {
         mSegmentList = segmentList;
     }
 
+    @Override
+    public int getType() {
+        return TYPE_MEDIA;
+    }
+
     /**
-     * 获取最大的片段时长
+     * 是不是点播类型
      */
-    public int getMaxSegmentDuration() {
-        return mTargetDurationTag.getDuration();
+    public boolean isVodType() {
+        if (mPlaylistTypeTag == null) {
+            return false;
+        }
+        else {
+            return mPlaylistTypeTag.getType().equals(EnumeratedString.VOD);
+        }
+    }
+
+    /**
+     * 是不是事件类型
+     */
+    public boolean isEventType() {
+        if (mPlaylistTypeTag == null) {
+            return false;
+        }
+        else {
+            return mPlaylistTypeTag.getType().equals(EnumeratedString.EVENT);
+        }
+    }
+
+    /**
+     * 是不是只有I帧
+     */
+    public boolean isIFrameOnly() {
+        return mIFrameOnlyTag != null;
     }
 
     /**
@@ -60,22 +92,16 @@ public final class MediaPlaylist extends Playlist {
     }
 
     /**
-     * 获取类型
+     * 获取播放时长
      */
-    public String getType() {
-        if (mPlaylistTypeTag == null) {
-            return "undefined";
-        }
-        else {
-            return mPlaylistTypeTag.getType();
-        }
-    }
+    public float getPlayDuration() {
+        float duration = 0;
 
-    /**
-     * 是不是只有I帧
-     */
-    public boolean isIFrameOnly() {
-        return mIFrameOnlyTag != null;
+        for (int i = 0; i < mSegmentList.size(); i++) {
+            duration += mSegmentList.get(i).getDuration();
+        }
+
+        return duration;
     }
 
     /**
@@ -121,32 +147,9 @@ public final class MediaPlaylist extends Playlist {
     }
 
     /**
-     * 获取播放时长
+     * 获取最大的片段时长
      */
-    public float getPlayDuration() {
-        float duration = 0;
-
-        for (int i = 0; i < mSegmentList.size(); i++) {
-            duration += mSegmentList.get(i).getDuration();
-        }
-
-        return duration;
-    }
-
-    /**
-     * 与另一媒体播放列表相比是否更新、追加了片段
-     */
-    public boolean isNewerThan(MediaPlaylist other) {
-        if (getType().equals(EnumeratedString.VOD)
-                || (getType().equals(EnumeratedString.EVENT) && noMoreSegments())) {
-            throw new IllegalStateException("playlist should not change");
-        }
-
-        if ((getFirstSequenceNumber() > other.getFirstSequenceNumber())
-                || (getSegmentCount() > other.getSegmentCount())) {
-            return true;
-        }
-
-        return false;
+    public int getMaxSegmentDuration() {
+        return mTargetDurationTag.getDuration();
     }
 }

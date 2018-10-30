@@ -1,13 +1,10 @@
 package com.iptv.core.hls.playlist;
 
 import com.iptv.core.hls.playlist.attribute.Attribute;
-import com.iptv.core.hls.playlist.datatype.EnumeratedString;
 import com.iptv.core.hls.playlist.tag.StreamInfTag;
-import com.iptv.core.hls.utils.HttpHelper;
 import com.iptv.core.hls.utils.UrlHelper;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,13 +12,6 @@ import java.util.List;
  * 流
  */
 public final class Stream implements Comparable<Integer> {
-    private String mPlaylistUrl;
-
-    private List<Rendition> mAudioRenditionList = new ArrayList<>();
-    private List<Rendition> mVideoRenditionList = new ArrayList<>();
-    private List<Rendition> mSubtitleRenditionList = new ArrayList<>();
-    private List<Rendition> mClosedCaptionRenditionList = new ArrayList<>();
-
     private StreamInfTag mStreamInfTag;
     private String mUri;
 
@@ -31,48 +21,6 @@ public final class Stream implements Comparable<Integer> {
     public Stream(StreamInfTag streamInfTag, String uri) {
         mStreamInfTag = streamInfTag;
         mUri = uri;
-    }
-
-    /**
-     * 设置播放列表url
-     */
-    void setPlaylistUrl(String playlistUrl) {
-        mPlaylistUrl = playlistUrl;
-    }
-
-    /**
-     * 设置展示列表
-     */
-    void setRenditionList(List<Rendition> renditionList) {
-        for (Rendition rendition : renditionList) {
-            String type = rendition.getType();
-            String groupId = rendition.getGroupId();
-
-            if (type.equals(EnumeratedString.AUDIO)) {
-                if (containsAudioRenditions()
-                        && mStreamInfTag.getAudioGroupId().equals(groupId)) {
-                    mAudioRenditionList.add(rendition);
-                }
-            }
-            else if (type.equals(EnumeratedString.VIDEO)) {
-                if (containsVideoRenditions()
-                        && mStreamInfTag.getVideoGroupId().equals(groupId)) {
-                    mVideoRenditionList.add(rendition);
-                }
-            }
-            else if (type.equals(EnumeratedString.SUBTITLES)) {
-                if (containsSubtitleRenditions()
-                        && mStreamInfTag.getSubtitleGroupId().equals(groupId)) {
-                    mSubtitleRenditionList.add(rendition);
-                }
-            }
-            else if (type.equals(EnumeratedString.CLOSED_CAPTIONS)) {
-                if (containsClosedCaptionRenditions()
-                        && mStreamInfTag.getClosedCaptionGroupId().equals(groupId)) {
-                    mClosedCaptionRenditionList.add(rendition);
-                }
-            }
-        }
     }
 
     /**
@@ -92,35 +40,21 @@ public final class Stream implements Comparable<Integer> {
     /**
      * 获取（可替代的）音频展示
      */
-    public Rendition[] getAudioRenditions() {
-        return mAudioRenditionList.toArray(
-                new Rendition[mAudioRenditionList.size()]);
-    }
+    public Rendition[] getAudioRenditions(List<Rendition> renditionList) {
+        if (!containsAudioRenditions()) {
+            throw new IllegalStateException("no alternative audio renditions");
+        }
 
-    /**
-     * 获取默认的音频展示
-     */
-    public Rendition getDefaultAudioRendition() {
-        for (Rendition rendition : mAudioRenditionList) {
-            if (rendition.isDefaultSelection()) {
-                return rendition;
+        List<Rendition> audioGroup = new ArrayList<>();
+
+        String audioGroupId = mStreamInfTag.getAudioGroupId();
+        for (Rendition rendition : renditionList) {
+            if (rendition.isAudio() && rendition.getGroupId().equals(audioGroupId)) {
+                audioGroup.add(rendition);
             }
         }
 
-        return null;
-    }
-
-    /**
-     * 获取与指定语言环境匹配的音频展示
-     */
-    public Rendition getAudioRenditionByLanguage(String language) {
-        for (Rendition rendition : mAudioRenditionList) {
-            if (rendition.getLanguage().equals(language)) {
-                return rendition;
-            }
-        }
-
-        return null;
+        return audioGroup.toArray(new Rendition[audioGroup.size()]);
     }
 
     /**
@@ -133,22 +67,21 @@ public final class Stream implements Comparable<Integer> {
     /**
      * 获取（可替代的）视频展示
      */
-    public Rendition[] getVideoRenditions() {
-        return mVideoRenditionList.toArray(
-                new Rendition[mVideoRenditionList.size()]);
-    }
+    public Rendition[] getVideoRenditions(List<Rendition> renditionList) {
+        if (!containsVideoRenditions()) {
+            throw new IllegalStateException("no alternative video renditions");
+        }
 
-    /**
-     * 获取默认的音频展示
-     */
-    public Rendition getDefaultVideoRendition() {
-        for (Rendition rendition : mVideoRenditionList) {
-            if (rendition.isDefaultSelection()) {
-                return rendition;
+        List<Rendition> videoGroup = new ArrayList<>();
+
+        String videoGroupId = mStreamInfTag.getVideoGroupId();
+        for (Rendition rendition : renditionList) {
+            if (rendition.isVideo() && rendition.getGroupId().equals(videoGroupId)) {
+                videoGroup.add(rendition);
             }
         }
 
-        return null;
+        return videoGroup.toArray(new Rendition[videoGroup.size()]);
     }
 
     /**
@@ -161,35 +94,21 @@ public final class Stream implements Comparable<Integer> {
     /**
      * 获取（可替代的）字幕展示
      */
-    public Rendition[] getSubtitleRenditions() {
-        return mSubtitleRenditionList.toArray(
-                new Rendition[mSubtitleRenditionList.size()]);
-    }
+    public Rendition[] getSubtitleRenditions(List<Rendition> renditionList) {
+        if (!containsSubtitleRenditions()) {
+            throw new IllegalStateException("no alternative subtitle renditions");
+        }
 
-    /**
-     * 获取默认的字幕展示
-     */
-    public Rendition getDefaultSubtitleRendition() {
-        for (Rendition rendition : mSubtitleRenditionList) {
-            if (rendition.isDefaultSelection()) {
-                return rendition;
+        List<Rendition> subtitleGroup = new ArrayList<>();
+
+        String subtitleGroupId = mStreamInfTag.getSubtitleGroupId();
+        for (Rendition rendition : renditionList) {
+            if (rendition.isSubtitle() && rendition.getGroupId().equals(subtitleGroupId)) {
+                subtitleGroup.add(rendition);
             }
         }
 
-        return null;
-    }
-
-    /**
-     * 获取与指定语言环境匹配的字幕展示
-     */
-    public Rendition getSubtitleRenditionByLanguage(String language) {
-        for (Rendition rendition : mSubtitleRenditionList) {
-            if (rendition.getLanguage().equals(language)) {
-                return rendition;
-            }
-        }
-
-        return null;
+        return subtitleGroup.toArray(new Rendition[subtitleGroup.size()]);
     }
 
     /**
@@ -202,45 +121,33 @@ public final class Stream implements Comparable<Integer> {
     /**
      * 获取（可替代的）隱藏字幕展示
      */
-    public Rendition[] getClosedCaptionRenditions() {
-        return mClosedCaptionRenditionList.toArray(
-                new Rendition[mClosedCaptionRenditionList.size()]);
-    }
+    public Rendition[] getClosedCaptionRenditions(List<Rendition> renditionList) {
+        if (!containsClosedCaptionRenditions()) {
+            throw new IllegalStateException("no alternative closed caption renditions");
+        }
 
-    /**
-     * 获取默认的隱藏字幕展示
-     */
-    public Rendition getDefaultClosedCaptionRendition() {
-        for (Rendition rendition : mClosedCaptionRenditionList) {
-            if (rendition.isDefaultSelection()) {
-                return rendition;
+        List<Rendition> ccGroup = new ArrayList<>();
+
+        String ccGroupId = mStreamInfTag.getClosedCaptionGroupId();
+        for (Rendition rendition : renditionList) {
+            if (rendition.isClosedCaption() && rendition.getGroupId().equals(ccGroupId)) {
+                ccGroup.add(rendition);
             }
         }
 
-        return null;
+        return ccGroup.toArray(new Rendition[ccGroup.size()]);
     }
 
     /**
-     * 获取与指定语言环境匹配的隱藏字幕展示
+     * 获取媒体播放列表
      */
-    public Rendition getClosedCaptionRenditionByLanguage(String language) {
-        for (Rendition rendition : mClosedCaptionRenditionList) {
-            if (rendition.getLanguage().equals(language)) {
-                return rendition;
-            }
+    public MediaPlaylist getMediaPlaylist(String baseUri) throws IOException {
+        Playlist playlist = Playlist.load(UrlHelper.makeUrl(baseUri, mUri), null);
+        if (playlist.getType() != Playlist.TYPE_MEDIA) {
+            throw new IllegalStateException("should be media playlist");
         }
 
-        return null;
-    }
-
-    /**
-     * 获取媒体列表
-     */
-    public Playlist getPlaylist() throws IOException {
-        InputStream input = HttpHelper.get(
-                UrlHelper.makeUrl(mPlaylistUrl, mUri), null);
-
-        return null;
+        return (MediaPlaylist)playlist;
     }
 
     @Override

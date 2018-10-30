@@ -3,18 +3,14 @@ package com.iptv.core.hls.playlist;
 import com.iptv.core.hls.playlist.attribute.Attribute;
 import com.iptv.core.hls.playlist.datatype.EnumeratedString;
 import com.iptv.core.hls.playlist.tag.MediaTag;
-import com.iptv.core.hls.utils.HttpHelper;
 import com.iptv.core.hls.utils.UrlHelper;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * 展示
  */
 public final class Rendition {
-    private String mPlaylistUrl;
-
     private MediaTag mMediaTag;
 
     /**
@@ -25,17 +21,31 @@ public final class Rendition {
     }
 
     /**
-     * 设置播放列表url
+     * 是不是音频（展示）
      */
-    void setPlaylistUrl(String playlistUrl) {
-        mPlaylistUrl = playlistUrl;
+    public boolean isAudio() {
+        return mMediaTag.getType().equals(EnumeratedString.AUDIO);
     }
 
     /**
-     * 获取类型
+     * 是不是视频（展示）
      */
-    public String getType() {
-        return mMediaTag.getType();
+    public boolean isVideo() {
+        return mMediaTag.getType().equals(EnumeratedString.VIDEO);
+    }
+
+    /**
+     * 是不是字幕（展示）
+     */
+    public boolean isSubtitle() {
+        return mMediaTag.getType().equals(EnumeratedString.SUBTITLES);
+    }
+
+    /**
+     * 是不是隐藏字幕（展示）
+     */
+    public boolean isClosedCaption() {
+        return mMediaTag.getType().equals(EnumeratedString.CLOSED_CAPTIONS);
     }
 
     /**
@@ -49,49 +59,62 @@ public final class Rendition {
      * 是不是默认的选择
      */
     public boolean isDefaultSelection() {
-        String state = EnumeratedString.NO;
-
+        String state;
         if (mMediaTag.containsAttribute(Attribute.Name.DEFAULT)) {
             state = mMediaTag.getDefaultSelection();
+        }
+        else {
+            state = EnumeratedString.NO;
         }
 
         return state.equals(EnumeratedString.YES);
     }
 
     /**
-     * 展示是不是在流里
-     */
-    public boolean isIncludedInStream() {
-        return !mMediaTag.containsAttribute(Attribute.Name.URI);
-    }
-
-    /**
      * 获取语言（如果有定义，否则即为未知）
      */
     public String getLanguage() {
-        String language = "und";
-
         if (mMediaTag.containsAttribute(Attribute.Name.LANGUAGE)) {
-            language = mMediaTag.getLanguage();
+            return mMediaTag.getLanguage();
         }
-
-        return language;
-    }
-
-    /**
-     * 获取媒体列表
-     */
-    public MediaPlaylist getPlaylist() throws IOException {
-        InputStream input = HttpHelper.get(
-                UrlHelper.makeUrl(mPlaylistUrl, mMediaTag.getUri()), null);
-
-        return null;
+        else {
+            return "und";
+        }
     }
 
     /**
      * 获取隐藏字幕（在媒体数据中）的id
      */
     public String getClosedCaptionId() {
+        if (!isClosedCaption()) {
+            throw new IllegalStateException("TYPE should be CLOSED-CAPTIONS");
+        }
+
         return mMediaTag.getInStreamId();
+    }
+
+    /**
+     * 是否定义了源
+     */
+    public boolean containsSource() {
+        return mMediaTag.containsAttribute(Attribute.Name.URI);
+    }
+
+    /**
+     * 获取媒体播放列表
+     */
+    public MediaPlaylist getMediaPlaylist(String baseUri) throws IOException {
+        if (!containsSource()) {
+            throw new IllegalStateException("media data is included in the playlist of stream " +
+                    "referencing this rendition");
+        }
+
+        Playlist playlist = Playlist.load(
+                UrlHelper.makeUrl(baseUri, mMediaTag.getUri()), null);
+        if (playlist.getType() != Playlist.TYPE_MEDIA) {
+            throw new IllegalStateException("should be media playlist");
+        }
+
+        return (MediaPlaylist)playlist;
     }
 }

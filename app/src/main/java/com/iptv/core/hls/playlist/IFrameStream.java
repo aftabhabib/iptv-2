@@ -1,24 +1,17 @@
 package com.iptv.core.hls.playlist;
 
 import com.iptv.core.hls.playlist.attribute.Attribute;
-import com.iptv.core.hls.playlist.datatype.EnumeratedString;
 import com.iptv.core.hls.playlist.tag.IFrameStreamInfTag;
-import com.iptv.core.hls.utils.HttpHelper;
 import com.iptv.core.hls.utils.UrlHelper;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * I帧流
  */
-public final class IFrameStream {
-    private String mPlaylistUrl;
-
-    private List<Rendition> mVideoRenditionList = new ArrayList<>();
-
+public final class IFrameStream implements Comparable<Integer> {
     private IFrameStreamInfTag mIFrameStreamInfTag;
 
     /**
@@ -26,30 +19,6 @@ public final class IFrameStream {
      */
     public IFrameStream(IFrameStreamInfTag iFrameStreamInfTag) {
         mIFrameStreamInfTag = iFrameStreamInfTag;
-    }
-
-    /**
-     * 设置播放列表url
-     */
-    void setPlaylistUrl(String playlistUrl) {
-        mPlaylistUrl = playlistUrl;
-    }
-
-    /**
-     * 设置展示列表
-     */
-    void setRenditionList(List<Rendition> renditionList) {
-        for (Rendition rendition : renditionList) {
-            String type = rendition.getType();
-            String groupId = rendition.getGroupId();
-
-            if (type.equals(EnumeratedString.VIDEO)) {
-                if (containsVideoRenditions()
-                        && mIFrameStreamInfTag.getVideoGroupId().equals(groupId)) {
-                    mVideoRenditionList.add(rendition);
-                }
-            }
-        }
     }
 
     /**
@@ -69,31 +38,38 @@ public final class IFrameStream {
     /**
      * 获取（可替代的）视频展示
      */
-    public Rendition[] getVideoRenditions() {
-        return mVideoRenditionList.toArray(
-                new Rendition[mVideoRenditionList.size()]);
-    }
+    public Rendition[] getVideoRenditions(List<Rendition> renditionList) {
+        if (!containsVideoRenditions()) {
+            throw new IllegalStateException("no alternative video renditions");
+        }
 
-    /**
-     * 获取默认的音频展示
-     */
-    public Rendition getDefaultVideoRendition() {
-        for (Rendition rendition : mVideoRenditionList) {
-            if (rendition.isDefaultSelection()) {
-                return rendition;
+        List<Rendition> videoGroup = new ArrayList<>();
+
+        String videoGroupId = mIFrameStreamInfTag.getVideoGroupId();
+        for (Rendition rendition : renditionList) {
+            if (rendition.isVideo() && rendition.getGroupId().equals(videoGroupId)) {
+                videoGroup.add(rendition);
             }
         }
 
-        return null;
+        return videoGroup.toArray(new Rendition[videoGroup.size()]);
     }
 
     /**
-     * 获取媒体列表
+     * 获取媒体播放列表
      */
-    public Playlist getPlaylist() throws IOException {
-        InputStream input = HttpHelper.get(
-                UrlHelper.makeUrl(mPlaylistUrl, mIFrameStreamInfTag.getUri()), null);
+    public MediaPlaylist getMediaPlaylist(String baseUri) throws IOException {
+        Playlist playlist = Playlist.load(
+                UrlHelper.makeUrl(baseUri, mIFrameStreamInfTag.getUri()), null);
+        if (playlist.getType() != Playlist.TYPE_MEDIA) {
+            throw new IllegalStateException("should be media playlist");
+        }
 
-        return null;
+        return (MediaPlaylist)playlist;
+    }
+
+    @Override
+    public int compareTo(Integer bandwidth) {
+        return getBandwidth() - bandwidth;
     }
 }

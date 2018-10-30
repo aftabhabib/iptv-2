@@ -27,12 +27,7 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * 片段
  */
-public final class Segment implements Comparable<Long> {
-    private String mPlaylistUrl;
-
-    private long mSequenceNumber;
-    private long mDiscontinuitySequenceNumber;
-
+public final class Segment {
     private MapTag mMapTag;
     private KeyTag mKeyTag;
     private ByteRangeTag mRangeTag;
@@ -43,36 +38,18 @@ public final class Segment implements Comparable<Long> {
     /**
      * 构造函数
      */
-    public Segment(MapTag mapTag, KeyTag keyTag,
-                   ByteRangeTag rangeTag, DiscontinuityTag discontinuityTag,
-                   InfTag infTag, String uri) {
+    public Segment(MapTag mapTag,
+                   KeyTag keyTag,
+                   ByteRangeTag rangeTag,
+                   DiscontinuityTag discontinuityTag,
+                   InfTag infTag,
+                   String uri) {
         mMapTag = mapTag;
         mKeyTag = keyTag;
         mRangeTag = rangeTag;
         mDiscontinuityTag = discontinuityTag;
         mInfTag = infTag;
         mUri = uri;
-    }
-
-    /**
-     * 设置播放列表url
-     */
-    void setPlaylistUrl(String playlistUrl) {
-        mPlaylistUrl = playlistUrl;
-    }
-
-    /**
-     * 设置序号
-     */
-    void setSequenceNumber(long sequenceNumber) {
-        mSequenceNumber = sequenceNumber;
-    }
-
-    /**
-     * 设置不连续序号
-     */
-    void setDiscontinuitySequenceNumber(long discontinuitySequenceNumber) {
-        mDiscontinuitySequenceNumber = discontinuitySequenceNumber;
     }
 
     /**
@@ -93,13 +70,12 @@ public final class Segment implements Comparable<Long> {
      * 是否加密
      */
     public boolean isEncrypted() {
-        boolean ret = false;
-
-        if (mKeyTag != null) {
-            ret = !mKeyTag.getMethod().equals(EnumeratedString.NONE);
+        if (mKeyTag == null) {
+            return false;
         }
-
-        return ret;
+        else {
+            return !mKeyTag.getMethod().equals(EnumeratedString.NONE);
+        }
     }
 
     /**
@@ -112,12 +88,13 @@ public final class Segment implements Comparable<Long> {
     /**
      * 获取解密密钥
      */
-    public Cipher getDecryptCipher() throws GeneralSecurityException, IOException {
+    public Cipher getDecryptCipher(String baseUri, long sequenceNumber)
+            throws GeneralSecurityException, IOException {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
 
         cipher.init(Cipher.DECRYPT_MODE,
-                new SecretKeySpec(getKey(), "AES"),
-                new IvParameterSpec(getInitVector()));
+                new SecretKeySpec(getKey(baseUri), "AES"),
+                new IvParameterSpec(getInitVector(sequenceNumber)));
 
         return cipher;
     }
@@ -125,40 +102,35 @@ public final class Segment implements Comparable<Long> {
     /**
      * 获取密钥数据
      */
-    private byte[] getKey() throws IOException {
+    private byte[] getKey(String baseUri) throws IOException {
         Cache cache = CacheManager.getInstance().getCache("key_data");
 
-        String uri = mKeyTag.getUri();
-        if (!cache.contains(uri)) {
-            cache.put(uri, fetchKey());
+        String url = UrlHelper.makeUrl(baseUri, mKeyTag.getUri());
+        if (!cache.contains(url)) {
+            cache.put(url, fetchKey(url));
         }
 
-        return cache.get(uri);
+        return cache.get(url);
     }
 
     /**
      * 抓取密钥数据
      */
-    private byte[] fetchKey() throws IOException {
-        String format = "identity";
+    private byte[] fetchKey(String url) throws IOException {
         if (mKeyTag.containsAttribute(Attribute.Name.KEY_FORMAT)) {
-            format = mKeyTag.getFormat();
+            String format = mKeyTag.getFormat();
+            if (!format.equals("identity")) {
+                throw new IllegalStateException("unsupported key format");
+            }
         }
 
-        if (!format.equals("identity")) {
-            throw new RuntimeException("unsupported key format");
-        }
-
-        InputStream input = HttpHelper.get(
-                UrlHelper.makeUrl(mPlaylistUrl, mKeyTag.getUri()), null);
-
-        return readByteArray(input);
+        return readByteArray(HttpHelper.get(url, null));
     }
 
     /**
      * 获取密钥初始化向量
      */
-    private byte[] getInitVector() {
+    private byte[] getInitVector(long sequenceNumber) {
         byte[] iv;
 
         if (mKeyTag.containsAttribute(Attribute.Name.IV)) {
@@ -170,10 +142,10 @@ public final class Segment implements Comparable<Long> {
              */
             iv = new byte[16];
 
-            iv[15] = (byte)(mSequenceNumber & 0xff);
-            iv[14] = (byte)((mSequenceNumber >> 8) & 0xff);
-            iv[13] = (byte)((mSequenceNumber >> 16) & 0xff);
-            iv[12] = (byte)((mSequenceNumber >> 24) & 0xff);
+            iv[15] = (byte)(sequenceNumber & 0xff);
+            iv[14] = (byte)((sequenceNumber >> 8) & 0xff);
+            iv[13] = (byte)((sequenceNumber >> 16) & 0xff);
+            iv[12] = (byte)((sequenceNumber >> 24) & 0xff);
         }
 
         return iv;
@@ -189,38 +161,27 @@ public final class Segment implements Comparable<Long> {
     /**
      * 获取格式特殊数据
      */
-    public byte[] getFormatSpecificData() throws IOException {
+    public byte[] getFormatSpecificData(String baseUri) throws IOException {
         Cache cache = CacheManager.getInstance().getCache("format_specific_data");
 
-        String uri = mMapTag.getUri();
-        if (!cache.contains(uri)) {
-            cache.put(uri, fetchFormatSpecificData());
+        String url = UrlHelper.makeUrl(baseUri, mMapTag.getUri());
+        if (!cache.contains(url)) {
+            cache.put(url, fetchFormatSpecificData(url));
         }
 
-        return cache.get(uri);
+        return cache.get(url);
     }
 
     /**
      * 抓取初始化片段数据
      */
-    private byte[] fetchFormatSpecificData() throws IOException {
+    private byte[] fetchFormatSpecificData(String url) throws IOException {
         Map<String, String> properties = null;
         if (mMapTag.containsAttribute(Attribute.Name.BYTE_RANGE)) {
-            ByteRange range = mMapTag.getByteRange();
-            long startPos = range.getOffset();
-            long endPos = range.getOffset() + range.getLength() - 1;
-
-            /**
-             * 设置Range头部
-             */
-            properties = new HashMap<>();
-            properties.put("Range", "byte=" + startPos + "-" + endPos);
+            properties = setRangeHeader(mMapTag.getByteRange());
         }
 
-        InputStream input = HttpHelper.get(
-                UrlHelper.makeUrl(mPlaylistUrl, mMapTag.getUri()), properties);
-
-        return readByteArray(input);
+        return readByteArray(HttpHelper.get(url, properties));
     }
 
     /**
@@ -267,33 +228,25 @@ public final class Segment implements Comparable<Long> {
     /**
      * 获取片段数据
      */
-    public InputStream getContent() throws IOException {
+    public InputStream getContent(String baseUri) throws IOException {
         Map<String, String> properties = null;
         if (mRangeTag != null) {
-            ByteRange range = mRangeTag.getRange();
-            long startPos = range.getOffset();
-            long endPos = range.getOffset() + range.getLength() - 1;
-
-            /**
-             * 设置Range头部
-             */
-            properties = new HashMap<>();
-            properties.put("Range", "byte=" + startPos + "-" + endPos);
+            properties = setRangeHeader(mRangeTag.getRange());
         }
 
-        return HttpHelper.get(UrlHelper.makeUrl(mPlaylistUrl, mUri), properties);
+        return HttpHelper.get(UrlHelper.makeUrl(baseUri, mUri), properties);
     }
 
-    @Override
-    public int compareTo(Long sequenceNumber) {
-        if (mSequenceNumber > sequenceNumber) {
-            return 1;
-        }
-        else if (mSequenceNumber < sequenceNumber) {
-            return -1;
-        }
-        else {
-            return 0;
-        }
+    /**
+     * 设置Range头部
+     */
+    private static Map<String, String> setRangeHeader(ByteRange range) {
+        Map<String, String> properties = new HashMap<>();
+
+        long startPos = range.getOffset();
+        long endPos = range.getOffset() + range.getLength() - 1;
+        properties.put("Range", "byte=" + startPos + "-" + endPos);
+
+        return properties;
     }
 }

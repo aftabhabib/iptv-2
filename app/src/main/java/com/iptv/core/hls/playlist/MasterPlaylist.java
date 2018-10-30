@@ -1,5 +1,7 @@
 package com.iptv.core.hls.playlist;
 
+import com.iptv.core.hls.playlist.tag.VersionTag;
+
 import java.util.List;
 
 /**
@@ -14,13 +16,21 @@ public final class MasterPlaylist extends Playlist {
     /**
      * 构造函数
      */
-    public MasterPlaylist(List<Rendition> renditionList,
-                          List<Stream> streamList, List<IFrameStream> iFrameStreamList) {
-        super();
+    public MasterPlaylist(String baseUri,
+                          VersionTag versionTag,
+                          List<Rendition> renditionList,
+                          List<Stream> streamList,
+                          List<IFrameStream> iFrameStreamList) {
+        super(baseUri, versionTag);
 
         mRenditionList = renditionList;
 
         mStreamList = streamList;
         mIFrameStreamList = iFrameStreamList;
+    }
+
+    @Override
+    public int getType() {
+        return TYPE_MASTER;
     }
 }
