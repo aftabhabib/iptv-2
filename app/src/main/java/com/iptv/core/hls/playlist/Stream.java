@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * 流
  */
-public final class Stream implements Comparable<Integer> {
+public final class Stream {
     private StreamInfTag mStreamInfTag;
     private String mUri;
 
@@ -40,7 +40,7 @@ public final class Stream implements Comparable<Integer> {
     /**
      * 获取（可替代的）音频展示
      */
-    public Rendition[] getAudioRenditions(List<Rendition> renditionList) {
+    public Rendition[] getAudioRenditions(Rendition[] renditions) {
         if (!containsAudioRenditions()) {
             throw new IllegalStateException("no alternative audio renditions");
         }
@@ -48,7 +48,7 @@ public final class Stream implements Comparable<Integer> {
         List<Rendition> audioGroup = new ArrayList<>();
 
         String audioGroupId = mStreamInfTag.getAudioGroupId();
-        for (Rendition rendition : renditionList) {
+        for (Rendition rendition : renditions) {
             if (rendition.isAudio() && rendition.getGroupId().equals(audioGroupId)) {
                 audioGroup.add(rendition);
             }
@@ -67,7 +67,7 @@ public final class Stream implements Comparable<Integer> {
     /**
      * 获取（可替代的）视频展示
      */
-    public Rendition[] getVideoRenditions(List<Rendition> renditionList) {
+    public Rendition[] getVideoRenditions(Rendition[] renditions) {
         if (!containsVideoRenditions()) {
             throw new IllegalStateException("no alternative video renditions");
         }
@@ -75,7 +75,7 @@ public final class Stream implements Comparable<Integer> {
         List<Rendition> videoGroup = new ArrayList<>();
 
         String videoGroupId = mStreamInfTag.getVideoGroupId();
-        for (Rendition rendition : renditionList) {
+        for (Rendition rendition : renditions) {
             if (rendition.isVideo() && rendition.getGroupId().equals(videoGroupId)) {
                 videoGroup.add(rendition);
             }
@@ -94,7 +94,7 @@ public final class Stream implements Comparable<Integer> {
     /**
      * 获取（可替代的）字幕展示
      */
-    public Rendition[] getSubtitleRenditions(List<Rendition> renditionList) {
+    public Rendition[] getSubtitleRenditions(Rendition[] renditions) {
         if (!containsSubtitleRenditions()) {
             throw new IllegalStateException("no alternative subtitle renditions");
         }
@@ -102,7 +102,7 @@ public final class Stream implements Comparable<Integer> {
         List<Rendition> subtitleGroup = new ArrayList<>();
 
         String subtitleGroupId = mStreamInfTag.getSubtitleGroupId();
-        for (Rendition rendition : renditionList) {
+        for (Rendition rendition : renditions) {
             if (rendition.isSubtitle() && rendition.getGroupId().equals(subtitleGroupId)) {
                 subtitleGroup.add(rendition);
             }
@@ -121,7 +121,7 @@ public final class Stream implements Comparable<Integer> {
     /**
      * 获取（可替代的）隱藏字幕展示
      */
-    public Rendition[] getClosedCaptionRenditions(List<Rendition> renditionList) {
+    public Rendition[] getClosedCaptionRenditions(Rendition[] renditions) {
         if (!containsClosedCaptionRenditions()) {
             throw new IllegalStateException("no alternative closed caption renditions");
         }
@@ -129,7 +129,7 @@ public final class Stream implements Comparable<Integer> {
         List<Rendition> ccGroup = new ArrayList<>();
 
         String ccGroupId = mStreamInfTag.getClosedCaptionGroupId();
-        for (Rendition rendition : renditionList) {
+        for (Rendition rendition : renditions) {
             if (rendition.isClosedCaption() && rendition.getGroupId().equals(ccGroupId)) {
                 ccGroup.add(rendition);
             }
@@ -148,10 +148,5 @@ public final class Stream implements Comparable<Integer> {
         }
 
         return (MediaPlaylist)playlist;
-    }
-
-    @Override
-    public int compareTo(Integer bandwidth) {
-        return getBandwidth() - bandwidth;
     }
 }

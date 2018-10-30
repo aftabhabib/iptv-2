@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -511,6 +513,23 @@ public final class PlaylistReader {
             if (tagName.equals(Tag.Name.MEDIA)) {
                 renditionList.add(new Rendition((MediaTag)tag));
             }
+        }
+
+        if (!mStreamList.isEmpty()) {
+            Collections.sort(mStreamList, new Comparator<Stream>() {
+                @Override
+                public int compare(Stream stream1, Stream stream2) {
+                    return stream1.getBandwidth() - stream2.getBandwidth();
+                }
+            });
+        }
+        if (!mIFrameStreamList.isEmpty()) {
+            Collections.sort(mIFrameStreamList, new Comparator<IFrameStream>() {
+                @Override
+                public int compare(IFrameStream stream1, IFrameStream stream2) {
+                    return stream1.getBandwidth() - stream2.getBandwidth();
+                }
+            });
         }
 
         return new MasterPlaylist(mBaseUri, versionTag,

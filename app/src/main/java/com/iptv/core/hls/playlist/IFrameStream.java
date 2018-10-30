@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * I帧流
  */
-public final class IFrameStream implements Comparable<Integer> {
+public final class IFrameStream {
     private IFrameStreamInfTag mIFrameStreamInfTag;
 
     /**
@@ -38,7 +38,7 @@ public final class IFrameStream implements Comparable<Integer> {
     /**
      * 获取（可替代的）视频展示
      */
-    public Rendition[] getVideoRenditions(List<Rendition> renditionList) {
+    public Rendition[] getVideoRenditions(Rendition[] renditions) {
         if (!containsVideoRenditions()) {
             throw new IllegalStateException("no alternative video renditions");
         }
@@ -46,7 +46,7 @@ public final class IFrameStream implements Comparable<Integer> {
         List<Rendition> videoGroup = new ArrayList<>();
 
         String videoGroupId = mIFrameStreamInfTag.getVideoGroupId();
-        for (Rendition rendition : renditionList) {
+        for (Rendition rendition : renditions) {
             if (rendition.isVideo() && rendition.getGroupId().equals(videoGroupId)) {
                 videoGroup.add(rendition);
             }
@@ -66,10 +66,5 @@ public final class IFrameStream implements Comparable<Integer> {
         }
 
         return (MediaPlaylist)playlist;
-    }
-
-    @Override
-    public int compareTo(Integer bandwidth) {
-        return getBandwidth() - bandwidth;
     }
 }
