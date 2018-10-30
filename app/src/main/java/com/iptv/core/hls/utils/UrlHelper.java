@@ -7,7 +7,7 @@ public final class UrlHelper {
     /**
      * 生成url
      */
-    public static String makeUrl(String playlistUrl, String uri) {
+    public static String makeUrl(String baseUri, String uri) {
         String url;
 
         if (uri.startsWith("http://") || uri.startsWith("https://")) {
@@ -17,16 +17,16 @@ public final class UrlHelper {
             url = uri;
         }
         else {
-            url = getDomain(playlistUrl) + "/" + uri;
+            url = baseUri + "/" + uri;
         }
 
         return url;
     }
 
     /**
-     * 获取播放列表url的域
+     * 获取播放列表url的基础uri
      */
-    private static String getDomain(String playlistUrl) {
+    public static String getBaseUri(String playlistUrl) {
         /**
          * scheme://authority/path?query#fragment
          */
